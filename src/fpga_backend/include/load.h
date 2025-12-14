@@ -5,16 +5,18 @@
 #include "define.h"
 
 
-
 void Load(
-    const uint64_t *src_ddr,
-    uint64_t dest_local[MAX_LIMBS][SQRT][SQRT],
-    int num_active_limbs
+    const uint64_t *mem_in,
+    uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
+    const int num_limbs,
+    const int limb_offset // 偏移量
 );
 
 void Store(
-    const uint64_t source_local[MAX_LIMBS][SQRT][SQRT],
-    uint64_t *dest_ddr,
-    int num_active_limbs
+    uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
+    uint64_t *mem_out,
+    const int num_limbs,
+    const int limb_offset // 偏移量
 );
+
 #endif // LOAD_H

@@ -235,6 +235,8 @@ void NTT_Kernel(
 
     bool is_ntt
 ){
+    // std::cout << "[FPGA] NTT_Kernel: modulus=" << modulus << ", is_ntt=" << is_ntt << std::endl;
+    // std::cout << "[FPGA] K_HALF=" << K_HALF << ", M=" << M << std::endl;
     int InputIndex[SQRT], OutputIndex[SQRT];
     int TwiddleIndex[BU_NUM];
     int stage_index;
@@ -257,7 +259,20 @@ void NTT_Kernel(
             }else{
                 permute_twiddle_factors(TwiddleFactor, intt_twiddle_memory, TwiddleIndex);
             }
+            // for (int l = 0; l < SQRT; l++) {
+            //     std::cout << PermuteData[l] << " ";
+            // }
+            // std::cout << std::endl;
+            // for (int l = 0; l < BU_NUM; l++) {
+            //     std::cout << TwiddleFactor[l] << " ";
+            // }
+            // std::cout << std::endl;
             compute_core(PermuteData, TwiddleFactor, NTTData, modulus, K_HALF, M, is_ntt);
+            // for (int l = 0; l < SQRT; l++) {
+            //     std::cout << NTTData[l] << " ";
+            // }
+            // std::cout << "[FPGA] Stage " << j << ", Row " << k << " completed." << std::endl;
+         
             repermute_data(NTTData, OutputIndex, RepermuteData);
             rewrite_data(stage_index, k, RepermuteData, in_memory);
         }            
@@ -283,19 +298,15 @@ void Compute_NTT(
     int mod_idx_offset
 
 ) {
-    // for (uint i = 0; i < RING_DIM; i++){
 
-    // }
-
-    for (int l = 0; l < num_active_limbs; l++){
+    for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++){
         NTT_Kernel(
             in_memory[l],
-    
-            modulus[mod_idx_offset + l],
-            K_HALF[mod_idx_offset + l],
-            M[mod_idx_offset + l],
-            ntt_twiddle_memory[mod_idx_offset + l],
-            intt_twiddle_memory[mod_idx_offset + l],
+            modulus[l],
+            K_HALF[l],
+            M[l],
+            ntt_twiddle_memory[l],
+            intt_twiddle_memory[l],
             is_ntt
         );
     }

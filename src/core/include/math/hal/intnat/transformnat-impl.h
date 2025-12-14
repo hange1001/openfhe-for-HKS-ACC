@@ -58,20 +58,20 @@
 #include <iomanip>
 #include <string>
 
-static void DumpPairCSV(const std::string& path,
-                        const std::string& tag,
-                        uint64_t q,
-                        uint32_t len,
-                        const std::string& aName, const std::vector<uint64_t>& a,
-                        const std::string& bName, const std::vector<uint64_t>& b) {
-    std::ofstream ofs(path, std::ios::app);
-    ofs << "# tag=" << tag << ", q=" << q << ", len=" << len << "\n";
-    ofs << "idx," << aName << "," << bName << ",equal\n";
-    for (uint32_t i = 0; i < len; ++i) {
-        ofs << i << "," << a[i] << "," << b[i] << "," << (a[i] == b[i] ? 1 : 0) << "\n";
-    }
-    ofs << "\n";
-}
+// static void DumpPairCSV(const std::string& path,
+//                         const std::string& tag,
+//                         uint64_t q,
+//                         uint32_t len,
+//                         const std::string& aName, const std::vector<uint64_t>& a,
+//                         const std::string& bName, const std::vector<uint64_t>& b) {
+//     std::ofstream ofs(path, std::ios::app);
+//     ofs << "# tag=" << tag << ", q=" << q << ", len=" << len << "\n";
+//     ofs << "idx," << aName << "," << bName << ",equal\n";
+//     for (uint32_t i = 0; i < len; ++i) {
+//         ofs << i << "," << a[i] << "," << b[i] << "," << (a[i] == b[i] ? 1 : 0) << "\n";
+//     }
+//     ofs << "\n";
+// }
 
 
 namespace intnat {
@@ -332,7 +332,7 @@ void NumberTheoreticTransformNat<VecType>::ForwardTransformToBitReverseInPlace(
 
     using IntType = typename VecType::Integer;
     const IntType modulus = element->GetModulus();
-    const uint32_t len    = static_cast<uint32_t>(element->GetLength());
+    // const uint32_t len    = static_cast<uint32_t>(element->GetLength());
 
     // ---------- CPU reference NTT (bit-reverse output) ----------
     auto cpu_ntt = [&](VecType& a) {
@@ -389,89 +389,85 @@ void NumberTheoreticTransformNat<VecType>::ForwardTransformToBitReverseInPlace(
         }
     };
 
-#ifdef OPENFHE_FPGA_ENABLE
-    {
-        FpgaManager& fm = FpgaManager::GetInstance();
-        if (fm.IsReady()) {
-            for(uint32_t i = 0; i < len; ++i){
-                (*element)[i] = i;
-            }
+// #ifdef OPENFHE_FPGA_ENABLE
+//     {
+//         FpgaManager& fm = FpgaManager::GetInstance();
+//         if (fm.IsReady()) {
+//             // for(uint32_t i = 0; i < len; ++i){
+//             //     (*element)[i] = i;
+//             // }
 
-            VecType fpgaVec(*element);  // FPGA output container
-            VecType cpuVec(*element);   // CPU reference container
+//             VecType fpgaVec(*element);  // FPGA output container
+//             VecType cpuVec(*element);   // CPU reference container
 
-            // ---- FPGA compute ----
-            std::vector<uint64_t> in(len), out(len);
-            for (uint32_t i = 0; i < len; ++i)
-                in[i] = fpgaVec[i].ConvertToInt();
+//             // ---- FPGA compute ----
+//             std::vector<uint64_t> in(len), out(len);
+//             for (uint32_t i = 0; i < len; ++i)
+//                 in[i] = fpgaVec[i].ConvertToInt();
 
-            uint64_t q = static_cast<uint64_t>(modulus.ConvertToInt());
-            fm.NttForwardOffload(in.data(), out.data(), q, static_cast<size_t>(len));
+//             uint64_t q = static_cast<uint64_t>(modulus.ConvertToInt());
+//             fm.NttForwardOffload(in.data(), out.data(), q, static_cast<size_t>(len));
 
-            for (uint32_t i = 0; i < len; ++i)
-                fpgaVec[i] = IntType(out[i]);
+//             for (uint32_t i = 0; i < len; ++i)
+//                 fpgaVec[i] = IntType(out[i]);
 
           
-            // ---- CPU compute for verification ----
-            cpu_ntt(cpuVec);
+//             // ---- CPU compute for verification ----
+//             cpu_ntt(cpuVec);
       
-            // ---- Compare as multisets (order-insensitive) ----
-            std::vector<uint64_t> cpuOut(len), fpgaOut(len);
-            for (uint32_t i = 0; i < len; ++i) {
-                cpuOut[i]  = cpuVec[i].ConvertToInt();
-                fpgaOut[i] = fpgaVec[i].ConvertToInt();
-            }
+//             // ---- Compare as multisets (order-insensitive) ----
+//             std::vector<uint64_t> cpuOut(len), fpgaOut(len);
+//             for (uint32_t i = 0; i < len; ++i) {
+//                 cpuOut[i]  = cpuVec[i].ConvertToInt();
+//                 fpgaOut[i] = fpgaVec[i].ConvertToInt();
+//             }
            
 
-            std::vector<uint64_t> cpuIn(len), fpgaIn(len);
-            for (uint32_t i = 0; i < len; ++i) {
-                uint64_t v = fpgaVec[i].ConvertToInt();
-                fpgaIn[i] = v;
-                cpuIn[i]  = v;
-            }
+//             std::vector<uint64_t> cpuIn(len), fpgaIn(len);
+//             for (uint32_t i = 0; i < len; ++i) {
+//                 uint64_t v = fpgaVec[i].ConvertToInt();
+//                 fpgaIn[i] = v;
+//                 cpuIn[i]  = v;
+//             }
 
-            static uint64_t run_id = 0;
-            ++run_id;
+//             static uint64_t run_id = 0;
+//             ++run_id;
 
-            std::string inFile  = "ntt_inputs.csv";
-            std::string outFile = "ntt_outputs.csv";
-
-
-            std::sort(cpuOut.begin(), cpuOut.end());
-            std::sort(fpgaOut.begin(), fpgaOut.end());
-
-            // ---- dump：两个 input 一个文件，两个 output 一个文件 ----
-            DumpPairCSV(inFile,  "run=" + std::to_string(run_id) + ":INPUT",  q, len, "cpu_in", cpuIn, "fpga_in", fpgaIn);
-            DumpPairCSV(outFile, "run=" + std::to_string(run_id) + ":OUTPUT", q, len, "cpu_out", cpuOut, "fpga_out", fpgaOut);
+//             std::string inFile  = "ntt_inputs.csv";
+//             std::string outFile = "ntt_outputs.csv";
 
 
+//             std::sort(cpuOut.begin(), cpuOut.end());
+//             std::sort(fpgaOut.begin(), fpgaOut.end());
 
-            bool ok = (cpuOut == fpgaOut);
-            if (!ok) {
-                // 找到第一个不一致的位置便于 debug
-                uint32_t bad = 0;
-                while (bad < len && cpuOut[bad] == fpgaOut[bad]) ++bad;
-                std::cerr << "[NTT VERIFY FAIL] len=" << len
-                          << " first_mismatch_at=" << bad
-                          << " cpu=" << cpuOut[bad]
-                          << " fpga=" << fpgaOut[bad]
-                          << " modulus=" << q << std::endl;
-            } else {
-                std::cout << "[NTT VERIFY PASS] (order-insensitive) len=" << len
-                          << " modulus=" << q << std::endl;
-            }
-            if (!ok) {
-                OPENFHE_THROW("NTT FPGA result verification failed");
-            }
+//             // ---- dump：两个 input 一个文件，两个 output 一个文件 ----
+//             DumpPairCSV(inFile,  "run=" + std::to_string(run_id) + ":INPUT",  q, len, "cpu_in", cpuIn, "fpga_in", fpgaIn);
+//             DumpPairCSV(outFile, "run=" + std::to_string(run_id) + ":OUTPUT", q, len, "cpu_out", cpuOut, "fpga_out", fpgaOut);
+
+
+
+//             bool ok = (cpuOut == fpgaOut);
+//             if (!ok) {
+//                 uint32_t bad = 0;
+//                 while (bad < len && cpuOut[bad] == fpgaOut[bad]) ++bad;
+//                 std::cerr << "[NTT VERIFY FAIL] len=" << len
+//                           << " first_mismatch_at=" << bad
+//                           << " cpu=" << cpuOut[bad]
+//                           << " fpga=" << fpgaOut[bad]
+//                           << " modulus=" << q << std::endl;
+//             } else {
+//                 std::cout << "[NTT VERIFY PASS] (order-insensitive) len=" << len
+//                           << " modulus=" << q << std::endl;
+//             }
+//             if (!ok) {
+//                 OPENFHE_THROW("NTT FPGA result verification failed");
+//             }
    
-            *element = fpgaVec;
-        }
-    }
-#endif
-
-    std::cout << "Checking intnat FPGA for NTT Forward BitReverse InPlace..." << std::endl;
+//             *element = fpgaVec;
+//         }
+//     }
+// #endif
     cpu_ntt(*element);
-    std::cout << "Finished NTT on CPU as reference." << std::endl;
 }
 
 // template <typename VecType>
@@ -618,39 +614,39 @@ void NumberTheoreticTransformNat<VecType>::InverseTransformFromBitReverseInPlace
     IntType modulus = element->GetModulus();
     IntType mu      = modulus.ComputeMu();
 
-#ifdef OPENFHE_FPGA_ENABLE
-    {
+// #ifdef OPENFHE_FPGA_ENABLE
+//     {
    
-        const uint32_t len     = static_cast<uint32_t>(element->GetLength());
-        FpgaManager& fm = FpgaManager::GetInstance();
-        if (fm.IsReady()) {
+//         const uint32_t len     = static_cast<uint32_t>(element->GetLength());
+//         FpgaManager& fm = FpgaManager::GetInstance();
+//         if (fm.IsReady()) {
            
-            VecType fpgaVec(*element);  // will be sent to FPGA
-            VecType cpuVec(*element);   // CPU reference
+//             VecType fpgaVec(*element);  // will be sent to FPGA
+//             VecType cpuVec(*element);   // CPU reference
 
           
-            std::vector<uint64_t> in(len), tw(len), out(len);
-            for (uint32_t i = 0; i < len; ++i) {
-                in[i] = fpgaVec[i].ConvertToInt();
-                tw[i] = rootOfUnityInverseTable[i].ConvertToInt();
+//             std::vector<uint64_t> in(len), tw(len), out(len);
+//             for (uint32_t i = 0; i < len; ++i) {
+//                 in[i] = fpgaVec[i].ConvertToInt();
+//                 tw[i] = rootOfUnityInverseTable[i].ConvertToInt();
                 
-            }
-            uint64_t q = static_cast<uint64_t>(modulus.ConvertToInt());
+//             }
+//             uint64_t q = static_cast<uint64_t>(modulus.ConvertToInt());
 
         
-            fm.NttInverseOffload(in.data(), out.data(), q, static_cast<size_t>(len));
-            for (uint32_t i = 0; i < len; ++i) {
-                fpgaVec[i] = IntType(out[i]);
-            }
+//             fm.NttInverseOffload(in.data(), out.data(), q, static_cast<size_t>(len));
+//             for (uint32_t i = 0; i < len; ++i) {
+//                 fpgaVec[i] = IntType(out[i]);
+//             }
 
-          
+//             std::cout << "Inverse NTT" << std::endl;
       
-            *element = fpgaVec;  
-            return;  
+//             *element = fpgaVec;  
+//             return;  
           
-        }
-    }
-#endif
+//         }
+//     }
+// #endif
 
     IntType loVal, hiVal, omega, omegaFactor;
     usint i, m, j1, j2, indexOmega, indexLo, indexHi;

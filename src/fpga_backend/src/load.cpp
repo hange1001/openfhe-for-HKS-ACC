@@ -1,49 +1,40 @@
-#include "load.h"
+#include "define.h"
 
 void Load(
-    const uint64_t *src_ddr,
-    uint64_t dest_local[MAX_LIMBS][SQRT][SQRT],
-    int num_active_limbs
+    const uint64_t *mem_in,
+    uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
+    const int num_active_limbs,
+    const int mod_index // 【新增】偏移量
 ) {
     #pragma HLS INLINE off
-
-    Load_Limb_Loop:
-    for (int limb = 0; limb < num_active_limbs; ++limb) {
-        // 对每个 limb 进行加载
-        Load_Row_Outer:
-        for (int i = 0; i < SQRT; ++i) {
-            Load_Row_Inner:
-            for (int j = 0; j < SQRT; ++j) {
+    for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
+        LOAD_ROW: 
+        for (int i = 0; i < SQRT; i++) {
+            LOAD_COL: 
+            for (int j = 0; j < SQRT; j++) {
                 #pragma HLS PIPELINE II=1
-                // 计算在 DDR 中的线性地址
-                size_t addr = limb * RING_DIM + i * SQRT + j;
-                dest_local[limb][i][j] = src_ddr[addr];
+        
+                buffer[l][i][j] = mem_in[ (l - mod_index) * RING_DIM + i * SQRT + j];
             }
         }
     }
 }
-
 
 void Store(
-    const uint64_t source_local[MAX_LIMBS][SQRT][SQRT],
-    uint64_t *dest_ddr,
-    int num_active_limbs
+    uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
+    uint64_t *mem_out,
+    const int num_active_limbs,
+    const int mod_index // 【新增】偏移量
 ) {
     #pragma HLS INLINE off
 
-    Store_Limb_Loop:
-    for (int limb = 0; limb < num_active_limbs; ++limb) {
-        // 对每个 limb 进行存储
-        Store_Row_Outer:
-        for (int i = 0; i < SQRT; ++i) {
-            Store_Row_Inner:
-            for (int j = 0; j < SQRT; ++j) {
-                #pragma HLS PIPELINE II=1
-                // 计算在 DDR 中的线性地址
-                size_t addr = limb * RING_DIM + i * SQRT + j;
-                dest_ddr[addr] = source_local[limb][i][j];
+    for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
+        STORE_ROW: 
+        for (int i = 0; i < SQRT; i++) {
+            STORE_COL: 
+            for (int j = 0; j < SQRT; j++) {
+                mem_out[ (l - mod_index) * RING_DIM + i * SQRT + j] = buffer[l][i][j];
             }
         }
     }
 }
-

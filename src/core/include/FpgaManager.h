@@ -35,7 +35,7 @@
 #endif
 
 // =============================================================
-// 2. Definitions (不变)
+// 2. Definitions 
 // =============================================================
 #define OP_INIT   0
 #define OP_ADD    1
@@ -58,7 +58,7 @@ inline std::string GetXclbinPath() {
 }
 
 // =============================================================
-// 3. Math Helpers (增强数论功能)
+// 3. Math Helpers 
 // =============================================================
 class MathUtils {
 public:
@@ -77,7 +77,6 @@ public:
         return Power(n, mod - 2, mod);
     }
 
-    // 欧几里得算法 (GCD)
     static uint64_t GCD(uint64_t a, uint64_t b) {
         while (b) {
             a %= b;
@@ -86,9 +85,6 @@ public:
         return a;
     }
 
-    // [新增] 质因数分解 (简化版，仅适用于 p-1 的因子)
-    // 警告：对于大数的 p-1，这个函数会非常慢或失败。
-    // 在 FHE 中，p-1 应该提前分解好。
     static std::vector<uint64_t> GetPrimeFactors(uint64_t n) {
         std::vector<uint64_t> factors;
         uint64_t temp = n;
@@ -106,17 +102,10 @@ public:
         return factors;
     }
 
-    // [新增] 检查 'a' 是否是素数 'p' 的原根 (SymPy 核心逻辑)
     static bool IsPrimitiveRoot(uint64_t a, uint64_t p) {
         if (GCD(a, p) != 1) return false;
-
-        // 对于素数 p，欧拉函数 phi(p) = p - 1
-        uint64_t phi = p - 1; 
-        
-        // 欧拉判别条件：a^((p-1)/q_i) != 1 (mod p) for all prime factors q_i of (p-1)
+        uint64_t phi = p - 1;  
         std::vector<uint64_t> factors = GetPrimeFactors(phi);
-        
-        // 警告: 如果 GetPrimeFactors 返回错误或不完整，此函数可能失败。
         if (factors.empty()) return false; 
 
         for (uint64_t q_i : factors) {
@@ -129,17 +118,17 @@ public:
         return true;
     }
 
-    // [新增] 搜索最小原根 (g)
+
     static uint64_t FindSmallestPrimitiveRoot(uint64_t p) {
         if (p <= 4) return p - 1;
 
-        // SymPy 逻辑：搜索最小的 g
+     
         for (uint64_t g = 2; g < p; ++g) {
             if (IsPrimitiveRoot(g, p)) {
                 return g; 
             }
         }
-        return 0; // 失败
+        return 0; 
     }
 
 
@@ -186,7 +175,7 @@ public:
 };
 
 // =============================================================
-// 4. FPGA Manager Class (不变)
+// 4. FPGA Manager Class 
 // =============================================================
 class FpgaManager {
 public:
@@ -272,7 +261,7 @@ public:
         const int PARAMS_PER_LIMB = 3; // MOD, K, M
         
         // Buf1: Only Q moduli data (Params + NTT Twiddles)
-        size_t buf1_size = n_q * PARAMS_PER_LIMB + n_q * N;
+        size_t buf1_size = n_q * PARAMS_PER_LIMB + total_limbs * N;
         std::vector<uint64_t> buf1_Q(buf1_size);
 
         for(size_t i=0; i<n_q; i++) {
@@ -284,11 +273,11 @@ public:
         memcpy(
             buf1_Q.data() + n_q * PARAMS_PER_LIMB, 
             permuted_ntt.data(), 
-            n_q * N * sizeof(uint64_t)
+            total_limbs * N * sizeof(uint64_t)
         );
 
         // Buf2: Only P moduli data (Params + INTT Twiddles)
-        size_t buf2_size = n_p * PARAMS_PER_LIMB + n_p * N;
+        size_t buf2_size = n_p * PARAMS_PER_LIMB + total_limbs * N;
         std::vector<uint64_t> buf2_P(buf2_size);
 
         for(size_t i=0; i<n_p; i++) {
@@ -299,8 +288,9 @@ public:
         }
         // Copy INTT twiddles for P limbs (从 permuted_intt 的第 n_q 个 limb 开始)
         memcpy(buf2_P.data() + n_p * PARAMS_PER_LIMB, 
-               permuted_intt.data() + n_q * N, 
-               n_p * N * sizeof(uint64_t));
+               permuted_intt.data() + total_limbs * N, 
+               total_limbs * N * sizeof(uint64_t)
+            );
 
         // 7. Send to FPGA (OP_INIT)
         auto bo_1 = xrt::bo(m_device, buf1_Q.size() * sizeof(uint64_t), m_kernel_top.group_id(0));
@@ -352,6 +342,7 @@ public:
 
             auto run = m_kernel_top(bo_in1, bo_in2, bo_out, opcode, num_limbs, mod_idx);
             run.wait();
+            
 
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
             bo_out.read(out);
@@ -372,26 +363,31 @@ public:
     }
 
     void NttForwardOffload(const uint64_t* in, uint64_t* out, uint64_t modulus, size_t n) {
+        std::cout << "=== [FPGA] Execute NTT ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_NTT, in, nullptr, out, 1, mod_idx); 
     }
 
     void NttInverseOffload(const uint64_t* in, uint64_t* out, uint64_t modulus, size_t n) {
+        std::cout << "=== [FPGA] Execute INTT ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_INTT, in, nullptr, out, 1, mod_idx);
     }
 
     void ModMultOffload(const uint64_t* a, const uint64_t* b, uint64_t* result, uint64_t modulus, size_t n) {
+        std::cout << "=== [FPGA] Execute Mult ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_MULT, a, b, result, 1, mod_idx);
     }
 
     void ModAddOffload(const uint64_t* a, const uint64_t* b, uint64_t* result, uint64_t modulus, size_t n) {
+        std::cout << "=== [FPGA] Execute Add ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_ADD, a, b, result, 1, mod_idx);
     }
     
     void ModSubOffload(const uint64_t* a, const uint64_t* b, uint64_t* result, uint64_t modulus, size_t n) {
+        std::cout << "=== [FPGA] Execute Sub ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_SUB, a, b, result, 1, mod_idx);
     }

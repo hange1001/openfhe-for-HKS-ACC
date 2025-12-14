@@ -96,54 +96,51 @@ void Top(
             break;
             
         case OP_ADD:
-            Load(mem_in1, poly_buffer_1, num_active_limbs);
-            Load(mem_in2, poly_buffer_2, num_active_limbs);
-            Compute_Add(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, num_active_limbs);
-            Store(result_buffer, mem_out, num_active_limbs);
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+            Load(mem_in2, poly_buffer_2, num_active_limbs, mod_index);
+            Compute_Add(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, num_active_limbs, mod_index);
+            Store(result_buffer, mem_out, num_active_limbs, mod_index);
             break;
 
         case OP_SUB:
-            Load(mem_in1, poly_buffer_1, num_active_limbs);
-            Load(mem_in2, poly_buffer_2, num_active_limbs);
-            Compute_Sub(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, num_active_limbs);
-            Store(result_buffer, mem_out, num_active_limbs);
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+            Load(mem_in2, poly_buffer_2, num_active_limbs, mod_index);
+            Compute_Sub(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, num_active_limbs, mod_index);
+            Store(result_buffer, mem_out, num_active_limbs, mod_index);
             break;
 
         case OP_MUL:
-            Load(mem_in1, poly_buffer_1, num_active_limbs);
-            Load(mem_in2, poly_buffer_2, num_active_limbs);
-            Compute_Mult(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, K_HALF, M, num_active_limbs);
-            Store(result_buffer, mem_out, num_active_limbs);
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+            Load(mem_in2, poly_buffer_2, num_active_limbs, mod_index);
+            Compute_Mult(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, K_HALF, M, num_active_limbs, mod_index);
+            Store(result_buffer, mem_out, num_active_limbs, mod_index);
             break;
 
 
         case OP_NTT:
-            Load(mem_in1, poly_buffer_1, num_active_limbs);
-            for (int l = 0; l < num_active_limbs; l++){
-                l = l + mod_index;
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+    
+            for (int l = 0; l < MAX_LIMBS; l++){
                 InterLeave(poly_buffer_1[l], true);
             }
-            std::cout << "Starting NTT Compute on FPGA..." << std::endl;
-            std::cout << "limbs: " << num_active_limbs << " mod_index: " << mod_index << std::endl;
-            std::cout << "First modulus: " << MODULUS[mod_index] << std::endl;
             
             Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, true, num_active_limbs, mod_index);
             
-            std::cout << "Finished NTT Compute on FPGA." << std::endl;
-            
-            Store(poly_buffer_1, mem_out, num_active_limbs);
+
+            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
 
         case OP_INTT:
-            Load(mem_in1, poly_buffer_1, num_active_limbs);
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
             
          
             Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, false, num_active_limbs, mod_index);
-            for (int l = 0; l < num_active_limbs; l++){
-                l = l + mod_index;
+
+            for (int l = 0; l < MAX_LIMBS; l++){
+          
                 InterLeave(poly_buffer_1[l], false);
             }
-            Store(poly_buffer_1, mem_out, num_active_limbs);
+            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
 
     }

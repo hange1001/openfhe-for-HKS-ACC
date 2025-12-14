@@ -13,14 +13,12 @@ void Compute_Mult(
 ) {
 
     Limb_Loop:
-    for (int r = 0; r < LIMB_Q+LIMB_P; r++) {
-        if (r >= num_active_limbs) break;
-        uint64_t q = MODULUS[r + mod_idx_offset]; 
-        uint64_t k_half = K_HALF[r + mod_idx_offset];
-        uint64_t m = M[r + mod_idx_offset];
+    for (int r = mod_idx_offset; r < num_active_limbs + mod_idx_offset; r++) {
+        uint64_t q = MODULUS[r]; 
+        uint64_t k_half = K_HALF[r];
+        uint64_t m = M[r];
         Row_Loop:
         for (int i = 0; i < SQRT; i++) {
-            
             Col_Loop:
             for (int j = 0; j < SQRT; j++) {
                 #pragma HLS PIPELINE II=1

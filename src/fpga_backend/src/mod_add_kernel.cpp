@@ -14,12 +14,10 @@ void Compute_Add(
 ) {
 
     Limb_Loop:
-    for (int r = 0; r < MAX_LIMBS; r++) {
-        if (r >= num_active_limbs) break;
-        uint64_t q = MODULUS[r + mod_idx_offset]; 
+    for (int r = mod_idx_offset; r < num_active_limbs + mod_idx_offset; r++) {
+        uint64_t q = MODULUS[r]; 
         Row_Loop:
-        for (int i = 0; i < SQRT; i++) {
-            
+        for (int i = 0; i < SQRT; i++) { 
             Col_Loop:
             for (int j = 0; j < SQRT; j++) {
                 #pragma HLS PIPELINE II=1

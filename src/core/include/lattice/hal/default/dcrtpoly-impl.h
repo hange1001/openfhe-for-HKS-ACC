@@ -433,6 +433,8 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) cons
 
             size_t   n   = vec_a.GetLength();
             uint64_t mod = vec_a.GetModulus().ConvertToInt();
+            std::cout << "Vector Length: " << n << std::endl;
+            std::cout << "Current Modulus: " << mod << std::endl;
 
             const uint64_t* pa = reinterpret_cast<const uint64_t*>(&vec_a[0]);
             const uint64_t* pb = reinterpret_cast<const uint64_t*>(&vec_b[0]);
@@ -453,6 +455,108 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) cons
         tmp.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
     return tmp;
 }
+
+// template <typename VecType>
+// DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) const {
+//     if (m_params->GetRingDimension() != rhs.m_params->GetRingDimension())
+//         OPENFHE_THROW("RingDimension mismatch");
+//     if (m_format != rhs.m_format)
+//         OPENFHE_THROW("Format mismatch");
+//     size_t size{m_vectors.size()};
+//     if (size != rhs.m_vectors.size())
+//         OPENFHE_THROW("tower size mismatch; cannot subtract");
+//     if (m_vectors[0].GetModulus() != rhs.m_vectors[0].GetModulus())
+//         OPENFHE_THROW("Modulus mismatch");
+
+// #ifdef OPENFHE_FPGA_ENABLE
+//     bool use_fpga = false;
+//     auto& fpga = FpgaManager::GetInstance();
+//     use_fpga = fpga.IsReady();
+    
+//     // 首先计算CPU结果作为基准
+//     DCRTPolyImpl<VecType> cpu_result(m_params, m_format);
+//     #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
+//     for (size_t i = 0; i < size; ++i)
+//         cpu_result.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
+    
+//     if (use_fpga) {
+//         // 计算FPGA结果
+//         DCRTPolyImpl<VecType> fpga_result(m_params, m_format);
+        
+//         for (size_t i = 0; i < size; ++i) {
+//             const auto& vec_a = m_vectors[i];
+//             const auto& vec_b = rhs.m_vectors[i];
+//             auto& vec_r = fpga_result.m_vectors[i];
+            
+//             vec_r = vec_a;  // 初始化vec_r
+            
+//             size_t n = vec_a.GetLength();
+//             uint64_t mod = vec_a.GetModulus().ConvertToInt();
+
+//             const uint64_t* pa = reinterpret_cast<const uint64_t*>(&vec_a[0]);
+//             const uint64_t* pb = reinterpret_cast<const uint64_t*>(&vec_b[0]);
+//             uint64_t* pr = reinterpret_cast<uint64_t*>(&vec_r[0]);
+            
+//             fpga.ModSubOffload(pa, pb, pr, mod, n);
+//         }
+        
+//         // 比较结果
+//         bool all_equal = true;
+//         int mismatch_count = 0;
+//         const int MAX_MISMATCHES_TO_PRINT = 1;
+        
+//         for (size_t i = 0; i < size; ++i) {
+//             const auto& cpu_vec = cpu_result.m_vectors[i];
+//             const auto& fpga_vec = fpga_result.m_vectors[i];
+            
+//             if (cpu_vec.GetLength() != fpga_vec.GetLength()) {
+//                 std::cerr << "ERROR: Vector length mismatch at tower " << i 
+//                           << ": CPU=" << cpu_vec.GetLength() 
+//                           << ", FPGA=" << fpga_vec.GetLength() << std::endl;
+//                 all_equal = false;
+//                 break;
+//             }
+            
+//             for (size_t j = 0; j < cpu_vec.GetLength(); ++j) {
+//                 if (cpu_vec[j] != fpga_vec[j]) {
+//                     if (mismatch_count < MAX_MISMATCHES_TO_PRINT) {
+//                         std::cerr << "ERROR: Mismatch at tower " << i 
+//                                   << ", index " << j 
+//                                   << ": CPU=" << cpu_vec[j] 
+//                                   << ", FPGA=" << fpga_vec[j] 
+//                                   << " (mod " << m_vectors[i].GetModulus() << ")" << std::endl;
+//                     }
+//                     mismatch_count++;
+//                     all_equal = false;
+//                 }
+//             }
+//         }
+        
+//         if (!all_equal) {
+//             std::cerr << "WARNING: FPGA and CPU results differ! Mismatches: " 
+//                       << mismatch_count << std::endl;
+            
+//             // 你可以选择抛出异常或继续执行
+//             // OPENFHE_THROW("FPGA and CPU results mismatch");
+            
+//             // 或者返回CPU结果（更可靠）
+//             return cpu_result;
+//         } else {
+//             std::cout << "SUCCESS: FPGA and CPU results match perfectly!" << std::endl;
+//             return fpga_result;
+//         }
+//     } else {
+//         // FPGA不可用，直接返回CPU结果
+//         return cpu_result;
+//     }
+// #else // 如果没有定义OPENFHE_FPGA_ENABLE，直接走CPU路径
+//     DCRTPolyImpl<VecType> cpu_result(m_params, m_format);
+//     #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
+//     for (size_t i = 0; i < size; ++i)
+//         cpu_result.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
+//     return cpu_result;
+// #endif // OPENFHE_FPGA_ENABLE
+// }
 
 
 
