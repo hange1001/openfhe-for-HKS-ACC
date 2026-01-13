@@ -31,7 +31,7 @@ KERNEL_SRC += $(SRC_DIR)/mod_sub_kernel.cpp
 KERNEL_NAME := Top
 
 # OpenFHE 路径
-OPENFHE_ROOT := /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe-development-1.4.0
+OPENFHE_ROOT := /home/timhan/FHE/openfhe
 OPENFHE_INC  := -I$(OPENFHE_ROOT)/src/pke/include \
                 -I$(OPENFHE_ROOT)/src/core/include \
                 -I$(OPENFHE_ROOT)/build/src/core \

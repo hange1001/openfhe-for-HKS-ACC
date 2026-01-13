@@ -1254,10 +1254,81 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::ApproxSwitchCRTBasis(
     uint32_t sizeQ = (m_vectors.size() > paramsQ->GetParams().size()) ? paramsQ->GetParams().size() : m_vectors.size();
     uint32_t sizeP = ans.m_vectors.size();
 
+    // [修复] 必须在这里定义 ringDim，因为下面的 FPGA 代码要用！
+    uint32_t ringDim = m_params->GetRingDimension();
+
+    // ================= [START] FPGA Hook =================
+    #ifdef OPENFHE_FPGA_ENABLE
+    if (FpgaManager::GetInstance().IsReady()) {
+        auto& fpga = FpgaManager::GetInstance();
+        // 硬件尺寸定义 (需匹配硬件 HLS 中的 macro 定义)
+        const uint32_t HW_SIZE_Q = 4; // 假设 HLS 一次处理 4 个输入 Limb
+        // const uint32_t HW_SIZE_P = 4; // 暂时用不到，因为我们是逐个 P 计算
+
+        // 简单的维度检查，防止越界
+        if (sizeQ <= HW_SIZE_Q) { // 只要 Q 不超标即可
+
+            // 1. 准备输入数据 (Pre-computation + Transpose + Padding)
+            // 布局: [ringDim][HW_SIZE_Q] -> Coefficient Major
+            // 这是一个 N 行 HW_SIZE_Q 列的矩阵
+            std::vector<uint64_t> flat_inputs(ringDim * HW_SIZE_Q, 0);
+
+            for (uint32_t ri = 0; ri < ringDim; ++ri) {
+                for (uint32_t i = 0; i < sizeQ; ++i) {
+                    const auto& qi = m_vectors[i].GetModulus();
+                    NativeInteger tmp = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i]);
+                    flat_inputs[ri * HW_SIZE_Q + i] = tmp.ConvertToInt();
+                }
+            }
+
+            // 2. 逐列调用 FPGA (Column-wise)
+            // 每次循环计算 1 个目标 P 模数下的结果
+            for (uint32_t j = 0; j < sizeP; ++j) {
+                const auto& pj = ans.m_vectors[j].GetModulus();
+                uint64_t mod_val = pj.ConvertToInt();
+
+                // [DEBUG]
+                // std::cout << "[DEBUG] FPGA Call j=" << j << ", Modulus=" << mod_val << std::endl;
+                
+                // 2.1 准备权重 W (第 j 列)
+                // 【修正 1】权重应当是紧密排列的向量，大小为 HW_SIZE_Q (为了对齐输入)
+                std::vector<uint64_t> flat_weights(HW_SIZE_Q, 0);
+                for (uint32_t i = 0; i < sizeQ; ++i) {
+                    flat_weights[i] = QHatModp[i][j].ConvertToInt();
+                }
+
+                // 2.2 准备输出
+                // 【修正 2】输出应当是紧密排列的 N 个系数
+                std::vector<uint64_t> flat_outputs(ringDim, 0);
+
+                // 2.3 Offload
+                fpga.BConvOffload(
+                    flat_inputs.data(),
+                    flat_weights.data(),
+                    flat_outputs.data(),
+                    mod_val,
+                    ringDim,
+                    sizeQ  // 传入实际有效 limb 数
+                );
+
+                // 2.4 填回结果
+                for (uint32_t ri = 0; ri < ringDim; ++ri) {
+                    // 【修正 3】紧密读取
+                    ans.m_vectors[j][ri] = NativeInteger(flat_outputs[ri]);
+                }
+            }
+            
+            // FPGA 完成，直接返回结果
+            return ans;
+        }
+    }
+    #endif
+    // ================= [END] FPGA Hook =================
+
     // std::cout << "Bconv operation" << std::endl;
 #if defined(HAVE_INT128) && (NATIVEINT == 64) && !defined(WITH_REDUCED_NOISE) && \
     (defined(WITH_OPENMP) || (defined(__clang__) && !defined(WITH_NATIVEOPT)))
-    uint32_t ringDim = m_params->GetRingDimension();
+    //uint32_t ringDim = m_params->GetRingDimension();
     std::vector<DoubleNativeInt> sum(sizeP);
     #pragma omp parallel for firstprivate(sum) num_threads(OpenFHEParallelControls.GetThreadLimit(8))
     for (uint32_t ri = 0; ri < ringDim; ++ri) {
@@ -2100,6 +2171,7 @@ void DCRTPolyImpl<VecType>::FastBaseConvqToBskMontgomery(
             result_mtilde[k] += ximtildeQHatModqi[i * n + k].ConvertToInt<uint64_t>() * qHatModmtildei;
         }
     }
+    
     for (uint32_t k = 0; k < n; ++k) {
         result_mtilde[k] &= mtilde_minus_1;
         result_mtilde[k] *= negQInvModmtilde;

@@ -6,15 +6,20 @@
 #include "mod_mult_kernel.cpp"
 #include "mod_add_kernel.cpp"
 #include "mod_sub_kernel.cpp"
+#include "../bconv.cpp"
 
 
 
 // -------------------------
-// Store the Memory
+// Store the Memory--TODO：testing
 // -------------------------
 static uint64_t poly_buffer_1[MAX_LIMBS][SQRT][SQRT];
 static uint64_t poly_buffer_2[MAX_LIMBS][SQRT][SQRT];
 static uint64_t result_buffer[MAX_LIMBS][SQRT][SQRT];
+//bconv data buffers
+static uint64_t bconv_x_buffer[MAX_LIMBS][SQRT][SQRT];
+static uint64_t bconv_weight_buffer[MAX_LIMBS][SQRT][SQRT];
+static uint64_t bconv_result_buffer[MAX_LIMBS][SQRT][SQRT];
 
 // -------------------------
 // Store the Modulus
@@ -143,11 +148,20 @@ void Top(
             Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
 
-        // case OP_BCONV:
+        // case OP_BCONV: --TODO:testing
             // Load
             // BConv
             // Store
             // break;
+        case OP_BCONV:
+            Load(mem_in1, bconv_x_buffer, num_active_limbs, mod_index); //input x
+            Load(mem_in2, bconv_weight_buffer, LIMB_Q, 0); //weights w
+
+            Compute_BConv(bconv_x_buffer, bconv_weight_buffer, bconv_result_buffer, MODULUS, num_active_limbs, mod_index);
+
+            Store(bconv_result_buffer, mem_out, num_active_limbs, mod_index);
+            break;
+            
 
     }
 

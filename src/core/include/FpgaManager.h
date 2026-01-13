@@ -52,7 +52,7 @@
 inline std::string GetXclbinPath() {
     const char* mode = std::getenv("XCL_EMULATION_MODE");
     // 请根据你的实际路径修改 Base Path
-    std::string base = "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe-development-1.4.0/src/fpga_backend/";
+    std::string base = "/home/timhan/FHE/openfhe/src/fpga_backend/";
     if (mode && std::string(mode) == "sw_emu") 
         return base + "fhe_kernels_sw_emu.xclbin";
     else if (mode && std::string(mode) == "hw_emu") 
@@ -191,29 +191,60 @@ public:
 
     bool IsReady() const { return m_is_ready; }
 
-    // ----------------------------------------------------------------------
+ // ----------------------------------------------------------------------
     // InitModuli: Compute -> Index -> Permute -> Pack
     // ----------------------------------------------------------------------
     void InitModuli(const std::vector<uint64_t>& q_mods, const std::vector<uint64_t>& p_mods) {
     #ifdef OPENFHE_FPGA_ENABLE
         if (!m_is_ready) return;
         
-        size_t n_q = q_mods.size();
+        // 【核心修复】硬件被锁定为 4 (由日志 MODULUS[3]=16 证实)
+        // 我们必须主动填充空洞，把 P 模数顶到 Index 4 的位置
+        const size_t HARDWARE_LIMB_Q = 4; 
+
+        size_t n_q_real = q_mods.size();
         size_t n_p = p_mods.size();
-        size_t total_limbs = n_q + n_p;
+        
+        // 自动计算对齐：如果真实 Q < 4，则对齐到 4
+        // 这样就把 HARDWARE_LIMB_Q 用起来了，不会报 unused variable
+        size_t n_q_aligned = std::max(n_q_real, HARDWARE_LIMB_Q);
+        
+        // 总 Limb 数 (对齐后)
+        size_t total_limbs_aligned = n_q_aligned + n_p; 
+        
         const int N = FPGA_RING_DIM;
 
-        std::cout << "[Host] Initializing FPGA with Q=" << n_q << ", P=" << n_p << " limbs..." << std::endl;
+        std::cout << "[Host] InitModuli (Auto-Padding): Real Q=" << n_q_real 
+                  << " -> Aligned to " << n_q_aligned 
+                  << ". P starts at Index " << n_q_aligned << std::endl;
 
-        // 1. 保存所有 Modulus 以便后续查找 mod_idx
+        // 1. 重构 stored_moduli (用于 GetModIndex 查找)
+        // 目标布局: [Q0, Q1, Q2, PAD, P0, P1] -> P0 索引变为 4
         m_stored_moduli.clear();
+        
+        // 1.1 填入真实 Q
         m_stored_moduli.insert(m_stored_moduli.end(), q_mods.begin(), q_mods.end());
+        
+        // 1.2 填充空洞 (Padding)
+        // 填入 1 是为了防止某些数学库在预计算时除以 0
+        if (n_q_real < n_q_aligned) {
+            size_t padding = n_q_aligned - n_q_real;
+            for(size_t k=0; k<padding; k++) {
+                m_stored_moduli.push_back(1); 
+            }
+        }
+
+        // 1.3 填入 P (此时 P 的起始索引就被顶到了 4，与硬件对齐！)
         m_stored_moduli.insert(m_stored_moduli.end(), p_mods.begin(), p_mods.end());
 
         // 2. Compute Constants K and M (Barrett Reduction)
-        std::vector<uint64_t> K_vals(total_limbs), M_vals(total_limbs);
-        for(size_t i=0; i<total_limbs; i++) {
+        std::vector<uint64_t> K_vals(total_limbs_aligned), M_vals(total_limbs_aligned);
+        for(size_t i=0; i<total_limbs_aligned; i++) {
             uint64_t p = m_stored_moduli[i];
+            if (p <= 1) { 
+                K_vals[i] = 0; M_vals[i] = 0; 
+                continue; 
+            }
             int k = (int)std::ceil(std::log2((double)p));
             unsigned __int128 power = (unsigned __int128)1 << (2 * k);
             uint64_t m = (uint64_t)(power / p);
@@ -221,15 +252,14 @@ public:
             M_vals[i] = m;
         }
 
-        // 3. Compute Standard Twiddle Factors (Linear Order)
-        std::vector<uint64_t> all_ntt_twiddles(total_limbs * N);
-        std::vector<uint64_t> all_intt_twiddles(total_limbs * N);
+        // 3. Compute Twiddles (Base on Aligned Total Limbs)
+        std::vector<uint64_t> all_ntt_twiddles(total_limbs_aligned * N);
+        std::vector<uint64_t> all_intt_twiddles(total_limbs_aligned * N);
 
-        for(size_t limb = 0; limb < total_limbs; limb++) {
+        for(size_t limb = 0; limb < total_limbs_aligned; limb++) {
             uint64_t mod = m_stored_moduli[limb];
-            
-        
-            // psi: 2N-th root of unity (Base for powers of w)
+            if (mod <= 1) continue; 
+
             uint64_t psi = MathUtils::Find2NthRootOfUnity(mod, N); 
             uint64_t psi_inv = MathUtils::ModInverse(psi, mod);
 
@@ -239,21 +269,17 @@ public:
             for(int i = 0; i < N; i++) {
                 all_ntt_twiddles[limb * N + i] = w;
                 all_intt_twiddles[limb * N + i] = w_inv;
-                
-                // Iteratively multiply by omega (tf_root)
                 w = ((unsigned __int128)w * psi) % mod;
                 w_inv = ((unsigned __int128)w_inv * psi_inv) % mod;
             }
         }
 
-        // 4. Generate Permutation Indices
+        // 4. Permute Twiddles
         std::vector<int> perm_index = MathUtils::GenerateTwiddleIndices(N);
+        std::vector<uint64_t> permuted_ntt(total_limbs_aligned * N);
+        std::vector<uint64_t> permuted_intt(total_limbs_aligned * N);
 
-        // 5. Permute Twiddle Factors
-        std::vector<uint64_t> permuted_ntt(total_limbs * N);
-        std::vector<uint64_t> permuted_intt(total_limbs * N);
-
-        for (size_t limb = 0; limb < total_limbs; limb++) {
+        for (size_t limb = 0; limb < total_limbs_aligned; limb++) {
             size_t base_offset = limb * N;
             for (size_t i = 0; i < perm_index.size(); ++i) {
                 permuted_ntt[base_offset + i]  = all_ntt_twiddles[base_offset + perm_index[i]];
@@ -261,46 +287,49 @@ public:
             }
         }
 
-
-
+        // ============================================================
+        // 5. Pack Buffers (发送给 FPGA)
+        // ============================================================
         const int PARAMS_PER_LIMB = 3; // MOD, K, M
         
-        // Buf1: Only Q moduli data (Params + NTT Twiddles)
-        size_t buf1_size = n_q * PARAMS_PER_LIMB + total_limbs * N;
+        // --- Buffer 1 (Q Params + NTT Twiddles) ---
+        // 关键：必须按照 n_q_aligned (4) 来打包头部
+        size_t buf1_size = n_q_aligned * PARAMS_PER_LIMB + total_limbs_aligned * N;
         std::vector<uint64_t> buf1_Q(buf1_size);
 
-        for(size_t i=0; i<n_q; i++) {
-            buf1_Q[i] = m_stored_moduli[i];            // MOD
-            buf1_Q[n_q + i] = K_vals[i];               // K
-            buf1_Q[n_q*2 + i] = M_vals[i];             // M
+        for(size_t i=0; i<n_q_aligned; i++) {
+            buf1_Q[i] = m_stored_moduli[i];                   // MOD
+            buf1_Q[n_q_aligned + i] = K_vals[i];              // K
+            buf1_Q[n_q_aligned*2 + i] = M_vals[i];            // M
         }
-        // Copy NTT twiddles for Q limbs (前 n_q 个 limb)
+        // Copy NTT Twiddles (offset 会自动对齐)
         memcpy(
-            buf1_Q.data() + n_q * PARAMS_PER_LIMB, 
+            buf1_Q.data() + n_q_aligned * PARAMS_PER_LIMB, 
             permuted_ntt.data(), 
-            total_limbs * N * sizeof(uint64_t)
+            total_limbs_aligned * N * sizeof(uint64_t)
         );
 
-        // Buf2: Only P moduli data (Params + INTT Twiddles)
-        size_t buf2_size = n_p * PARAMS_PER_LIMB + total_limbs * N;
+        // --- Buffer 2 (P Params + INTT Twiddles) ---
+        size_t buf2_size = n_p * PARAMS_PER_LIMB + total_limbs_aligned * N;
         std::vector<uint64_t> buf2_P(buf2_size);
 
         for(size_t i=0; i<n_p; i++) {
-            size_t global_idx = n_q + i; // Offset into global arrays
+            // P 在 stored_moduli 中的索引从 4 开始
+            size_t global_idx = n_q_aligned + i; 
             buf2_P[i] = m_stored_moduli[global_idx];        // MOD
             buf2_P[n_p + i] = K_vals[global_idx];           // K
             buf2_P[n_p*2 + i] = M_vals[global_idx];         // M
         }
-        // Copy INTT twiddles for P limbs (从 permuted_intt 的第 n_q 个 limb 开始)
+        // Copy INTT Twiddles
         memcpy(buf2_P.data() + n_p * PARAMS_PER_LIMB, 
-               permuted_intt.data() + total_limbs * N, 
-               total_limbs * N * sizeof(uint64_t)
+               permuted_intt.data(), 
+               total_limbs_aligned * N * sizeof(uint64_t)
             );
 
         // 7. Send to FPGA (OP_INIT)
         auto bo_1 = xrt::bo(m_device, buf1_Q.size() * sizeof(uint64_t), m_kernel_top.group_id(0));
         auto bo_2 = xrt::bo(m_device, buf2_P.size() * sizeof(uint64_t), m_kernel_top.group_id(1));
-        auto bo_out = xrt::bo(m_device, 8, m_kernel_top.group_id(2)); // Dummy Output BO
+        auto bo_out = xrt::bo(m_device, 8, m_kernel_top.group_id(2)); 
 
         bo_1.write(buf1_Q.data());
         bo_2.write(buf2_P.data());
@@ -315,7 +344,7 @@ public:
         std::cout << "[Host] FPGA Parameter Init Complete." << std::endl;
     #endif
     }
-
+    
     // --- 其他函数 (Execute, Wrappers) 保持不变 ---
     void Execute(
         uint8_t opcode, 
@@ -397,8 +426,16 @@ public:
         Execute(OP_SUB, a, b, result, 1, mod_idx);
     }
 
+    //TODO:testing
+    // void BConvOffload(...) n是什么，要加吗
+    void BConvOffload(const uint64_t* x,const uint64_t* w, uint64_t* result, uint64_t modulus,size_t n, size_t num_q_limbs) {
+        std::cout << "=== [FPGA] Execute BConv ===" << std::endl;
+        std::cout << " num_limbs=" << num_q_limbs << std::endl;
 
-    // void BConvOffload(...) 
+        int mod_idx = GetModIndex(modulus);
+        Execute(OP_BCONV, x, w, result, num_q_limbs, mod_idx);
+    }
+    //看top.cpp的bconv_systolic函数最后一个参数是num_limbs，这里暂时写1
 
 private:
 #ifdef OPENFHE_FPGA_ENABLE

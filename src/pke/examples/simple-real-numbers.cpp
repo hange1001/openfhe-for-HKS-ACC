@@ -107,6 +107,53 @@ int main() {
     // ======================================================================
 
 
+    // ======================================================================
+    // 【DEBUG: FPGA BConv 独立单元测试】
+    // ======================================================================
+    if (FpgaManager::GetInstance().IsReady() && !fpga_q_mods.empty()) {
+        std::cout << "\n------------------------------------------------" << std::endl;
+        std::cout << " [DEBUG] Running BConv Unit Test..." << std::endl;
+        std::cout << "------------------------------------------------" << std::endl;
+
+        // 1. 准备参数
+        uint64_t test_mod = fpga_q_mods[0]; 
+        size_t N = cc->GetRingDimension(); // 4096
+        
+        // 【关键修改 1】先把 num_limbs 拿出来
+        size_t num_limbs = fpga_q_mods.size(); 
+        std::cout << " [DEBUG] Config: N=" << N << ", Limbs=" << num_limbs << std::endl;
+
+        // 【关键修改 2】分配内存时乘以 num_limbs
+        // 防止 FPGA 读写越界 (Buffer Overflow)
+        std::vector<uint64_t> host_x(N * num_limbs, 1);
+        std::vector<uint64_t> host_w(N * num_limbs, 2); 
+        std::vector<uint64_t> host_res(N * num_limbs, 0);
+
+        // 2. 调用 FPGA
+        try {
+            FpgaManager::GetInstance().BConvOffload(
+                host_x.data(), 
+                host_w.data(), 
+                host_res.data(), 
+                test_mod, 
+                N,
+                num_limbs
+            );
+
+            std::cout << " [DEBUG] BConv Call Finished." << std::endl;
+            // 3. 简单的结果检查
+            std::cout << " [DEBUG] Result[0]: " << host_res[0] << std::endl;
+            // 检查最后一个 Limb 的数据，确保 FPGA 真的算到了那里
+            std::cout << " [DEBUG] Result[last]: " << host_res[(num_limbs-1)*N] << std::endl;
+        } catch (const std::exception& e) {
+             std::cerr << " [DEBUG] BConv Test Failed: " << e.what() << std::endl;
+        }
+        std::cout << "------------------------------------------------\n" << std::endl;
+    }
+    // ======================================================================
+    // 【DEBUG 结束】
+    // ======================================================================
+
     // Enable the features that you wish to use
     cc->Enable(PKE);
     cc->Enable(KEYSWITCH);
