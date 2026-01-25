@@ -1,4 +1,4 @@
-#include "ntt_kernel.h"
+#include "../include/ntt_kernel.h"
 
 void compute_indices(int j, int k, int InputIndex[SQRT], int OutputIndex[SQRT]) {
     generate_input_index(j, k, InputIndex);

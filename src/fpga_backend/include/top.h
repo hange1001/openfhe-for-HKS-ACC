@@ -18,7 +18,7 @@ extern "C" {
         uint64_t *mem_out,
         const uint8_t opcode,
         const int num_active_limbs,
-        const int mod_index = 0
+        const int mod_index
     );
 }
 

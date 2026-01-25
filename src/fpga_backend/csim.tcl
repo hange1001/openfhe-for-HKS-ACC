@@ -1,19 +1,22 @@
 open_project Solution
-set_top AddMod   ;# 这里设为 AddMod 或者你的顶层函数名都可以
+
+# 使用 Compute_BConv 作为顶层函数 (3D 数组接口)
+set_top Compute_BConv
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
-# 1. 添加设计文件 (src)
-foreach source_file [glob -nocomplain ./src/*.cpp] {
-    add_files $source_file -cflags $my_cflags
-}
+# 添加源文件
+add_files ./src/bconv.cpp -cflags $my_cflags
+add_files ./src/arithmetic.cpp -cflags $my_cflags
 
-foreach test_file [glob -nocomplain ./test/*.cpp] {
-    add_files $test_file -cflags $my_cflags -tb
-}
+# 添加测试文件
+add_files ./bconv_test.cpp -cflags $my_cflags -tb
+
 open_solution "solution1"
 set_part xcu250-figd2104-2l-e
 create_clock -period 4ns
 
+# 运行 C 仿真
 csim_design
+
 exit

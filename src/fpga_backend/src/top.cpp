@@ -1,12 +1,12 @@
 #include "../include/top.h"
-#include "load.cpp"
-#include "arithmetic.cpp"
-#include "ntt_kernel.cpp"
-#include "interleave.cpp"
-#include "mod_mult_kernel.cpp"
-#include "mod_add_kernel.cpp"
-#include "mod_sub_kernel.cpp"
-#include "../bconv.cpp"
+#include "../include/load.h"
+#include "../include/arithmetic.h"
+#include "../include/ntt_kernel.h"
+#include "../include/interleave.h"
+#include "../include/mod_mult_kernel.h"
+#include "../include/mod_add_kernel.h"
+#include "../include/mod_sub_kernel.h"
+#include "../include/bconv.h"
 
 
 
@@ -16,10 +16,7 @@
 static uint64_t poly_buffer_1[MAX_LIMBS][SQRT][SQRT];
 static uint64_t poly_buffer_2[MAX_LIMBS][SQRT][SQRT];
 static uint64_t result_buffer[MAX_LIMBS][SQRT][SQRT];
-//bconv data buffers
-static uint64_t bconv_x_buffer[MAX_LIMBS][SQRT][SQRT];
-static uint64_t bconv_weight_buffer[MAX_LIMBS][SQRT][SQRT];
-static uint64_t bconv_result_buffer[MAX_LIMBS][SQRT][SQRT];
+
 
 // -------------------------
 // Store the Modulus
@@ -65,20 +62,35 @@ void Top(
     #pragma HLS BIND_STORAGE variable=result_buffer type=ram_2p impl=bram
 
     switch(opcode) {
-        case OP_INIT:
+        case OP_INIT: {
             std::cout << "[FPGA] Initializing Modulus Parameters..." << std::endl;
+            
+            // 简单布局：Q模数在索引0,1,2，P模数在索引3,4
+            // 无padding，与Host端一致
+            
             init_Q_Loop:
             for (int i = 0; i < LIMB_Q; i++){
                 MODULUS[i] = mem_in1[i];
                 K_HALF[i] = mem_in1[LIMB_Q + i];
                 M[i] = mem_in1[LIMB_Q*2 + i];
+                
+                #ifndef __SYNTHESIS__
+                std::cout << "[FPGA Init] Q[" << i << "]: MOD=" << MODULUS[i] 
+                          << ", K=" << K_HALF[i] << ", M=" << M[i] << std::endl;
+                #endif
             }
             init_P_Loop:
             for (int j = 0; j < LIMB_P; j++){
+                // P模数从索引LIMB_Q开始，即索引3,4
                 int idx = LIMB_Q + j;
                 MODULUS[idx] = mem_in2[j];
                 K_HALF[idx] = mem_in2[LIMB_P + j];
                 M[idx] = mem_in2[LIMB_P*2 + j];
+                
+                #ifndef __SYNTHESIS__
+                std::cout << "[FPGA Init] P[" << j << "] (idx=" << idx << "): MOD=" << MODULUS[idx] 
+                          << ", K=" << K_HALF[idx] << ", M=" << M[idx] << std::endl;
+                #endif
             }
             init_NTTTwiddle_Loop:
             for (int l = 0; l < LIMB_Q + LIMB_P; l++){
@@ -99,6 +111,7 @@ void Top(
                 }
             }
             break;
+        } 
             
         case OP_ADD:
             Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
@@ -124,46 +137,44 @@ void Top(
 
         case OP_NTT:
             Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-    
             for (int l = 0; l < MAX_LIMBS; l++){
                 InterLeave(poly_buffer_1[l], true);
             }
-            
             Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, true, num_active_limbs, mod_index);
-            
-
             Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
 
         case OP_INTT:
             Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-            
-         
             Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, false, num_active_limbs, mod_index);
-
             for (int l = 0; l < MAX_LIMBS; l++){
-          
                 InterLeave(poly_buffer_1[l], false);
             }
             Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
 
-        // case OP_BCONV: --TODO:testing
-            // Load
-            // BConv
-            // Store
-            // break;
+    
         case OP_BCONV:
-            Load(mem_in1, bconv_x_buffer, num_active_limbs, mod_index); //input x
-            Load(mem_in2, bconv_weight_buffer, LIMB_Q, 0); //weights w
-
-            Compute_BConv(bconv_x_buffer, bconv_weight_buffer, bconv_result_buffer, MODULUS, num_active_limbs, mod_index);
-
-            Store(bconv_result_buffer, mem_out, num_active_limbs, mod_index);
+            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+            static uint64_t in_w[LIMB_Q][LIMB_P];
+            for (int q = 0; q < LIMB_Q; q++){
+                for (int p = 0; p < LIMB_P; p++){
+                    in_w[q][p] = mem_in2[q*LIMB_P + p];
+                }
+            }
+            Compute_BConv(poly_buffer_1, in_w, MODULUS, num_active_limbs, mod_index);
+            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
+            for (int l = 0; l < MAX_LIMBS; l++){
+                for (int row = 0; row < SQRT; row++){
+                    for (int col = 0; col < SQRT; col++){
+                        std::cout << "poly_buffer_1[" << l << "][" << row << "][" << col << "] = " << poly_buffer_1[l][row][col] << std::endl;
+                    }
+                }
+            }
             break;
-            
 
+        default:
+            std::cout << "[FPGA] Unknown opcode: " << opcode << std::endl;
+            break;
     }
-
-                
 }

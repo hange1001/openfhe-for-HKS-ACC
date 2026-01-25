@@ -1,14 +1,22 @@
 open_project Solution
 # 设置你的顶层函数名（请确保它与 C++ 代码中的函数名一致）
-set_top Auto
+set_top Top
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
 # ================= 修改开始 =================
 
 add_files {
-    ./src/auto.cpp
-
+    # add all the source files
+    ./src/top.cpp
+    ./src/load.cpp
+    ./src/arithmetic.cpp
+    ./src/bconv.cpp
+    ./src/mod_add_kernel.cpp
+    ./src/mod_sub_kernel.cpp
+    ./src/mod_mult_kernel.cpp
+    ./src/ntt_kernel.cpp
+    ./src/interleave.cpp
 } -cflags $my_cflags
 
 # ================= 修改结束 =================

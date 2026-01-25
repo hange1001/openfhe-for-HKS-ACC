@@ -39,6 +39,7 @@
 #include "config_core.h"
 
 #include <type_traits>
+#include <iomanip>  // 用于 std::setw 格式化输出
 
 #ifdef OPENFHE_FPGA_ENABLE
     #include "FpgaManager.h"
@@ -433,8 +434,6 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) cons
 
             size_t   n   = vec_a.GetLength();
             uint64_t mod = vec_a.GetModulus().ConvertToInt();
-            std::cout << "Vector Length: " << n << std::endl;
-            std::cout << "Current Modulus: " << mod << std::endl;
 
             const uint64_t* pa = reinterpret_cast<const uint64_t*>(&vec_a[0]);
             const uint64_t* pb = reinterpret_cast<const uint64_t*>(&vec_b[0]);
@@ -449,115 +448,11 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) cons
     }
 #endif // OPENFHE_FPGA_ENABLE
 
-    // 没有 FPGA / 没 ready，走原来的 CPU 分支
 #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
     for (size_t i = 0; i < size; ++i)
         tmp.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
     return tmp;
 }
-
-// template <typename VecType>
-// DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Minus(const DCRTPolyImpl& rhs) const {
-//     if (m_params->GetRingDimension() != rhs.m_params->GetRingDimension())
-//         OPENFHE_THROW("RingDimension mismatch");
-//     if (m_format != rhs.m_format)
-//         OPENFHE_THROW("Format mismatch");
-//     size_t size{m_vectors.size()};
-//     if (size != rhs.m_vectors.size())
-//         OPENFHE_THROW("tower size mismatch; cannot subtract");
-//     if (m_vectors[0].GetModulus() != rhs.m_vectors[0].GetModulus())
-//         OPENFHE_THROW("Modulus mismatch");
-
-// #ifdef OPENFHE_FPGA_ENABLE
-//     bool use_fpga = false;
-//     auto& fpga = FpgaManager::GetInstance();
-//     use_fpga = fpga.IsReady();
-    
-//     // 首先计算CPU结果作为基准
-//     DCRTPolyImpl<VecType> cpu_result(m_params, m_format);
-//     #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
-//     for (size_t i = 0; i < size; ++i)
-//         cpu_result.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
-    
-//     if (use_fpga) {
-//         // 计算FPGA结果
-//         DCRTPolyImpl<VecType> fpga_result(m_params, m_format);
-        
-//         for (size_t i = 0; i < size; ++i) {
-//             const auto& vec_a = m_vectors[i];
-//             const auto& vec_b = rhs.m_vectors[i];
-//             auto& vec_r = fpga_result.m_vectors[i];
-            
-//             vec_r = vec_a;  // 初始化vec_r
-            
-//             size_t n = vec_a.GetLength();
-//             uint64_t mod = vec_a.GetModulus().ConvertToInt();
-
-//             const uint64_t* pa = reinterpret_cast<const uint64_t*>(&vec_a[0]);
-//             const uint64_t* pb = reinterpret_cast<const uint64_t*>(&vec_b[0]);
-//             uint64_t* pr = reinterpret_cast<uint64_t*>(&vec_r[0]);
-            
-//             fpga.ModSubOffload(pa, pb, pr, mod, n);
-//         }
-        
-//         // 比较结果
-//         bool all_equal = true;
-//         int mismatch_count = 0;
-//         const int MAX_MISMATCHES_TO_PRINT = 1;
-        
-//         for (size_t i = 0; i < size; ++i) {
-//             const auto& cpu_vec = cpu_result.m_vectors[i];
-//             const auto& fpga_vec = fpga_result.m_vectors[i];
-            
-//             if (cpu_vec.GetLength() != fpga_vec.GetLength()) {
-//                 std::cerr << "ERROR: Vector length mismatch at tower " << i 
-//                           << ": CPU=" << cpu_vec.GetLength() 
-//                           << ", FPGA=" << fpga_vec.GetLength() << std::endl;
-//                 all_equal = false;
-//                 break;
-//             }
-            
-//             for (size_t j = 0; j < cpu_vec.GetLength(); ++j) {
-//                 if (cpu_vec[j] != fpga_vec[j]) {
-//                     if (mismatch_count < MAX_MISMATCHES_TO_PRINT) {
-//                         std::cerr << "ERROR: Mismatch at tower " << i 
-//                                   << ", index " << j 
-//                                   << ": CPU=" << cpu_vec[j] 
-//                                   << ", FPGA=" << fpga_vec[j] 
-//                                   << " (mod " << m_vectors[i].GetModulus() << ")" << std::endl;
-//                     }
-//                     mismatch_count++;
-//                     all_equal = false;
-//                 }
-//             }
-//         }
-        
-//         if (!all_equal) {
-//             std::cerr << "WARNING: FPGA and CPU results differ! Mismatches: " 
-//                       << mismatch_count << std::endl;
-            
-//             // 你可以选择抛出异常或继续执行
-//             // OPENFHE_THROW("FPGA and CPU results mismatch");
-            
-//             // 或者返回CPU结果（更可靠）
-//             return cpu_result;
-//         } else {
-//             std::cout << "SUCCESS: FPGA and CPU results match perfectly!" << std::endl;
-//             return fpga_result;
-//         }
-//     } else {
-//         // FPGA不可用，直接返回CPU结果
-//         return cpu_result;
-//     }
-// #else // 如果没有定义OPENFHE_FPGA_ENABLE，直接走CPU路径
-//     DCRTPolyImpl<VecType> cpu_result(m_params, m_format);
-//     #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
-//     for (size_t i = 0; i < size; ++i)
-//         cpu_result.m_vectors[i] = m_vectors[i].Minus(rhs.m_vectors[i]);
-//     return cpu_result;
-// #endif // OPENFHE_FPGA_ENABLE
-// }
-
 
 
 
@@ -797,9 +692,7 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Plus(const DCRTPolyType& rhs) const
             const auto& vec_b = rhs.m_vectors[i];
             auto&       vec_r = tmp.m_vectors[i];
 
-            // 关键一步：先分配好 vec_r 的存储
-            vec_r = vec_a;                         // 这样长度/模数都跟 vec_a 一样
-                                                   // 后面 FPGA 会把里面的值覆盖掉
+            vec_r = vec_a;                         
 
             size_t   n   = vec_a.GetLength();
             uint64_t mod = vec_a.GetModulus().ConvertToInt();
@@ -815,7 +708,7 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Plus(const DCRTPolyType& rhs) const
         return tmp;
     }
 #endif // OPENFHE_FPGA_ENABLE
-    // 没有 FPGA / 没 ready 就走原来的 CPU 分支
+  
 #pragma omp parallel for num_threads(OpenFHEParallelControls.GetThreadLimit(size))
     for (size_t i = 0; i < size; ++i)
         tmp.m_vectors[i] = m_vectors[i].PlusNoCheck(rhs.m_vectors[i]);
@@ -896,7 +789,6 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Times(const std::vector<NativeInteg
         auto& fpga = FpgaManager::GetInstance();
         bool use_fpga = fpga.IsReady();
         size_t size = m_vectors.size();
-        std::cout << "FPGA Times called, use_fpga = " << use_fpga << std::endl;
 
         for (size_t i = 0; i < size; ++i) {
             const auto& vec_a = m_vectors[i];
@@ -915,8 +807,8 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::Times(const std::vector<NativeInteg
                 fpga.ModMultOffload(ptr_a, ptr_b, ptr_res, modulus, n);
 
             } else {
-                // 报错并退出程序
-                OPENFHE_THROW("FPGA acceleration not available, please check FPGA status.");
+                // Fallback to CPU implementation
+                tmp.m_vectors[i] = m_vectors[i].Times(element.m_vectors[i]);
             }
         }
         return tmp;
@@ -1251,97 +1143,83 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::ApproxSwitchCRTBasis(
     const std::vector<DoubleNativeInt>& modpBarrettMu
 ) const {
     DCRTPolyImpl<VecType> ans(paramsP, m_format, true);
+    // DCRTPolyImpl<VecType> ans_fpga(paramsP, m_format, true);
+
     uint32_t sizeQ = (m_vectors.size() > paramsQ->GetParams().size()) ? paramsQ->GetParams().size() : m_vectors.size();
     uint32_t sizeP = ans.m_vectors.size();
-
-    // [修复] 必须在这里定义 ringDim，因为下面的 FPGA 代码要用！
     uint32_t ringDim = m_params->GetRingDimension();
 
-    // ================= [START] FPGA Hook =================
-    #ifdef OPENFHE_FPGA_ENABLE
-    if (FpgaManager::GetInstance().IsReady()) {
-        auto& fpga = FpgaManager::GetInstance();
-        // 硬件尺寸定义 (需匹配硬件 HLS 中的 macro 定义)
-        const uint32_t HW_SIZE_Q = 4; // 假设 HLS 一次处理 4 个输入 Limb
-        // const uint32_t HW_SIZE_P = 4; // 暂时用不到，因为我们是逐个 P 计算
 
-        // 简单的维度检查，防止越界
-        if (sizeQ <= HW_SIZE_Q) { // 只要 Q 不超标即可
 
-            // 1. 准备输入数据 (Pre-computation + Transpose + Padding)
-            // 布局: [ringDim][HW_SIZE_Q] -> Coefficient Major
-            // 这是一个 N 行 HW_SIZE_Q 列的矩阵
-            std::vector<uint64_t> flat_inputs(ringDim * HW_SIZE_Q, 0);
+//     // ================= [START] FPGA Hook =================
+// #ifdef OPENFHE_FPGA_ENABLE
+//     if (FpgaManager::GetInstance().IsReady()) {
+//         auto& fpga = FpgaManager::GetInstance();
+//         std::cout << "[FPGA BConv] sizeQ=" << sizeQ << ", sizeP=" << sizeP << std::endl;
 
-            for (uint32_t ri = 0; ri < ringDim; ++ri) {
-                for (uint32_t i = 0; i < sizeQ; ++i) {
-                    const auto& qi = m_vectors[i].GetModulus();
-                    NativeInteger tmp = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i]);
-                    flat_inputs[ri * HW_SIZE_Q + i] = tmp.ConvertToInt();
-                }
-            }
+        
+//         // 1. 准备输入矩阵 X: [ringDim × sizeQ]，紧密排列
+//         std::vector<uint64_t> flat_inputs(ringDim * sizeQ, 0);
+//         for (uint32_t ri = 0; ri < ringDim; ++ri) {
+//             for (uint32_t i = 0; i < sizeQ; ++i) {
+//                 const auto& qi = m_vectors[i].GetModulus();
+//                 NativeInteger tmp = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i]);
+//                 flat_inputs[ri * sizeQ + i] = tmp.ConvertToInt();
+//             }
+//         }
 
-            // 2. 逐列调用 FPGA (Column-wise)
-            // 每次循环计算 1 个目标 P 模数下的结果
-            for (uint32_t j = 0; j < sizeP; ++j) {
-                const auto& pj = ans.m_vectors[j].GetModulus();
-                uint64_t mod_val = pj.ConvertToInt();
+//         // 2. 准备权重矩阵 W: [sizeQ × sizeP]，紧密排列
+//         std::vector<uint64_t> flat_weights(sizeQ * sizeP, 0);
+//         for (uint32_t i = 0; i < sizeQ; ++i) {
+//             for (uint32_t j = 0; j < sizeP; ++j) {
+//                 flat_weights[i * sizeP + j] = QHatModp[i][j].ConvertToInt();
+//             }
+//         }
 
-                // [DEBUG]
-                // std::cout << "[DEBUG] FPGA Call j=" << j << ", Modulus=" << mod_val << std::endl;
-                
-                // 2.1 准备权重 W (第 j 列)
-                // 【修正 1】权重应当是紧密排列的向量，大小为 HW_SIZE_Q (为了对齐输入)
-                std::vector<uint64_t> flat_weights(HW_SIZE_Q, 0);
-                for (uint32_t i = 0; i < sizeQ; ++i) {
-                    flat_weights[i] = QHatModp[i][j].ConvertToInt();
-                }
+//         // 3. 准备输出缓冲区: [ringDim × sizeP]
+//         std::vector<uint64_t> flat_outputs(ringDim * sizeP, 0);
 
-                // 2.2 准备输出
-                // 【修正 2】输出应当是紧密排列的 N 个系数
-                std::vector<uint64_t> flat_outputs(ringDim, 0);
+//         // 4. 调用FPGA
+//         fpga.BConvOffload(
+//             flat_inputs.data(),
+//             flat_weights.data(),
+//             flat_outputs.data(),
+//             ringDim,
+//             sizeQ,
+//             0
+//         );
 
-                // 2.3 Offload
-                fpga.BConvOffload(
-                    flat_inputs.data(),
-                    flat_weights.data(),
-                    flat_outputs.data(),
-                    mod_val,
-                    ringDim,
-                    sizeQ  // 传入实际有效 limb 数
-                );
+//         // 5. 提取结果并对每列使用正确的P模数
+//         for (uint32_t j = 0; j < sizeP; ++j) {
+//             for (uint32_t ri = 0; ri < ringDim; ++ri) {
+//                 uint64_t result_val = flat_outputs[ri * sizeP + j];
+//                 ans_fpga.m_vectors[j][ri] = result_val;
+//             }
+//         }
+//     }
+// #endif
 
-                // 2.4 填回结果
-                for (uint32_t ri = 0; ri < ringDim; ++ri) {
-                    // 【修正 3】紧密读取
-                    ans.m_vectors[j][ri] = NativeInteger(flat_outputs[ri]);
-                }
-            }
-            
-            // FPGA 完成，直接返回结果
-            return ans;
-        }
-    }
-    #endif
-    // ================= [END] FPGA Hook =================
-
-    // std::cout << "Bconv operation" << std::endl;
 #if defined(HAVE_INT128) && (NATIVEINT == 64) && !defined(WITH_REDUCED_NOISE) && \
     (defined(WITH_OPENMP) || (defined(__clang__) && !defined(WITH_NATIVEOPT)))
-    //uint32_t ringDim = m_params->GetRingDimension();
+    
+    std::cout << "Bconv operation" << std::endl;
     std::vector<DoubleNativeInt> sum(sizeP);
+    
     #pragma omp parallel for firstprivate(sum) num_threads(OpenFHEParallelControls.GetThreadLimit(8))
-    for (uint32_t ri = 0; ri < ringDim; ++ri) {
+    for (uint32_t ri = 0; ri < ringDim; ++ri) {    
         std::fill(sum.begin(), sum.end(), 0);
         for (uint32_t i = 0; i < sizeQ; ++i) {
             const auto& QHatModpi    = QHatModp[i];
-            const auto& qi           = m_vectors[i].GetModulus();
+            const auto& qi           = m_vectors[i].GetModulus();    
             const auto xQHatInvModqi = m_vectors[i][ri]
                                            .ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i])
                                            .template ConvertToInt<uint64_t>();
-            for (uint32_t j = 0; j < sizeP; ++j)
+            
+            for (uint32_t j = 0; j < sizeP; ++j){
                 sum[j] += Mul128(xQHatInvModqi, QHatModpi[j].ConvertToInt<uint64_t>());
+            }
         }
+        
         for (uint32_t j = 0; j < sizeP; ++j) {
             auto&& pj            = ans.m_vectors[j].GetModulus().template ConvertToInt<uint64_t>();
             ans.m_vectors[j][ri] = BarrettUint128ModUint64(sum[j], pj, modpBarrettMu[j]);
@@ -1362,6 +1240,16 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::ApproxSwitchCRTBasis(
         }
     }
 #endif
+
+    // for (uint32_t j = 0; j < sizeP; ++j) {
+    //     for (uint32_t ri = 0; ri < ringDim; ++ri) {
+    //         std::cout << "ans[" << j << "][" << ri << "] = " << ans.m_vectors[j][ri].ConvertToInt() << std::endl;
+    //         std::cout << "ans_fpga[" << j << "][" << ri << "] = " << ans_fpga.m_vectors[j][ri].ConvertToInt() << std::endl;
+    //         std::cout << "difference = " << ans.m_vectors[j][ri].ConvertToInt() - ans_fpga.m_vectors[j][ri].ConvertToInt() << std::endl;
+    //     }
+    // }
+
+
     return ans;
 }
 
