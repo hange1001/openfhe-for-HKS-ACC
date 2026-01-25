@@ -133,8 +133,8 @@ int main() {
     auto cSub = cc->EvalSub(c1, c2);
     auto cScalar = cc->EvalMult(c1, 4.0);
     auto cMul = cc->EvalMult(c1, c2);
-    // auto cRot1 = cc->EvalRotate(c1, 1);
-    // auto cRot2 = cc->EvalRotate(c1, -2);
+    auto cRot1 = cc->EvalRotate(c1, 1);
+    auto cRot2 = cc->EvalRotate(c1, -2);
 
     // Step 5: Decryption and output
     Plaintext result;

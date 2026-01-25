@@ -31,6 +31,10 @@ static const int BU_NUM = 32;
 static const int LIMB_Q = 3;  // Q模数数量，索引 0, 1, 2
 static const int LIMB_P = 2;  // P模数数量，索引 3, 4
 
+// BConv Systolic Array维度: LIMB_Q行 × MAX_OUT_COLS列
+// MAX_OUT_COLS = LIMB_Q + LIMB_P，可以处理Q→P, P→Q等任意转换
+static const int MAX_OUT_COLS = LIMB_Q + LIMB_P;  // 5
+
 static const int STAGE = 12; //log2(RING_DIM)
 
 // 总limb数 = Q + P = 3 + 2 = 5

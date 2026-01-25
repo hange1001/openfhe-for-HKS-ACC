@@ -155,24 +155,41 @@ void Top(
 
     
         case OP_BCONV: {
+            // num_active_limbs = sizeP (输出列数)
+            int sizeP = num_active_limbs;
+            
             // Load Q limbs (输入) 到 poly_buffer_1[0..LIMB_Q-1]
             Load(mem_in1, poly_buffer_1, LIMB_Q, 0);
             
-            // Load 权重矩阵
-            static uint64_t in_w[LIMB_Q][LIMB_P];
+            // mem_in2布局: [权重矩阵 LIMB_Q*MAX_OUT_COLS] [输出模数 MAX_OUT_COLS]
+            // 权重矩阵: in_w[q][p] = mem_in2[q * MAX_OUT_COLS + p]
+            // 输出模数: out_mod[p] = mem_in2[LIMB_Q * MAX_OUT_COLS + p]
+            
+            static uint64_t in_w[LIMB_Q][MAX_OUT_COLS];
             for (int q = 0; q < LIMB_Q; q++){
-                for (int p = 0; p < LIMB_P; p++){
-                    in_w[q][p] = mem_in2[q*LIMB_P + p];
+                for (int p = 0; p < MAX_OUT_COLS; p++){
+                    in_w[q][p] = mem_in2[q * MAX_OUT_COLS + p];
                 }
             }
             
+            static uint64_t out_mod[MAX_OUT_COLS];
+            int mod_offset = LIMB_Q * MAX_OUT_COLS;
+            for (int p = 0; p < MAX_OUT_COLS; p++){
+                out_mod[p] = mem_in2[mod_offset + p];
+            }
             
-            // 计算 BConv, 结果写到 poly_buffer_1[LIMB_Q..LIMB_Q+LIMB_P-1]
-            Compute_BConv(poly_buffer_1, in_w, MODULUS, num_active_limbs, mod_index);
+            #ifndef __SYNTHESIS__
+            std::cout << "[BCONV] sizeP=" << sizeP << std::endl;
+            for (int p = 0; p < sizeP; p++) {
+                std::cout << "  out_mod[" << p << "] = " << out_mod[p] << std::endl;
+            }
+            #endif
             
+            // 计算 BConv, 结果写到 poly_buffer_1[LIMB_Q..LIMB_Q+sizeP-1]
+            Compute_BConv(poly_buffer_1, in_w, out_mod, sizeP);
             
-            // Store P limbs (输出) 从 poly_buffer_1[LIMB_Q..LIMB_Q+LIMB_P-1]
-            for (int l = 0; l < LIMB_P; l++) {
+            // Store sizeP limbs (输出)
+            for (int l = 0; l < sizeP; l++) {
                 for (int i = 0; i < SQRT; i++) {
                     for (int j = 0; j < SQRT; j++) {
                         mem_out[l * RING_DIM + i * SQRT + j] = poly_buffer_1[LIMB_Q + l][i][j];

@@ -430,36 +430,54 @@ public:
         Execute(OP_SUB, a, b, result, 1, mod_idx);
     }
 
+    // BConv with dynamic output moduli
+    // Kernel: LIMB_Q rows × MAX_OUT_COLS columns (3×5)
+    static const int KERNEL_LIMB_Q = 3;
+    static const int KERNEL_MAX_OUT_COLS = 5;  // LIMB_Q + LIMB_P
+    
     void BConvOffload(
-        const uint64_t* x,      // 输入: [LIMB_Q × RING_DIM], padded
-        const uint64_t* w,      // 权重: [LIMB_Q × LIMB_P], padded
-        uint64_t* result,       // 输出: [LIMB_P × RING_DIM]
+        const uint64_t* x,              // 输入: [KERNEL_LIMB_Q × RING_DIM]
+        const uint64_t* w,              // 权重: [KERNEL_LIMB_Q × KERNEL_MAX_OUT_COLS]
+        const uint64_t* out_mod,        // 输出模数: [sizeP]
+        uint64_t* result,               // 输出: [sizeP × RING_DIM]
         size_t ringDim, 
-        int kernelQ,            // kernel的LIMB_Q维度
-        int kernelP             // kernel的LIMB_P维度
+        int sizeP                       // 实际输出列数
     ) {
     #ifdef OPENFHE_FPGA_ENABLE
         if (!m_is_ready) return;
         
-        std::cout << "=== [FPGA] Execute BConv === kernelQ=" << kernelQ << ", kernelP=" << kernelP << std::endl;
+        std::cout << "=== [FPGA] Execute BConv === sizeP=" << sizeP << std::endl;
 
         try {
-            // Buffer大小使用kernel维度
-            size_t in_size = kernelQ * ringDim * sizeof(uint64_t);
-            size_t weight_size = kernelQ * kernelP * sizeof(uint64_t);
-            size_t out_size = kernelP * ringDim * sizeof(uint64_t);
+            // Buffer sizes
+            size_t in_size = KERNEL_LIMB_Q * ringDim * sizeof(uint64_t);
+            // mem_in2 = weights + out_mod
+            size_t weights_count = KERNEL_LIMB_Q * KERNEL_MAX_OUT_COLS;
+            size_t mod_count = KERNEL_MAX_OUT_COLS;
+            size_t meta_size = (weights_count + mod_count) * sizeof(uint64_t);
+            size_t out_size = sizeP * ringDim * sizeof(uint64_t);
+            
+            // Pack weights + moduli into single buffer
+            std::vector<uint64_t> meta_buffer(weights_count + mod_count, 0);
+            // Copy weights
+            std::memcpy(meta_buffer.data(), w, weights_count * sizeof(uint64_t));
+            // Copy output moduli (padded with 0)
+            for (int i = 0; i < sizeP && i < KERNEL_MAX_OUT_COLS; i++) {
+                meta_buffer[weights_count + i] = out_mod[i];
+            }
             
             auto bo_in = xrt::bo(m_device, in_size, m_kernel_top.group_id(0));
-            auto bo_w = xrt::bo(m_device, weight_size, m_kernel_top.group_id(1));
+            auto bo_meta = xrt::bo(m_device, meta_size, m_kernel_top.group_id(1));
             auto bo_out = xrt::bo(m_device, out_size, m_kernel_top.group_id(2));
 
             bo_in.write(x);
             bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
             
-            bo_w.write(w);
-            bo_w.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            bo_meta.write(meta_buffer.data());
+            bo_meta.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
-            auto run = m_kernel_top(bo_in, bo_w, bo_out, OP_BCONV, kernelQ, 0);
+            // num_active_limbs = sizeP (输出列数)
+            auto run = m_kernel_top(bo_in, bo_meta, bo_out, OP_BCONV, sizeP, 0);
             run.wait();
 
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
