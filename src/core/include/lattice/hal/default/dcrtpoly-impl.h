@@ -1151,53 +1151,76 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::ApproxSwitchCRTBasis(
 
 
 
-//     // ================= [START] FPGA Hook =================
-// #ifdef OPENFHE_FPGA_ENABLE
-//     if (FpgaManager::GetInstance().IsReady()) {
-//         auto& fpga = FpgaManager::GetInstance();
-//         std::cout << "[FPGA BConv] sizeQ=" << sizeQ << ", sizeP=" << sizeP << std::endl;
+    // ================= [START] FPGA Hook =================
+#ifdef OPENFHE_FPGA_ENABLE
+    // Kernel硬编码维度和模数
+    const uint32_t KERNEL_LIMB_Q = 3;
+    const uint32_t KERNEL_LIMB_P = 2;
+    // Kernel中存储的P模数（在OP_INIT时设置）
+    const uint64_t KERNEL_P_MOD_0 = 1152921504606748673ULL;
+    const uint64_t KERNEL_P_MOD_1 = 1152921504606683137ULL;
+    
+    // 检查目标模数是否匹配kernel中的P模数
+    bool modulus_match = true;
+    if (sizeP >= 1) {
+        uint64_t target_mod_0 = ans.m_vectors[0].GetModulus().ConvertToInt();
+        if (target_mod_0 != KERNEL_P_MOD_0) modulus_match = false;
+    }
+    if (sizeP >= 2 && modulus_match) {
+        uint64_t target_mod_1 = ans.m_vectors[1].GetModulus().ConvertToInt();
+        if (target_mod_1 != KERNEL_P_MOD_1) modulus_match = false;
+    }
+    
+    if (FpgaManager::GetInstance().IsReady() && sizeQ <= KERNEL_LIMB_Q && sizeP <= KERNEL_LIMB_P && modulus_match) {
+        auto& fpga = FpgaManager::GetInstance();
+        std::cout << "[FPGA BConv] sizeQ=" << sizeQ << ", sizeP=" << sizeP 
+                  << " -> Using FPGA" << std::endl;
 
+        // 1. 准备输入矩阵 X: [KERNEL_LIMB_Q × ringDim]，带padding
+        // 有效数据在[0..sizeQ-1]，[sizeQ..KERNEL_LIMB_Q-1]填充0
+        std::vector<uint64_t> flat_inputs(ringDim * KERNEL_LIMB_Q, 0);
+        for (uint32_t i = 0; i < sizeQ; ++i) {
+            const auto& qi = m_vectors[i].GetModulus();
+            for (uint32_t ri = 0; ri < ringDim; ++ri) {
+                NativeInteger tmp = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i]);
+                flat_inputs[i * ringDim + ri] = tmp.ConvertToInt();
+            }
+        }
+        // padding行自动为0
+
+        // 2. 准备权重矩阵 W: [KERNEL_LIMB_Q × KERNEL_LIMB_P]，带padding
+        // 有效数据在[0..sizeQ-1][0..sizeP-1]，其余填充0
+        std::vector<uint64_t> flat_weights(KERNEL_LIMB_Q * KERNEL_LIMB_P, 0);
+        for (uint32_t i = 0; i < sizeQ; ++i) {
+            for (uint32_t j = 0; j < sizeP; ++j) {
+                flat_weights[i * KERNEL_LIMB_P + j] = QHatModp[i][j].ConvertToInt();
+            }
+        }
+
+        // 3. 准备输出缓冲区: [KERNEL_LIMB_P × ringDim]
+        std::vector<uint64_t> flat_outputs(ringDim * KERNEL_LIMB_P, 0);
+
+        // 4. 调用FPGA（使用kernel的固定维度）
+        fpga.BConvOffload(
+            flat_inputs.data(),
+            flat_weights.data(),
+            flat_outputs.data(),
+            ringDim,
+            KERNEL_LIMB_Q,  // 使用kernel维度
+            KERNEL_LIMB_P
+        );
+
+        // 5. 提取FPGA结果
+        for (uint32_t j = 0; j < sizeP; ++j) {
+            for (uint32_t ri = 0; ri < ringDim; ++ri) {
+                uint64_t result_val = flat_outputs[j * ringDim + ri];
+                ans.m_vectors[j][ri] = result_val;
+            }
+        }
         
-//         // 1. 准备输入矩阵 X: [ringDim × sizeQ]，紧密排列
-//         std::vector<uint64_t> flat_inputs(ringDim * sizeQ, 0);
-//         for (uint32_t ri = 0; ri < ringDim; ++ri) {
-//             for (uint32_t i = 0; i < sizeQ; ++i) {
-//                 const auto& qi = m_vectors[i].GetModulus();
-//                 NativeInteger tmp = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], qi, QHatInvModqPrecon[i]);
-//                 flat_inputs[ri * sizeQ + i] = tmp.ConvertToInt();
-//             }
-//         }
-
-//         // 2. 准备权重矩阵 W: [sizeQ × sizeP]，紧密排列
-//         std::vector<uint64_t> flat_weights(sizeQ * sizeP, 0);
-//         for (uint32_t i = 0; i < sizeQ; ++i) {
-//             for (uint32_t j = 0; j < sizeP; ++j) {
-//                 flat_weights[i * sizeP + j] = QHatModp[i][j].ConvertToInt();
-//             }
-//         }
-
-//         // 3. 准备输出缓冲区: [ringDim × sizeP]
-//         std::vector<uint64_t> flat_outputs(ringDim * sizeP, 0);
-
-//         // 4. 调用FPGA
-//         fpga.BConvOffload(
-//             flat_inputs.data(),
-//             flat_weights.data(),
-//             flat_outputs.data(),
-//             ringDim,
-//             sizeQ,
-//             0
-//         );
-
-//         // 5. 提取结果并对每列使用正确的P模数
-//         for (uint32_t j = 0; j < sizeP; ++j) {
-//             for (uint32_t ri = 0; ri < ringDim; ++ri) {
-//                 uint64_t result_val = flat_outputs[ri * sizeP + j];
-//                 ans_fpga.m_vectors[j][ri] = result_val;
-//             }
-//         }
-//     }
-// #endif
+        return ans;
+    }
+#endif
 
 #if defined(HAVE_INT128) && (NATIVEINT == 64) && !defined(WITH_REDUCED_NOISE) && \
     (defined(WITH_OPENMP) || (defined(__clang__) && !defined(WITH_NATIVEOPT)))

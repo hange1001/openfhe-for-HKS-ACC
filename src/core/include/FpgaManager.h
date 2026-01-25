@@ -430,18 +430,44 @@ public:
         Execute(OP_SUB, a, b, result, 1, mod_idx);
     }
 
-    //TODO:testing
     void BConvOffload(
-        const uint64_t* x, 
-        const uint64_t* w, 
-        uint64_t* result, 
-        size_t n, 
-        int sizeQ, 
-        int sizeP
+        const uint64_t* x,      // 输入: [LIMB_Q × RING_DIM], padded
+        const uint64_t* w,      // 权重: [LIMB_Q × LIMB_P], padded
+        uint64_t* result,       // 输出: [LIMB_P × RING_DIM]
+        size_t ringDim, 
+        int kernelQ,            // kernel的LIMB_Q维度
+        int kernelP             // kernel的LIMB_P维度
     ) {
-        std::cout << "=== [FPGA] Execute BConv ===" << std::endl;
+    #ifdef OPENFHE_FPGA_ENABLE
+        if (!m_is_ready) return;
+        
+        std::cout << "=== [FPGA] Execute BConv === kernelQ=" << kernelQ << ", kernelP=" << kernelP << std::endl;
 
-        Execute(OP_BCONV, x, w, result, sizeQ, 0);
+        try {
+            // Buffer大小使用kernel维度
+            size_t in_size = kernelQ * ringDim * sizeof(uint64_t);
+            size_t weight_size = kernelQ * kernelP * sizeof(uint64_t);
+            size_t out_size = kernelP * ringDim * sizeof(uint64_t);
+            
+            auto bo_in = xrt::bo(m_device, in_size, m_kernel_top.group_id(0));
+            auto bo_w = xrt::bo(m_device, weight_size, m_kernel_top.group_id(1));
+            auto bo_out = xrt::bo(m_device, out_size, m_kernel_top.group_id(2));
+
+            bo_in.write(x);
+            bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            
+            bo_w.write(w);
+            bo_w.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+
+            auto run = m_kernel_top(bo_in, bo_w, bo_out, OP_BCONV, kernelQ, 0);
+            run.wait();
+
+            bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+            bo_out.read(result);
+        } catch (const std::exception& e) {
+            std::cerr << "[FPGA BConv Error] " << e.what() << std::endl;
+        }
+    #endif
     }
 
 
