@@ -154,24 +154,33 @@ void Top(
             break;
 
     
-        case OP_BCONV:
-            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+        case OP_BCONV: {
+            // Load Q limbs (输入) 到 poly_buffer_1[0..LIMB_Q-1]
+            Load(mem_in1, poly_buffer_1, LIMB_Q, 0);
+            
+            // Load 权重矩阵
             static uint64_t in_w[LIMB_Q][LIMB_P];
             for (int q = 0; q < LIMB_Q; q++){
                 for (int p = 0; p < LIMB_P; p++){
                     in_w[q][p] = mem_in2[q*LIMB_P + p];
                 }
             }
+            
+            
+            // 计算 BConv, 结果写到 poly_buffer_1[LIMB_Q..LIMB_Q+LIMB_P-1]
             Compute_BConv(poly_buffer_1, in_w, MODULUS, num_active_limbs, mod_index);
-            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
-            for (int l = 0; l < MAX_LIMBS; l++){
-                for (int row = 0; row < SQRT; row++){
-                    for (int col = 0; col < SQRT; col++){
-                        std::cout << "poly_buffer_1[" << l << "][" << row << "][" << col << "] = " << poly_buffer_1[l][row][col] << std::endl;
+            
+            
+            // Store P limbs (输出) 从 poly_buffer_1[LIMB_Q..LIMB_Q+LIMB_P-1]
+            for (int l = 0; l < LIMB_P; l++) {
+                for (int i = 0; i < SQRT; i++) {
+                    for (int j = 0; j < SQRT; j++) {
+                        mem_out[l * RING_DIM + i * SQRT + j] = poly_buffer_1[LIMB_Q + l][i][j];
                     }
                 }
             }
             break;
+        }
 
         default:
             std::cout << "[FPGA] Unknown opcode: " << opcode << std::endl;

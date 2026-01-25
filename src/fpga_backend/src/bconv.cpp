@@ -128,8 +128,9 @@ void bconv_systolic(
             int data_idx = t - q;
             
             if (data_idx >= 0 && data_idx < RING_DIM) {
-                int row = data_idx % SQRT;
-                int col = data_idx / SQRT;
+                // 使用row-major顺序匹配Load函数
+                int row = data_idx / SQRT;
+                int col = data_idx % SQRT;
                 x_reg[q][0] = in_x[q][row][col];
             } else {
                 x_reg[q][0] = 0;
@@ -175,8 +176,9 @@ void bconv_systolic(
             if (t >= latency && valid_count[p] < RING_DIM) {
                 // Read result from bottom of column p
                 ap_uint<128> result = sum_reg[p][LIMB_Q];
-                int row = valid_count[p] % SQRT;
-                int col = valid_count[p] / SQRT;
+                // 使用row-major顺序匹配Store函数
+                int row = valid_count[p] / SQRT;
+                int col = valid_count[p] % SQRT;
                 in_x[LIMB_Q + p][row][col] = (uint64_t)(result);
                 
                 valid_count[p]++;
