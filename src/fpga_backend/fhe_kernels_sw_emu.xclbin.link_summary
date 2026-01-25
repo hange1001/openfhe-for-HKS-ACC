@@ -9,10 +9,10 @@
 <ENTRY>
 {
  "type": "ET_CmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:06 2026",
- "timestampMillis": "1769355246937",
+ "dateTimestamp": "Mon Jan 26 00:01:48 2026",
+ "timestampMillis": "1769356908034",
  "buildStep": {
-  "cmdId": "cd7b03de-dc42-45a8-ba3d-b9a62bed885e",
+  "cmdId": "e672474d-9caf-4b73-9b3f-afce78b440d6",
   "name": "v++",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/link.steps.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/unwrapped/lnx64.o/v++  --vivado.prop \"run.__KERNEL__.{STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS}={-directive sdx_optimization_effort_high}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_route_design_summary steps {route_design} runs {impl_1} options {-max_paths 10}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_post_route_phys_opt_design_summary steps {post_route_phys_opt_design} runs {impl_1} options {-max_paths 10}\" -l -t sw_emu --platform xilinx_u250_gen3x16_xdma_4_1_202210_1 --save-temps -I./include -I./src -o fhe_kernels_sw_emu.xclbin temp.xo ",
@@ -37,10 +37,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:06 2026",
- "timestampMillis": "1769355246938",
+ "dateTimestamp": "Mon Jan 26 00:01:48 2026",
+ "timestampMillis": "1769356908035",
  "status": {
-  "cmdId": "cd7b03de-dc42-45a8-ba3d-b9a62bed885e",
+  "cmdId": "e672474d-9caf-4b73-9b3f-afce78b440d6",
   "state": "CS_RUNNING"
  }
 }
@@ -48,8 +48,8 @@
 <ENTRY>
 {
  "type": "ET_FlowMetaData",
- "dateTimestamp": "Sun Jan 25 23:34:10 2026",
- "timestampMillis": "1769355250420",
+ "dateTimestamp": "Mon Jan 26 00:01:51 2026",
+ "timestampMillis": "1769356911337",
  "buildSummary": {
   "hardwarePlatform": "xilinx_u250_gen3x16_xdma_4_1_202210_1.xpfm",
   "hardwareDsa": "",
@@ -78,16 +78,16 @@
      "uuid": ""
     },
     "sources": [
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp",
      "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/top.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp",
      "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/interleave.cpp",
-     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/auto.cpp"
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/auto.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp",
+     "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp"
     ],
     "psSources": [],
     "cuNames": [
@@ -105,8 +105,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Sun Jan 25 23:34:10 2026",
- "timestampMillis": "1769355250825",
+ "dateTimestamp": "Mon Jan 26 00:01:51 2026",
+ "timestampMillis": "1769356911679",
  "report": {
   "path": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/systemDiagramModel.json",
   "name": "",
@@ -119,10 +119,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:10 2026",
- "timestampMillis": "1769355250829",
+ "dateTimestamp": "Mon Jan 26 00:01:51 2026",
+ "timestampMillis": "1769356911684",
  "buildStep": {
-  "cmdId": "760a322d-9834-462b-b375-3e3e9e45550b",
+  "cmdId": "7f72f63d-9e99-497a-83dd-e05779bf2ba2",
   "name": "regiongen",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_regiongen.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../runtime/bin/regiongen_new -v -m /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.xml -r /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.rtd -t alg -o xcl_top",
@@ -145,10 +145,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:10 2026",
- "timestampMillis": "1769355250829",
+ "dateTimestamp": "Mon Jan 26 00:01:51 2026",
+ "timestampMillis": "1769356911684",
  "status": {
-  "cmdId": "760a322d-9834-462b-b375-3e3e9e45550b",
+  "cmdId": "7f72f63d-9e99-497a-83dd-e05779bf2ba2",
   "state": "CS_RUNNING"
  }
 }
@@ -156,10 +156,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:11 2026",
- "timestampMillis": "1769355251853",
+ "dateTimestamp": "Mon Jan 26 00:01:52 2026",
+ "timestampMillis": "1769356912732",
  "status": {
-  "cmdId": "760a322d-9834-462b-b375-3e3e9e45550b",
+  "cmdId": "7f72f63d-9e99-497a-83dd-e05779bf2ba2",
   "state": "CS_PASSED"
  }
 }
@@ -167,507 +167,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:11 2026",
- "timestampMillis": "1769355251860",
+ "dateTimestamp": "Mon Jan 26 00:01:52 2026",
+ "timestampMillis": "1769356912742",
  "buildStep": {
-  "cmdId": "96afefa4-203e-4fea-8e27-a589eb288aa5",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/ntt_kernel.o -MP -MF obj/ntt_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp -o obj/ntt_kernel.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/ntt_kernel.o",
-   "-MP",
-   "-MF",
-   "obj/ntt_kernel.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp",
-   "-o",
-   "obj/ntt_kernel.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:11 2026",
- "timestampMillis": "1769355251861",
- "status": {
-  "cmdId": "96afefa4-203e-4fea-8e27-a589eb288aa5",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:13 2026",
- "timestampMillis": "1769355253114",
- "status": {
-  "cmdId": "96afefa4-203e-4fea-8e27-a589eb288aa5",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:13 2026",
- "timestampMillis": "1769355253117",
- "buildStep": {
-  "cmdId": "2839c9aa-6442-4e55-86ab-7ae3df4df228",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/arithmetic.o -MP -MF obj/arithmetic.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp -o obj/arithmetic.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/arithmetic.o",
-   "-MP",
-   "-MF",
-   "obj/arithmetic.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp",
-   "-o",
-   "obj/arithmetic.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:13 2026",
- "timestampMillis": "1769355253118",
- "status": {
-  "cmdId": "2839c9aa-6442-4e55-86ab-7ae3df4df228",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:14 2026",
- "timestampMillis": "1769355254245",
- "status": {
-  "cmdId": "2839c9aa-6442-4e55-86ab-7ae3df4df228",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:14 2026",
- "timestampMillis": "1769355254248",
- "buildStep": {
-  "cmdId": "9cc45baa-1471-44bc-ac4b-315df3b0141d",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/load.o -MP -MF obj/load.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp -o obj/load.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/load.o",
-   "-MP",
-   "-MF",
-   "obj/load.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp",
-   "-o",
-   "obj/load.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:14 2026",
- "timestampMillis": "1769355254249",
- "status": {
-  "cmdId": "9cc45baa-1471-44bc-ac4b-315df3b0141d",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:15 2026",
- "timestampMillis": "1769355255347",
- "status": {
-  "cmdId": "9cc45baa-1471-44bc-ac4b-315df3b0141d",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:15 2026",
- "timestampMillis": "1769355255351",
- "buildStep": {
-  "cmdId": "63c7955a-9b8d-4c78-b694-d2622eefb73f",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_sub_kernel.o -MP -MF obj/mod_sub_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp -o obj/mod_sub_kernel.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/mod_sub_kernel.o",
-   "-MP",
-   "-MF",
-   "obj/mod_sub_kernel.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp",
-   "-o",
-   "obj/mod_sub_kernel.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:15 2026",
- "timestampMillis": "1769355255352",
- "status": {
-  "cmdId": "63c7955a-9b8d-4c78-b694-d2622eefb73f",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:16 2026",
- "timestampMillis": "1769355256466",
- "status": {
-  "cmdId": "63c7955a-9b8d-4c78-b694-d2622eefb73f",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:16 2026",
- "timestampMillis": "1769355256469",
- "buildStep": {
-  "cmdId": "c7f7a309-b9c0-4927-9b61-891e5cf3626d",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/bconv.o -MP -MF obj/bconv.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp -o obj/bconv.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/bconv.o",
-   "-MP",
-   "-MF",
-   "obj/bconv.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp",
-   "-o",
-   "obj/bconv.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:16 2026",
- "timestampMillis": "1769355256469",
- "status": {
-  "cmdId": "c7f7a309-b9c0-4927-9b61-891e5cf3626d",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:18 2026",
- "timestampMillis": "1769355258170",
- "status": {
-  "cmdId": "c7f7a309-b9c0-4927-9b61-891e5cf3626d",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:18 2026",
- "timestampMillis": "1769355258173",
- "buildStep": {
-  "cmdId": "a1f23345-a9e6-4d84-9319-4d063c7e4aae",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_add_kernel.o -MP -MF obj/mod_add_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp -o obj/mod_add_kernel.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/mod_add_kernel.o",
-   "-MP",
-   "-MF",
-   "obj/mod_add_kernel.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp",
-   "-o",
-   "obj/mod_add_kernel.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:18 2026",
- "timestampMillis": "1769355258174",
- "status": {
-  "cmdId": "a1f23345-a9e6-4d84-9319-4d063c7e4aae",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:19 2026",
- "timestampMillis": "1769355259256",
- "status": {
-  "cmdId": "a1f23345-a9e6-4d84-9319-4d063c7e4aae",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:19 2026",
- "timestampMillis": "1769355259258",
- "buildStep": {
-  "cmdId": "06db2d7a-050e-4323-a846-96f9f97ab7be",
-  "name": "gcc",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_mult_kernel.o -MP -MF obj/mod_mult_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp -o obj/mod_mult_kernel.o",
-  "args": [
-   "-I",
-   ".",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
-   "-I",
-   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
-   "-I",
-   "/usr/include/x86_64-linux-gnu",
-   "-std=c++14",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
-   "-I",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
-   "-fPIC",
-   "-g",
-   "-c",
-   "-DHLS_STREAM_THREAD_SAFE",
-   "-MD",
-   "-MT",
-   "obj/mod_mult_kernel.o",
-   "-MP",
-   "-MF",
-   "obj/mod_mult_kernel.Cd",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp",
-   "-o",
-   "obj/mod_mult_kernel.o"
-  ],
-  "iniFiles": [],
-  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:19 2026",
- "timestampMillis": "1769355259258",
- "status": {
-  "cmdId": "06db2d7a-050e-4323-a846-96f9f97ab7be",
-  "state": "CS_RUNNING"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:20 2026",
- "timestampMillis": "1769355260315",
- "status": {
-  "cmdId": "06db2d7a-050e-4323-a846-96f9f97ab7be",
-  "state": "CS_PASSED"
- }
-}
-</ENTRY>
-<ENTRY>
-{
- "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:20 2026",
- "timestampMillis": "1769355260318",
- "buildStep": {
-  "cmdId": "2f7dab78-d7d4-4bc5-ac8b-62d9a4408cf6",
+  "cmdId": "edd4493c-f146-4551-a869-0090d8b568e8",
   "name": "gcc",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/top.o -MP -MF obj/top.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/top.cpp -o obj/top.o",
@@ -713,10 +216,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:20 2026",
- "timestampMillis": "1769355260319",
+ "dateTimestamp": "Mon Jan 26 00:01:52 2026",
+ "timestampMillis": "1769356912743",
  "status": {
-  "cmdId": "2f7dab78-d7d4-4bc5-ac8b-62d9a4408cf6",
+  "cmdId": "edd4493c-f146-4551-a869-0090d8b568e8",
   "state": "CS_RUNNING"
  }
 }
@@ -724,10 +227,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:21 2026",
- "timestampMillis": "1769355261779",
+ "dateTimestamp": "Mon Jan 26 00:01:54 2026",
+ "timestampMillis": "1769356914142",
  "status": {
-  "cmdId": "2f7dab78-d7d4-4bc5-ac8b-62d9a4408cf6",
+  "cmdId": "edd4493c-f146-4551-a869-0090d8b568e8",
   "state": "CS_PASSED"
  }
 }
@@ -735,10 +238,81 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:21 2026",
- "timestampMillis": "1769355261782",
+ "dateTimestamp": "Mon Jan 26 00:01:54 2026",
+ "timestampMillis": "1769356914146",
  "buildStep": {
-  "cmdId": "f61ce734-5290-49c3-a9d1-4eaf728ecb9c",
+  "cmdId": "e3891d2a-fb98-4b96-918a-359346598261",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/load.o -MP -MF obj/load.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp -o obj/load.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/load.o",
+   "-MP",
+   "-MF",
+   "obj/load.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp",
+   "-o",
+   "obj/load.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:54 2026",
+ "timestampMillis": "1769356914147",
+ "status": {
+  "cmdId": "e3891d2a-fb98-4b96-918a-359346598261",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:55 2026",
+ "timestampMillis": "1769356915290",
+ "status": {
+  "cmdId": "e3891d2a-fb98-4b96-918a-359346598261",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:01:55 2026",
+ "timestampMillis": "1769356915294",
+ "buildStep": {
+  "cmdId": "b90fea86-0c59-47c7-aca3-ef6f67c7440c",
   "name": "gcc",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/interleave.o -MP -MF obj/interleave.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/interleave.cpp -o obj/interleave.o",
@@ -784,10 +358,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:21 2026",
- "timestampMillis": "1769355261782",
+ "dateTimestamp": "Mon Jan 26 00:01:55 2026",
+ "timestampMillis": "1769356915295",
  "status": {
-  "cmdId": "f61ce734-5290-49c3-a9d1-4eaf728ecb9c",
+  "cmdId": "b90fea86-0c59-47c7-aca3-ef6f67c7440c",
   "state": "CS_RUNNING"
  }
 }
@@ -795,10 +369,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:22 2026",
- "timestampMillis": "1769355262953",
+ "dateTimestamp": "Mon Jan 26 00:01:56 2026",
+ "timestampMillis": "1769356916513",
  "status": {
-  "cmdId": "f61ce734-5290-49c3-a9d1-4eaf728ecb9c",
+  "cmdId": "b90fea86-0c59-47c7-aca3-ef6f67c7440c",
   "state": "CS_PASSED"
  }
 }
@@ -806,10 +380,294 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:22 2026",
- "timestampMillis": "1769355262956",
+ "dateTimestamp": "Mon Jan 26 00:01:56 2026",
+ "timestampMillis": "1769356916516",
  "buildStep": {
-  "cmdId": "41935f50-6b67-4163-9e14-d66bd643359b",
+  "cmdId": "11c3230f-a612-410b-a70d-f1309f679d38",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_mult_kernel.o -MP -MF obj/mod_mult_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp -o obj/mod_mult_kernel.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/mod_mult_kernel.o",
+   "-MP",
+   "-MF",
+   "obj/mod_mult_kernel.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp",
+   "-o",
+   "obj/mod_mult_kernel.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:56 2026",
+ "timestampMillis": "1769356916517",
+ "status": {
+  "cmdId": "11c3230f-a612-410b-a70d-f1309f679d38",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:57 2026",
+ "timestampMillis": "1769356917693",
+ "status": {
+  "cmdId": "11c3230f-a612-410b-a70d-f1309f679d38",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:01:57 2026",
+ "timestampMillis": "1769356917697",
+ "buildStep": {
+  "cmdId": "fa1cd504-bc5c-4503-af8e-0ebce0b08b25",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_sub_kernel.o -MP -MF obj/mod_sub_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp -o obj/mod_sub_kernel.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/mod_sub_kernel.o",
+   "-MP",
+   "-MF",
+   "obj/mod_sub_kernel.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp",
+   "-o",
+   "obj/mod_sub_kernel.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:57 2026",
+ "timestampMillis": "1769356917697",
+ "status": {
+  "cmdId": "fa1cd504-bc5c-4503-af8e-0ebce0b08b25",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:58 2026",
+ "timestampMillis": "1769356918824",
+ "status": {
+  "cmdId": "fa1cd504-bc5c-4503-af8e-0ebce0b08b25",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:01:58 2026",
+ "timestampMillis": "1769356918828",
+ "buildStep": {
+  "cmdId": "b83e5b27-e261-4912-b822-ac9753c2eb9e",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/ntt_kernel.o -MP -MF obj/ntt_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp -o obj/ntt_kernel.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/ntt_kernel.o",
+   "-MP",
+   "-MF",
+   "obj/ntt_kernel.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp",
+   "-o",
+   "obj/ntt_kernel.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:01:58 2026",
+ "timestampMillis": "1769356918828",
+ "status": {
+  "cmdId": "b83e5b27-e261-4912-b822-ac9753c2eb9e",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:00 2026",
+ "timestampMillis": "1769356920037",
+ "status": {
+  "cmdId": "b83e5b27-e261-4912-b822-ac9753c2eb9e",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:02:00 2026",
+ "timestampMillis": "1769356920040",
+ "buildStep": {
+  "cmdId": "a2e22898-d287-49e4-a6be-c893034669ad",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/bconv.o -MP -MF obj/bconv.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp -o obj/bconv.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/bconv.o",
+   "-MP",
+   "-MF",
+   "obj/bconv.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp",
+   "-o",
+   "obj/bconv.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:00 2026",
+ "timestampMillis": "1769356920040",
+ "status": {
+  "cmdId": "a2e22898-d287-49e4-a6be-c893034669ad",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:01 2026",
+ "timestampMillis": "1769356921889",
+ "status": {
+  "cmdId": "a2e22898-d287-49e4-a6be-c893034669ad",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:02:01 2026",
+ "timestampMillis": "1769356921892",
+ "buildStep": {
+  "cmdId": "b25d1e38-16d7-4b46-ab0b-a147c5b4c9e9",
   "name": "gcc",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/auto.o -MP -MF obj/auto.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/auto.cpp -o obj/auto.o",
@@ -855,10 +713,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:22 2026",
- "timestampMillis": "1769355262957",
+ "dateTimestamp": "Mon Jan 26 00:02:01 2026",
+ "timestampMillis": "1769356921892",
  "status": {
-  "cmdId": "41935f50-6b67-4163-9e14-d66bd643359b",
+  "cmdId": "b25d1e38-16d7-4b46-ab0b-a147c5b4c9e9",
   "state": "CS_RUNNING"
  }
 }
@@ -866,10 +724,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264254",
+ "dateTimestamp": "Mon Jan 26 00:02:03 2026",
+ "timestampMillis": "1769356923225",
  "status": {
-  "cmdId": "41935f50-6b67-4163-9e14-d66bd643359b",
+  "cmdId": "b25d1e38-16d7-4b46-ab0b-a147c5b4c9e9",
   "state": "CS_PASSED"
  }
 }
@@ -877,26 +735,46 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264258",
+ "dateTimestamp": "Mon Jan 26 00:02:03 2026",
+ "timestampMillis": "1769356923229",
  "buildStep": {
-  "cmdId": "138b9d1c-c532-4f95-9e44-c886f7529440",
-  "name": "ar",
-  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_ar.log",
-  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/binutils-2.26/bin/ar -cr /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top.csim_cu.a /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/arithmetic.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/auto.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/ntt_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/load.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/bconv.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_add_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/interleave.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/top.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_sub_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_mult_kernel.o",
+  "cmdId": "097a4fd8-b50c-493e-89cd-f3b9bcb140a1",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_add_kernel.o -MP -MF obj/mod_add_kernel.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp -o obj/mod_add_kernel.o",
   "args": [
-   "-cr",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top.csim_cu.a",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/arithmetic.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/auto.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/ntt_kernel.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/load.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/bconv.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_add_kernel.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/interleave.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/top.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_sub_kernel.o",
-   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_mult_kernel.o"
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/mod_add_kernel.o",
+   "-MP",
+   "-MF",
+   "obj/mod_add_kernel.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp",
+   "-o",
+   "obj/mod_add_kernel.o"
   ],
   "iniFiles": [],
   "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
@@ -906,10 +784,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264259",
+ "dateTimestamp": "Mon Jan 26 00:02:03 2026",
+ "timestampMillis": "1769356923230",
  "status": {
-  "cmdId": "138b9d1c-c532-4f95-9e44-c886f7529440",
+  "cmdId": "097a4fd8-b50c-493e-89cd-f3b9bcb140a1",
   "state": "CS_RUNNING"
  }
 }
@@ -917,10 +795,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264286",
+ "dateTimestamp": "Mon Jan 26 00:02:04 2026",
+ "timestampMillis": "1769356924378",
  "status": {
-  "cmdId": "138b9d1c-c532-4f95-9e44-c886f7529440",
+  "cmdId": "097a4fd8-b50c-493e-89cd-f3b9bcb140a1",
   "state": "CS_PASSED"
  }
 }
@@ -928,10 +806,132 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264289",
+ "dateTimestamp": "Mon Jan 26 00:02:04 2026",
+ "timestampMillis": "1769356924382",
  "buildStep": {
-  "cmdId": "38517d5d-cee4-402d-9fda-b81627579fcb",
+  "cmdId": "7c63f0db-8e8d-40eb-b7f0-b4f6960d69f2",
+  "name": "gcc",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include -I /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/arithmetic.o -MP -MF obj/arithmetic.Cd /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp -o obj/arithmetic.o",
+  "args": [
+   "-I",
+   ".",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl",
+   "-I",
+   "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include",
+   "-I",
+   "/usr/include/x86_64-linux-gnu",
+   "-std=c++14",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/include",
+   "-I",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/src",
+   "-fPIC",
+   "-g",
+   "-c",
+   "-DHLS_STREAM_THREAD_SAFE",
+   "-MD",
+   "-MT",
+   "obj/arithmetic.o",
+   "-MP",
+   "-MF",
+   "obj/arithmetic.Cd",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp",
+   "-o",
+   "obj/arithmetic.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:04 2026",
+ "timestampMillis": "1769356924383",
+ "status": {
+  "cmdId": "7c63f0db-8e8d-40eb-b7f0-b4f6960d69f2",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925501",
+ "status": {
+  "cmdId": "7c63f0db-8e8d-40eb-b7f0-b4f6960d69f2",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925506",
+ "buildStep": {
+  "cmdId": "5f6a097b-fe98-4117-a140-5c2eca2389f5",
+  "name": "ar",
+  "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top_ar.log",
+  "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/binutils-2.26/bin/ar -cr /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top.csim_cu.a /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_mult_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/auto.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/ntt_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_sub_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/load.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/arithmetic.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_add_kernel.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/bconv.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/top.o /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/interleave.o",
+  "args": [
+   "-cr",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/Top.csim_cu.a",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_mult_kernel.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/auto.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/ntt_kernel.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_sub_kernel.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/load.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/arithmetic.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/mod_add_kernel.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/bconv.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/top.o",
+   "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/Top/obj/interleave.o"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925507",
+ "status": {
+  "cmdId": "5f6a097b-fe98-4117-a140-5c2eca2389f5",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925539",
+ "status": {
+  "cmdId": "5f6a097b-fe98-4117-a140-5c2eca2389f5",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925545",
+ "buildStep": {
+  "cmdId": "53c64211-1339-478e-9d29-68d335d0d606",
   "name": "g++",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xcl_top_gpp.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/g++ -I . -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../common/technology/autopilot/opencl -I /data-hdd/opt/Xilinx/Vitis/2024.1/bin/../data/emulation/include -I /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/auto_cc/include -fPIC -g -DHLS_STREAM_THREAD_SAFE -std=c++14 -fpermissive -c -MD -MT obj/xcl_top.o -MP -MF obj/xcl_top.CXXd xcl_top.cpp -o obj/xcl_top.o",
@@ -972,10 +972,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:24 2026",
- "timestampMillis": "1769355264290",
+ "dateTimestamp": "Mon Jan 26 00:02:05 2026",
+ "timestampMillis": "1769356925546",
  "status": {
-  "cmdId": "38517d5d-cee4-402d-9fda-b81627579fcb",
+  "cmdId": "53c64211-1339-478e-9d29-68d335d0d606",
   "state": "CS_RUNNING"
  }
 }
@@ -983,10 +983,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265582",
+ "dateTimestamp": "Mon Jan 26 00:02:06 2026",
+ "timestampMillis": "1769356926993",
  "status": {
-  "cmdId": "38517d5d-cee4-402d-9fda-b81627579fcb",
+  "cmdId": "53c64211-1339-478e-9d29-68d335d0d606",
   "state": "CS_PASSED"
  }
 }
@@ -994,10 +994,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265584",
+ "dateTimestamp": "Mon Jan 26 00:02:06 2026",
+ "timestampMillis": "1769356926998",
  "buildStep": {
-  "cmdId": "02a54d00-29e7-454d-a8ce-02cce983dd90",
+  "cmdId": "a3d2a038-9930-4caa-9b2c-a250fcbbee00",
   "name": "g++",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_top_gpp.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/g++ -fPIC -DHLS_STREAM_THREAD_SAFE -std=c++14 -Wall -shared -Wl,--whole-archive,-soname,fhe_kernels_sw_emu.so -o fhe_kernels_sw_emu.so Top/Top.csim_cu.a obj/xcl_top.o -Wl,--no-whole-archive -Wl,--as-needed -L /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lib/lnx64.o -lhlsmathsim -L /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/fpo_v7_1 -lgmp -lmpfr -lIp_floating_point_v7_1_bitacc_cmodel -Wl,-rpath,/data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/fpo_v7_1 -L /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/fft_v9_1 -lIp_xfft_v9_1_bitacc_cmodel -L /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/tools/fir_v7_0 -lgmp -lIp_fir_compiler_v7_2_bitacc_cmodel -L /data-hdd/opt/Xilinx/Vitis_HLS/2024.1/bin/../lnx64/lib/csim -lhlsmc++-GCC46 -L /data-hdd/opt/Xilinx/Vivado/2024.1/tps/lnx64/gcc-8.3.0/bin/../lib/gcc/x86_64-pc-linux-gnu/6.2.0/ -lgcov",
@@ -1045,10 +1045,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265584",
+ "dateTimestamp": "Mon Jan 26 00:02:06 2026",
+ "timestampMillis": "1769356926999",
  "status": {
-  "cmdId": "02a54d00-29e7-454d-a8ce-02cce983dd90",
+  "cmdId": "a3d2a038-9930-4caa-9b2c-a250fcbbee00",
   "state": "CS_RUNNING"
  }
 }
@@ -1056,10 +1056,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265691",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927133",
  "status": {
-  "cmdId": "02a54d00-29e7-454d-a8ce-02cce983dd90",
+  "cmdId": "a3d2a038-9930-4caa-9b2c-a250fcbbee00",
   "state": "CS_PASSED"
  }
 }
@@ -1067,8 +1067,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265860",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927331",
  "report": {
   "path": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xml.rtd",
   "name": "",
@@ -1081,10 +1081,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265868",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927342",
  "buildStep": {
-  "cmdId": "5d87d14e-6815-477b-868f-a67815447888",
+  "cmdId": "8942c3a0-1e43-4bab-bb84-c93688ca22d4",
   "name": "xclbinutil",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xclbinutil.log",
   "commandLine": "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/xclbinutil --add-section BITSTREAM:RAW:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.so --force --target sw_emu --add-section :JSON:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.rtd --append-section :JSON:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/appendSection.rtd --add-section CLOCK_FREQ_TOPOLOGY:JSON:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xml.rtd --add-section BUILD_METADATA:JSON:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_build.rtd --add-section EMBEDDED_METADATA:RAW:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.xml --add-section SYSTEM_METADATA:RAW:/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/link/int/systemDiagramModel.json --output /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/fhe_kernels_sw_emu.xclbin",
@@ -1117,10 +1117,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:25 2026",
- "timestampMillis": "1769355265868",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927343",
  "status": {
-  "cmdId": "5d87d14e-6815-477b-868f-a67815447888",
+  "cmdId": "8942c3a0-1e43-4bab-bb84-c93688ca22d4",
   "state": "CS_RUNNING"
  }
 }
@@ -1128,10 +1128,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266174",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927672",
  "status": {
-  "cmdId": "5d87d14e-6815-477b-868f-a67815447888",
+  "cmdId": "8942c3a0-1e43-4bab-bb84-c93688ca22d4",
   "state": "CS_PASSED"
  }
 }
@@ -1139,10 +1139,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266177",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927676",
  "buildStep": {
-  "cmdId": "3899f480-ace9-4d21-b7c2-921e740f851a",
+  "cmdId": "18404b9e-e2bb-4829-90a1-0e14fc1914c7",
   "name": "xclbinutil",
   "logFile": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/fhe_kernels_sw_emu.xclbin.info",
   "commandLine": "/data-hdd/opt/Xilinx/Vitis/2024.1/bin/xclbinutil --quiet --info --input /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/fhe_kernels_sw_emu.xclbin",
@@ -1160,10 +1160,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266178",
+ "dateTimestamp": "Mon Jan 26 00:02:07 2026",
+ "timestampMillis": "1769356927676",
  "status": {
-  "cmdId": "3899f480-ace9-4d21-b7c2-921e740f851a",
+  "cmdId": "18404b9e-e2bb-4829-90a1-0e14fc1914c7",
   "state": "CS_RUNNING"
  }
 }
@@ -1171,10 +1171,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266496",
+ "dateTimestamp": "Mon Jan 26 00:02:08 2026",
+ "timestampMillis": "1769356928007",
  "status": {
-  "cmdId": "3899f480-ace9-4d21-b7c2-921e740f851a",
+  "cmdId": "18404b9e-e2bb-4829-90a1-0e14fc1914c7",
   "state": "CS_PASSED"
  }
 }
@@ -1182,8 +1182,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266511",
+ "dateTimestamp": "Mon Jan 26 00:02:08 2026",
+ "timestampMillis": "1769356928029",
  "report": {
   "path": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/logs/optraceViewer.html",
   "name": "",
@@ -1196,10 +1196,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266513",
+ "dateTimestamp": "Mon Jan 26 00:02:08 2026",
+ "timestampMillis": "1769356928032",
  "status": {
-  "cmdId": "cd7b03de-dc42-45a8-ba3d-b9a62bed885e",
+  "cmdId": "e672474d-9caf-4b73-9b3f-afce78b440d6",
   "state": "CS_PASSED"
  }
 }
@@ -1207,8 +1207,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266647",
+ "dateTimestamp": "Mon Jan 26 00:02:08 2026",
+ "timestampMillis": "1769356928179",
  "report": {
   "path": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/reports/link/v++_link_fhe_kernels_sw_emu_guidance.html",
   "name": "",
@@ -1221,8 +1221,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Sun Jan 25 23:34:26 2026",
- "timestampMillis": "1769355266648",
+ "dateTimestamp": "Mon Jan 26 00:02:08 2026",
+ "timestampMillis": "1769356928181",
  "report": {
   "path": "/home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/src/fpga_backend/_x/v++_link_fhe_kernels_sw_emu_guidance.pb3",
   "name": "",
