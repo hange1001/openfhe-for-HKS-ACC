@@ -2,142 +2,149 @@
 #include <iomanip>
 #include <vector>
 #include <random>
-#include "bconv.h"
+#include <cstring>
+#include "./include/bconv.h"
 
 // ------------------------------------------------------------------
-// 软件参考模型 (Golden Reference)
+// 软件参考模型 (Golden Reference) for Compute_BConv
 // ------------------------------------------------------------------
-// 逻辑：标准的矩阵乘法 C = (A x B) % mod
-// A (Input X) : [RING_DIM][SIZE_Q] (M x K)
-// B (Weight)  : [SIZE_Q][SIZE_P]   (K x N)
-// Mod         : [SIZE_P]           (N) - 每一列对应一个模数
-// C (Output)  : [RING_DIM][SIZE_P] (M x N)
-void bconv_ref(
-    const uint64_t* x, 
-    const uint64_t* w, 
-    const uint64_t* mod, 
-    uint64_t* out
+// Compute_BConv 执行的操作 (匹配 bconv_systolic):
+// 对于每个 ring element 位置 (row, col) 和每个输出 limb p:
+//   out[mod_idx_offset + p][row][col] = (sum_{q=0}^{LIMB_Q-1} in_x[q][row][col] * in_w[q][p]) % MODULUS[mod_idx_offset + p]
+//
+// 注意: 权重是 2D 数组 in_w[LIMB_Q][LIMB_P]
+void bconv_ref_3d(
+    uint64_t in_x[LIMB_Q + LIMB_P][SQRT][SQRT],
+    const uint64_t in_w[LIMB_Q][LIMB_P],
+    const uint64_t MODULUS[LIMB_Q + LIMB_P],
+    int mod_idx_offset
 ) {
-    for (int r = 0; r < RING_DIM; ++r) {       // 遍历行 (Time Step / M)
-        for (int c = 0; c < SIZE_P; ++c) {     // 遍历列 (Output Channel / N)
-            
-            // 使用 128 位累加防止溢出
-            unsigned __int128 acc = 0;
-            
-            for (int k = 0; k < SIZE_Q; ++k) { // 遍历中间维 (Input Channel / K)
-                // 索引计算: Row-Major
-                // x[r][k]
-                uint64_t val_x = x[r * SIZE_Q + k];
-                // w[k][c]
-                uint64_t val_w = w[k * SIZE_P + c];
+   
+    // 对每个输出 limb p
+    for (int p = 0; p < LIMB_P; ++p) {
+        uint64_t mod = MODULUS[LIMB_Q + p];
+        
+        // 对每个 ring element 位置
+        for (int row = 0; row < SQRT; ++row) {
+            for (int col = 0; col < SQRT; ++col) {
+                unsigned __int128 acc = 0;
                 
-                acc += (unsigned __int128)val_x * (unsigned __int128)val_w;
+                // 累加所有输入 limb q 的贡献
+                for (int q = 0; q < LIMB_Q; ++q) {
+                    uint64_t x_val = in_x[q][row][col];
+                    uint64_t w_val = in_w[q][p];
+                    acc += (unsigned __int128)x_val * (unsigned __int128)w_val;
+                }
+                
+                // 存储到 out[mod_idx_offset + p]
+                in_x[LIMB_Q + p][row][col] = (uint64_t)(acc);
             }
-            
-            // 按列取模
-            uint64_t current_mod = mod[c];
-            out[r * SIZE_P + c] = (uint64_t)(acc % current_mod);
         }
     }
 }
 
 // ------------------------------------------------------------------
-// 辅助函数：打印矩阵 (仅打印小部分)
+// 辅助函数：打印 3D 数组的一个 limb
 // ------------------------------------------------------------------
-void print_matrix_head(const char* name, const uint64_t* data, int rows, int cols, int max_rows=16) {
-    std::cout << "Matrix " << name << " [" << rows << "x" << cols << "] (First " << max_rows << " rows):\n";
-    int limit_r = (rows < max_rows) ? rows : max_rows;
-    for (int r = 0; r < limit_r; ++r) {
-        for (int c = 0; c < cols; ++c) {
-            std::cout << std::setw(6) << data[r * cols + c] << " ";
+void print_limb(const char* name, const uint64_t data[SQRT][SQRT], int max_rows = 4) {
+    std::cout << name << " [" << SQRT << "x" << SQRT << "] (First " << max_rows << " rows):\n";
+    for (int r = 0; r < max_rows && r < SQRT; ++r) {
+        for (int c = 0; c < 8 && c < SQRT; ++c) {
+            std::cout << std::setw(8) << data[r][c] << " ";
         }
+        if (SQRT > 8) std::cout << "...";
         std::cout << "\n";
     }
-    if (rows > max_rows) std::cout << "...\n";
     std::cout << std::endl;
 }
 
 int main() {
     std::cout << "=============================================" << std::endl;
-    std::cout << "   Testbench for 2D Weight Stationary Array  " << std::endl;
-    std::cout << "   Dims: X[" << RING_DIM << "x" << SIZE_Q << "] * W[" 
-              << SIZE_Q << "x" << SIZE_P << "] -> Out[" << RING_DIM << "x" << SIZE_P << "]" << std::endl;
+    std::cout << "   Testbench for Compute_BConv (3D Arrays)   " << std::endl;
+    std::cout << "   Using FIXED dimensions:" << std::endl;
+    std::cout << "   LIMB_Q=" << LIMB_Q << ", LIMB_P=" << LIMB_P << std::endl;
+    std::cout << "   SQRT=" << SQRT << " (RING_DIM=" << RING_DIM << ")" << std::endl;
     std::cout << "=============================================" << std::endl;
 
-    // 1. 使用 std::vector 在堆上分配内存 (防止栈溢出)
-    std::vector<uint64_t> x_host(RING_DIM * SIZE_Q);
-    std::vector<uint64_t> mat_host(SIZE_Q * SIZE_P); // Weight
-    std::vector<uint64_t> mod_host(SIZE_P);
-    std::vector<uint64_t> out_ref(RING_DIM * SIZE_P);
-    std::vector<uint64_t> out_hw(RING_DIM * SIZE_P);
+    // 1. 分配数组
+    // in_x: [LIMB_Q + LIMB_P][SQRT][SQRT] - 只使用前 LIMB_Q 个 limb
+    // in_w: [LIMB_Q][LIMB_P] - 2D 权重数组
+    // out:  [LIMB_Q + LIMB_P][SQRT][SQRT] - 输出
+    static uint64_t in_x[LIMB_Q + LIMB_P][SQRT][SQRT];
+    static uint64_t in_hw[LIMB_Q + LIMB_P][SQRT][SQRT];
+    static uint64_t in_w[LIMB_Q][LIMB_P];
+    static uint64_t MODULUS[LIMB_Q + LIMB_P];
 
-    // 2. 初始化数据
-    // 模数: 每一列使用不同的模数，方便验证列独立性
-    // e.g., 101, 103, 107...
-    for (int j = 0; j < SIZE_P; ++j) {
-        mod_host[j] = 100 + j*2 + 1; 
+    // 2. 设置模数
+    std::cout << "Setting up modulus array..." << std::endl;
+    for (int i = 0; i < LIMB_Q + LIMB_P; ++i) {
+        MODULUS[i] = 1000000007ULL + i * 1000;  // 不同的模数
     }
+    std::cout << "MODULUS[0] = " << MODULUS[0] << std::endl;
 
-    // 输入 X: 简单的规律数据 + 少量随机
-    for (int i = 0; i < RING_DIM * SIZE_Q; ++i) {
-        // x_host[i] = (i % 100) + 1; // 简单模式
-        x_host[i] = rand() % 100;     // 随机模式
-    }
-
-    // 权重 W
-    for (int i = 0; i < SIZE_Q * SIZE_P; ++i) {
-        mat_host[i] = (i % 50) + 1; 
-    }
-
-    // 3. 运行软件参考模型
-    std::cout << "Running Reference Model..." << std::endl;
-    bconv_ref(x_host.data(), mat_host.data(), mod_host.data(), out_ref.data());
-
-    // 4. 运行硬件 Kernel (HLS)
-    std::cout << "Running Hardware Kernel..." << std::endl;
-    
-    // 需要强制转换为 ap_uint<64>* 接口
-    // std::vector.data() 返回底层指针
-    ap_uint<64>* x_dev   = reinterpret_cast<ap_uint<64>*>(x_host.data());
-    ap_uint<64>* mat_dev = reinterpret_cast<ap_uint<64>*>(mat_host.data());
-    ap_uint<64>* mod_dev = reinterpret_cast<ap_uint<64>*>(mod_host.data());
-    ap_uint<64>* out_dev = reinterpret_cast<ap_uint<64>*>(out_hw.data());
-
-    bconv_systolic(x_dev, mat_dev, mod_dev, out_dev);
-
-    // 5. 结果比对
-    std::cout << "Verifying Results..." << std::endl;
-    int errors = 0;
-    for (int r = 0; r < RING_DIM; ++r) {
-        for (int c = 0; c < SIZE_P; ++c) {
-            int idx = r * SIZE_P + c;
-            if (out_hw[idx] != out_ref[idx]) {
-                if (errors < 20) { // 只打印前20个错误
-                    std::cout << "Mismatch at Row=" << r << " Col=" << c 
-                              << " | Ref=" << out_ref[idx] << " HW=" << out_hw[idx] << std::endl;
-                }
-                errors++;
+    // 3. 初始化输入数据 in_x
+    std::cout << "Initializing input X [" << (LIMB_Q + LIMB_P) << "][" << SQRT << "][" << SQRT << "]..." << std::endl;
+    srand(42);
+    for (int l = 0; l < LIMB_Q; ++l) {  // 只初始化前 LIMB_Q 个 limb
+        for (int r = 0; r < SQRT; ++r) {
+            for (int c = 0; c < SQRT; ++c) {
+                in_x[l][r][c] = rand() % 100 + 1;  // 1-100
+                in_hw[l][r][c] = in_x[l][r][c];
             }
         }
     }
-
-    // 6. 打印部分结果用于观察 (只打印前几行)
-    std::cout << "\n--- Sample Data Inspection ---\n";
-    // 如果 RING_DIM 很大，不要全部打印
-    print_matrix_head("X (Input)", x_host.data(), RING_DIM, SIZE_Q);
-    print_matrix_head("W (Weight)", mat_host.data(), SIZE_Q, SIZE_P);
-    print_matrix_head("Out (Ref)", out_ref.data(), RING_DIM, SIZE_P);
-    print_matrix_head("Out (HW) ", out_hw.data(),  RING_DIM, SIZE_P);
-
-    if (errors == 0) {
-        std::cout << "\n=============================================" << std::endl;
-        std::cout << "  TEST PASSED! Output Matches perfectly. " << std::endl;
-        std::cout << "=============================================" << std::endl;
-        return 0;
-    } else {
-        std::cout << "\n=============================================" << std::endl;
-        std::cout << "  TEST FAILED with " << errors << " errors." << std::endl;
-        std::cout << "=============================================" << std::endl;
-        return 1;
+    // 其余 limb 清零
+    for (int l = LIMB_Q; l < LIMB_Q + LIMB_P; ++l) {
+        memset(in_x[l], 0, sizeof(in_x[l]));
+        memset(in_hw[l], 0, sizeof(in_hw[l]));
     }
+
+    // 4. 初始化权重 in_w
+    std::cout << "Initializing weights W [" << LIMB_Q << "][" << LIMB_P << "]..." << std::endl;
+    for (int q = 0; q < LIMB_Q; ++q) {
+        for (int p = 0; p < LIMB_P; ++p) {
+            in_w[q][p] = ((q * LIMB_P + p) % 50) + 1;  // 1-50
+        }
+    }
+
+
+
+    // 6. 运行软件参考模型
+    std::cout << "\nRunning Reference Model..." << std::endl;
+    int num_active_limbs = LIMB_Q;
+    int mod_idx_offset = 0;
+    bconv_ref_3d(in_x, in_w, MODULUS, mod_idx_offset);
+    std::cout << "Reference model completed." << std::endl;
+
+    // 7. 运行硬件 Kernel (Compute_BConv)
+    std::cout << "\nRunning Hardware Kernel (Compute_BConv)..." << std::endl;
+    Compute_BConv(
+        in_hw,           // input
+        in_w,           // weights (2D)
+        MODULUS,        // modulus array
+        num_active_limbs,
+        mod_idx_offset
+    );
+    std::cout << "Hardware kernel completed." << std::endl;
+
+    // 8. 结果比对
+    std::cout << "\nVerifying Results..." << std::endl;
+    int errors = 0;
+    int total_checked = 0;
+    
+    for (int l = 0; l < LIMB_Q + LIMB_P; ++l) {
+        for (int r = 0; r < SQRT; ++r) {
+            for (int c = 0; c < SQRT; ++c) {
+                if (in_hw[l][r][c] != in_x[l][r][c]) {
+                    errors++;
+                    std::cout << "Error at in_hw[" << l << "][" << r << "][" << c << "] = " << in_hw[l][r][c] << " != " << in_x[l][r][c] << std::endl;
+                }
+            }
+        }
+    }
+    std::cout << "Total errors: " << errors << std::endl;
+    std::cout << "Total checked: " << total_checked << std::endl;
+    std::cout << "Error rate: " << (double)errors / total_checked << std::endl;
+
+    return errors;
 }

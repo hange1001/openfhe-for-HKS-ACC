@@ -15,9 +15,6 @@
 #define PROFILE
 
 #include "openfhe.h"
-
-// 【新增】引入 FPGA 管理器
-// 如果编译报错找不到文件，请检查这个路径是否正确
 #include "FpgaManager.h"
 
 using namespace lbcrypto;
@@ -103,55 +100,7 @@ int main() {
     }
     std::cout << "################################################\n" << std::endl;
     // ======================================================================
-    // 【FPGA 初始化模块 END】
-    // ======================================================================
-
-
-    // ======================================================================
-    // 【DEBUG: FPGA BConv 独立单元测试】
-    // ======================================================================
-    if (FpgaManager::GetInstance().IsReady() && !fpga_q_mods.empty()) {
-        std::cout << "\n------------------------------------------------" << std::endl;
-        std::cout << " [DEBUG] Running BConv Unit Test..." << std::endl;
-        std::cout << "------------------------------------------------" << std::endl;
-
-        // 1. 准备参数
-        uint64_t test_mod = fpga_q_mods[0]; 
-        size_t N = cc->GetRingDimension(); // 4096
-        
-        // 【关键修改 1】先把 num_limbs 拿出来
-        size_t num_limbs = fpga_q_mods.size(); 
-        std::cout << " [DEBUG] Config: N=" << N << ", Limbs=" << num_limbs << std::endl;
-
-        // 【关键修改 2】分配内存时乘以 num_limbs
-        // 防止 FPGA 读写越界 (Buffer Overflow)
-        std::vector<uint64_t> host_x(N * num_limbs, 1);
-        std::vector<uint64_t> host_w(N * num_limbs, 2); 
-        std::vector<uint64_t> host_res(N * num_limbs, 0);
-
-        // 2. 调用 FPGA
-        try {
-            FpgaManager::GetInstance().BConvOffload(
-                host_x.data(), 
-                host_w.data(), 
-                host_res.data(), 
-                test_mod, 
-                N,
-                num_limbs
-            );
-
-            std::cout << " [DEBUG] BConv Call Finished." << std::endl;
-            // 3. 简单的结果检查
-            std::cout << " [DEBUG] Result[0]: " << host_res[0] << std::endl;
-            // 检查最后一个 Limb 的数据，确保 FPGA 真的算到了那里
-            std::cout << " [DEBUG] Result[last]: " << host_res[(num_limbs-1)*N] << std::endl;
-        } catch (const std::exception& e) {
-             std::cerr << " [DEBUG] BConv Test Failed: " << e.what() << std::endl;
-        }
-        std::cout << "------------------------------------------------\n" << std::endl;
-    }
-    // ======================================================================
-    // 【DEBUG 结束】
+    // Init FPGA
     // ======================================================================
 
     // Enable the features that you wish to use
@@ -184,8 +133,8 @@ int main() {
     auto cSub = cc->EvalSub(c1, c2);
     auto cScalar = cc->EvalMult(c1, 4.0);
     auto cMul = cc->EvalMult(c1, c2);
-    auto cRot1 = cc->EvalRotate(c1, 1);
-    auto cRot2 = cc->EvalRotate(c1, -2);
+    // auto cRot1 = cc->EvalRotate(c1, 1);
+    // auto cRot2 = cc->EvalRotate(c1, -2);
 
     // Step 5: Decryption and output
     Plaintext result;
@@ -212,14 +161,6 @@ int main() {
     cc->Decrypt(keys.secretKey, cMul, &result);
     result->SetLength(batchSize);
     std::cout << "x1 * x2 = " << result << std::endl;
-
-    cc->Decrypt(keys.secretKey, cRot1, &result);
-    result->SetLength(batchSize);
-    std::cout << "x1 rotate by 1 = " << result << std::endl;
-
-    cc->Decrypt(keys.secretKey, cRot2, &result);
-    result->SetLength(batchSize);
-    std::cout << "x1 rotate by -2 = " << result << std::endl;
 
     return 0;
 }

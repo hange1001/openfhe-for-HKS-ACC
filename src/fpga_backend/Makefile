@@ -22,16 +22,20 @@ INC_DIR    := ./include
 
 # 源文件定义 (主要用于 Vitis Flow 打包，HLS Flow 依赖你的 TCL 脚本配置)
 KERNEL_SRC := $(SRC_DIR)/top.cpp 
-# KERNEL_SRC += $(SRC_DIR)/arithmetic.cpp
 KERNEL_SRC += $(SRC_DIR)/load.cpp
 KERNEL_SRC += $(SRC_DIR)/mod_add_kernel.cpp
 KERNEL_SRC += $(SRC_DIR)/mod_mult_kernel.cpp
 KERNEL_SRC += $(SRC_DIR)/mod_sub_kernel.cpp
+KERNEL_SRC += $(SRC_DIR)/ntt_kernel.cpp
+KERNEL_SRC += $(SRC_DIR)/arithmetic.cpp
+KERNEL_SRC += $(SRC_DIR)/bconv.cpp
+KERNEL_SRC += $(SRC_DIR)/interleave.cpp
+KERNEL_SRC += $(SRC_DIR)/auto.cpp
 
 KERNEL_NAME := Top
 
 # OpenFHE 路径
-OPENFHE_ROOT := /home/timhan/FHE/openfhe
+OPENFHE_ROOT := /home/CONNECT/xmeng027/work/FHE-BERT-Tiny/openfhe/
 OPENFHE_INC  := -I$(OPENFHE_ROOT)/src/pke/include \
                 -I$(OPENFHE_ROOT)/src/core/include \
                 -I$(OPENFHE_ROOT)/build/src/core \
@@ -77,11 +81,11 @@ xclbin: $(XCLBIN)
 
 temp.xo: $(KERNEL_SRC)
 	@echo "-> Synthesizing Kernel (Vitis HLS)..."
-	$(VPP) -c $(VPP_FLAGS) -k $(KERNEL_NAME) -o $@ $<
+	$(VPP) -c $(VPP_FLAGS) -k $(KERNEL_NAME) -o $@ $^
 
 $(XCLBIN): temp.xo
 	@echo "-> Linking Kernel (Vitis Link)..."
-	$(VPP) -l $(VPP_FLAGS) -o $@ $<
+	$(VPP) -l $(VPP_FLAGS) -o $@ $^
 
 emconfig:
 	@echo "-> Generating emconfig.json..."

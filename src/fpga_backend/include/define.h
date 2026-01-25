@@ -26,11 +26,14 @@ static const int LOG_SQRT = 6;
 
 static const int BU_NUM = 32;
 
-static const int LIMB_Q = 3;
-static const int LIMB_P = 2;
+
+// 维度定义
+static const int LIMB_Q = 3;  // Q模数数量，索引 0, 1, 2
+static const int LIMB_P = 2;  // P模数数量，索引 3, 4
 
 static const int STAGE = 12; //log2(RING_DIM)
 
+// 总limb数 = Q + P = 3 + 2 = 5
 #define MAX_LIMBS (LIMB_Q + LIMB_P)
 
 // 兼容旧代码的别名 (如果你的代码里混用了 LIMB)
@@ -45,7 +48,8 @@ static const int LIMB = MAX_LIMBS;
 #define OP_MULT   3
 #define OP_NTT    4
 #define OP_INTT   5
-#define OP_AUTO   6
+#define OP_BCONV  6  // Fixed: was OP_AUTO, now matches opcode.h
+#define OP_AUTO   7  // Reserved for future use
 
 // =========================================================
 // 4. 辅助常量

@@ -1,4 +1,5 @@
 #include "define.h"
+#include "../include/load.h"
 
 void Load(
     const uint64_t *mem_in,

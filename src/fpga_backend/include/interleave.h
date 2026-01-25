@@ -5,10 +5,13 @@
 #include <cstdint>
 #include "define.h"
 
+extern "C" {
 
 void InterLeave(
     uint64_t data[SQRT][SQRT],   // 读写同一个片上 BRAM
     const bool is_right_shift
 );
+
+}
 
 #endif // SHIFT_H
