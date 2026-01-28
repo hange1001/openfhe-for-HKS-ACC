@@ -1229,7 +1229,7 @@ DCRTPolyImpl<VecType> DCRTPolyImpl<VecType>::ApproxSwitchCRTBasis(
 #if defined(HAVE_INT128) && (NATIVEINT == 64) && !defined(WITH_REDUCED_NOISE) && \
     (defined(WITH_OPENMP) || (defined(__clang__) && !defined(WITH_NATIVEOPT)))
     
-    std::cout << "Bconv operation" << std::endl;
+    // std::cout << "Bconv operation" << std::endl;
     std::vector<DoubleNativeInt> sum(sizeP);
     
     #pragma omp parallel for firstprivate(sum) num_threads(OpenFHEParallelControls.GetThreadLimit(8))
