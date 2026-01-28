@@ -25,8 +25,8 @@
      // ======================================================================
      
      // A. Specify main parameters
-     uint32_t multDepth = 1;
-     uint32_t scaleModSize = 50;
+     uint32_t multDepth = 3;
+     uint32_t scaleModSize = 30;
      uint32_t ringDegree = 1 << 12;
      uint32_t batchSize = 8;
  
@@ -55,18 +55,18 @@
      auto ringDim = cc->GetRingDimension();
      std::cout << "[Host] Ring Dimension: " << ringDim << std::endl;
  
-     // 2. 提取 Q 模数 (Ciphertext Moduli)
-     auto elementParams = cc->GetElementParams();
-     const auto& rnsParams = elementParams->GetParams();
+    // 2. 提取 Q 模数 (Ciphertext Moduli)
+    auto elementParams = cc->GetElementParams();
+    const auto& rnsParams = elementParams->GetParams();
      
-     std::cout << "[Host] Extracting Q (Ciphertext Moduli)..." << std::endl;
-     for (size_t i = 0; i < rnsParams.size(); i++) {
-         uint64_t q_val = rnsParams[i]->GetModulus().ConvertToInt();
-         fpga_q_mods.push_back(q_val);
-         // 打印前几个看看
-         if (i < 3 || i == rnsParams.size() - 1) {
-             std::cout << "  Q[" << i << "]: " << q_val << std::endl;
-         }
+    std::cout << "[Host] Extracting Q (Ciphertext Moduli)..." << std::endl;
+    for (size_t i = 0; i < rnsParams.size(); i++) {
+        uint64_t q_val = rnsParams[i]->GetModulus().ConvertToInt();
+        fpga_q_mods.push_back(q_val);
+        // 打印前几个看看
+    
+        std::cout << "  Q[" << i << "]: " << q_val << std::endl;
+    
      }
      std::cout << "  Total Q Limbs: " << fpga_q_mods.size() << std::endl;
  
@@ -115,52 +115,54 @@
      cc->EvalRotateKeyGen(keys.secretKey, {1, -2});
  
      // Step 3: Encoding and encryption of inputs
-     std::vector<double> x1 = {0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0};
-     std::vector<double> x2 = {5.0, 4.0, 3.0, 2.0, 1.0, 0.75, 0.5, 0.25};
+     std::vector<double> x1 = {0.25,1000000};
  
      Plaintext ptxt1 = cc->MakeCKKSPackedPlaintext(x1);
-     Plaintext ptxt2 = cc->MakeCKKSPackedPlaintext(x2);
  
      std::cout << "Input x1: " << ptxt1 << std::endl;
-     std::cout << "Input x2: " << ptxt2 << std::endl;
  
      auto c1 = cc->Encrypt(keys.publicKey, ptxt1);
-     auto c2 = cc->Encrypt(keys.publicKey, ptxt2);
+
+    // 打印密文每个 RNS Limb 的实际模数
+    auto currentParams = c1->GetElements()[0].GetParams()->GetParams();
+    std::cout << "Ciphertext RNS Basis: " << std::endl;
+    for (size_t i = 0; i < currentParams.size(); i++) {
+        std::cout << "  Actual q[" << i << "]: " << currentParams[i]->GetModulus() << std::endl;
+    }
  
      // Step 4: Evaluation
      // 这里的 EvalAdd, EvalMult 会在底层调用你的 FPGA 算子
-     auto cAdd = cc->EvalAdd(c1, c2);
-     auto cSub = cc->EvalSub(c1, c2);
-     auto cScalar = cc->EvalMult(c1, 4.0);
-     auto cMul = cc->EvalMult(c1, c2);
-     auto cRot1 = cc->EvalRotate(c1, 1);
-     auto cRot2 = cc->EvalRotate(c1, -2);
+     auto c1_2 = cc->EvalMult(c1, c1);
+
+     // 打印密文每个 RNS Limb 的实际模数
+    auto currentParams2 = c1_2->GetElements()[0].GetParams()->GetParams();
+    std::cout << "Ciphertext RNS Basis: " << std::endl;
+    for (size_t i = 0; i < currentParams2.size(); i++) {
+        std::cout << "  C1_2 Actual q[" << i << "]: " << currentParams2[i]->GetModulus() << std::endl;
+    }
+
+     auto c1_4 = cc->EvalMult(c1_2, c1_2);
+
+     // 打印密文每个 RNS Limb 的实际模数
+    auto currentParams4 = c1_4->GetElements()[0].GetParams()->GetParams();
+    std::cout << "Ciphertext RNS Basis: " << std::endl;
+    for (size_t i = 0; i < currentParams4.size(); i++) {
+        std::cout << "  C1_4 Actual q[" << i << "]: " << currentParams4[i]->GetModulus() << std::endl;
+    }
+
  
      // Step 5: Decryption and output
-     Plaintext result;
+     Plaintext result2;
+     cc->Decrypt(keys.secretKey, c1_2, &result2);
+     result2->SetLength(batchSize);
+     std::cout << "x1^2 = " << result2 << std::endl;
+
+     Plaintext result4;
      std::cout.precision(8);
- 
      std::cout << std::endl << "Results of homomorphic computations: " << std::endl;
- 
-     cc->Decrypt(keys.secretKey, c1, &result);
-     result->SetLength(batchSize);
-     std::cout << "x1 = " << result;
- 
-     cc->Decrypt(keys.secretKey, cAdd, &result);
-     result->SetLength(batchSize);
-     std::cout << "x1 + x2 = " << result;
- 
-     cc->Decrypt(keys.secretKey, cSub, &result);
-     result->SetLength(batchSize);
-     std::cout << "x1 - x2 = " << result << std::endl;
- 
-     cc->Decrypt(keys.secretKey, cScalar, &result);
-     result->SetLength(batchSize);
-     std::cout << "4 * x1 = " << result << std::endl;
- 
-     cc->Decrypt(keys.secretKey, cMul, &result);
-     result->SetLength(batchSize);
-     std::cout << "x1 * x2 = " << result << std::endl;
+     cc->Decrypt(keys.secretKey, c1_4, &result4);
+     result4->SetLength(batchSize);
+     std::cout << "x1^4 = " << result4 << std::endl;
  
      return 0;
  }
