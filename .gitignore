@@ -77,6 +77,8 @@ test_detail.xml
 # Vitis/Vivado generated artifacts
 src/fpga_backend/.ipcache/
 src/fpga_backend/_x/
+src/fpga_backend/Solution/
+src/fpga_backend/.Xil/
 *.xclbin
 *.xsa
 *.xo
