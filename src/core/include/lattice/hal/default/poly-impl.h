@@ -382,21 +382,15 @@ PolyImpl<VecType> PolyImpl<VecType>::AutomorphismTransform(uint32_t k, const std
     // ==========================================
 #ifdef OPENFHE_FPGA_ENABLE
     if (FpgaManager::GetInstance().IsReady() && n == FPGA_RING_DIM) {
-        std::cout << "Execute INTT on FPGA" << std::endl;
         using IntType = typename VecType::Integer;
         std::vector<uint64_t> inBuf(n), outBuf(n);
         
-        for (uint32_t i = 0; i < n; ++i) {
-            inBuf[i] = (*tmp.m_values)[i].ConvertToInt();
-        }
-
-        // OpenFHE 的 EVAL 天然是位反转序，直接喂给 FPGA INTT
-        FpgaManager::GetInstance().NttInverseOffload(inBuf.data(), outBuf.data(), q.ConvertToInt(), n);
+        for (uint32_t i = 0; i < n; ++i) inBuf[i] = (*tmp.m_values)[i].ConvertToInt();
         
-        for (uint32_t i = 0; i < n; ++i) {
-            (*tmp.m_values)[i] = IntType(outBuf[i]);
-        }
-        tmp.SetFormat(Format::COEFFICIENT); // 手动更新为 COEFFICIENT (自然序)
+        FpgaManager::GetInstance().NttInverseOffload(inBuf.data(), outBuf.data(), q.ConvertToInt(), n);
+    
+        for (uint32_t i = 0; i < n; ++i) (*tmp.m_values)[i] = IntType(outBuf[i]);
+        //tmp.SetFormat(Format::COEFFICIENT);// 手动更新为 COEFFICIENT (自然序)
     } else
 #endif
     {
@@ -411,22 +405,16 @@ PolyImpl<VecType> PolyImpl<VecType>::AutomorphismTransform(uint32_t k, const std
     
 #ifdef OPENFHE_FPGA_ENABLE
     if (FpgaManager::GetInstance().IsReady() && n == FPGA_RING_DIM) {
-        std::cout << "Execute Automorphism Transform on FPGA" << std::endl;
         using Integer = typename VecType::Integer;
         Integer kinvInt = Integer(k).ModInverse(Integer(2 * n));
         uint32_t kinv = kinvInt.ConvertToInt();
         std::vector<uint64_t> inBuf(n), outBuf(n);
         
-        for (uint32_t i = 0; i < n; ++i) {
-            inBuf[i] = (*tmp.m_values)[i].ConvertToInt();
-        }
+        for (uint32_t i = 0; i < n; ++i) inBuf[i] = (*tmp.m_values)[i].ConvertToInt();
         
-        // FPGA Auto 接收并输出自然序
         FpgaManager::GetInstance().AutoOffload(inBuf.data(), outBuf.data(), k, kinv, q.ConvertToInt(), n);
         
-        for (uint32_t i = 0; i < n; ++i) {
-            (*tmp.m_values)[i] = Integer(outBuf[i]);
-        }
+        for (uint32_t i = 0; i < n; ++i) (*tmp.m_values)[i] = Integer(outBuf[i]);
     } else
 #endif
     {
@@ -442,21 +430,15 @@ PolyImpl<VecType> PolyImpl<VecType>::AutomorphismTransform(uint32_t k, const std
     // ==========================================
 #ifdef OPENFHE_FPGA_ENABLE
     if (FpgaManager::GetInstance().IsReady() && n == FPGA_RING_DIM) {
-        std::cout << "Execute NTT on FPGA" << std::endl;
         using IntType = typename VecType::Integer;
         std::vector<uint64_t> inBuf(n), outBuf(n);
         
-        for (uint32_t i = 0; i < n; ++i) {
-            inBuf[i] = (*tmp.m_values)[i].ConvertToInt();            
-        }
+        for (uint32_t i = 0; i < n; ++i) inBuf[i] = (*tmp.m_values)[i].ConvertToInt();            
         
-        // FPGA NTT 接收自然序，输出位反转序
         FpgaManager::GetInstance().NttForwardOffload(inBuf.data(), outBuf.data(), q.ConvertToInt(), n);
         
-        for (uint32_t i = 0; i < n; ++i) {
-            (*tmp.m_values)[i] = IntType(outBuf[i]);
-        }
-        tmp.SetFormat(Format::EVALUATION); // 手动更新为 EVALUATION (位反转序)
+        for (uint32_t i = 0; i < n; ++i) (*tmp.m_values)[i] = IntType(outBuf[i]);
+        //tmp.SetFormat(Format::EVALUATION);// 手动更新为 EVALUATION (位反转序)
     } else
 #endif     
     {
@@ -465,7 +447,6 @@ PolyImpl<VecType> PolyImpl<VecType>::AutomorphismTransform(uint32_t k, const std
 
     return tmp;
 }
-
 
 template <typename VecType>
 PolyImpl<VecType> PolyImpl<VecType>::MultiplicativeInverse() const {
