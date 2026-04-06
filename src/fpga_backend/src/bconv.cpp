@@ -4,34 +4,18 @@
 static const int TOTAL_CYCLES = LIMB_Q + RING_DIM + MAX_OUT_COLS - 1;
 
 void bconv_systolic(
-    uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
-    const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
-    const uint64_t out_mod[MAX_OUT_COLS],
+    uint64_t in_x[MAX_LIMBS][SQRT][SQRT],       // <-- 加上 (&in_x)
+    const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],  // <-- 加上 (&in_w)
+    const uint64_t out_mod[MAX_OUT_COLS],       // <-- 加上 (&out_mod)
     int sizeP
 ) {
-#pragma HLS INTERFACE m_axi port=in_x   bundle=gmem0
-#pragma HLS INTERFACE m_axi port=in_w   bundle=gmem1
-#pragma HLS INTERFACE s_axilite port=out_mod bundle=control 
-#pragma HLS INTERFACE s_axilite port=sizeP bundle=control
-#pragma HLS INTERFACE s_axilite port=return bundle=control
-
-    ap_uint<64> local_w[LIMB_Q][MAX_OUT_COLS];
-#pragma HLS ARRAY_PARTITION variable=local_w complete dim=0
+    // 1. 强制尽早内联，打破函数边界
+    #pragma HLS INLINE
     
-    Load_W: for (int q = 0; q < LIMB_Q; ++q) {
-        for (int p = 0; p < MAX_OUT_COLS; ++p) {
-#pragma HLS PIPELINE II=1
-            local_w[q][p] = in_w[q][p];
-        }
-    }
-
-    ap_uint<64> local_mod[MAX_OUT_COLS];
-#pragma HLS ARRAY_PARTITION variable=local_mod complete
-    
-    Load_Mod: for (int p = 0; p < MAX_OUT_COLS; ++p) {
-#pragma HLS PIPELINE II=1
-        local_mod[p] = out_mod[p];
-    }
+    // 2. 声明形参的物理形态，与外部传入的 local 数组保持绝对一致
+    #pragma HLS ARRAY_PARTITION variable=in_x type=complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=in_w complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out_mod complete dim=0
 
     ap_uint<64> x_reg[LIMB_Q][MAX_OUT_COLS + 1];
     ap_uint<128> sum_reg[MAX_OUT_COLS][LIMB_Q + 1];
@@ -94,6 +78,7 @@ void bconv_systolic(
             if (data_idx >= 0 && data_idx < RING_DIM) {
                 int row = data_idx / SQRT;
                 int col = data_idx % SQRT;
+                //FIXME -- Done
                 x_reg[q][0] = in_x[q][row][col];
             } else {
                 x_reg[q][0] = 0;
@@ -114,8 +99,8 @@ void bconv_systolic(
                 ap_uint<128> sum_in = sum_curr[p][q];
                 
                 // MAC operation using column-specific modulus
-                ap_uint<64> mod_p = local_mod[p];
-                ap_uint<128> prod = ((ap_uint<128>)x_in * (ap_uint<128>)local_w[q][p]) % mod_p;
+                ap_uint<64> mod_p = out_mod[p];
+                ap_uint<128> prod = ((ap_uint<128>)x_in * (ap_uint<128>)in_w[q][p]) % mod_p;
                 ap_uint<128> sum_out = (sum_in + prod) % mod_p;
                 
                 // Write outputs (for next cycle)
@@ -138,6 +123,7 @@ void bconv_systolic(
                 ap_uint<128> result = sum_reg[p][LIMB_Q];
                 int row = valid_count[p] / SQRT;
                 int col = valid_count[p] % SQRT;
+                //FIXME --Done
                 in_x[LIMB_Q + p][row][col] = (uint64_t)(result);
                 
                 valid_count[p]++;
@@ -155,5 +141,65 @@ void Compute_BConv(
     const uint64_t out_mod[MAX_OUT_COLS],
     int sizeP
 ) {
-    bconv_systolic(in_x, in_w, out_mod, sizeP);
+    // 所有的全局总线接口（DDR）统一定义在顶层
+    #pragma HLS INTERFACE m_axi port=in_x   bundle=gmem0
+    #pragma HLS INTERFACE m_axi port=in_w   bundle=gmem1
+    #pragma HLS INTERFACE s_axilite port=out_mod bundle=control 
+    #pragma HLS INTERFACE s_axilite port=sizeP bundle=control
+    #pragma HLS INTERFACE s_axilite port=return bundle=control
+
+    // ----------------------------------------------
+    // 1. 开辟片上存储空间 (Local Memories)
+    // ----------------------------------------------
+    // X 数据量大，用BRAM，仅在第一维拆分满足 UNROLL
+    uint64_t local_in_x[MAX_LIMBS][SQRT][SQRT];
+    #pragma HLS BIND_STORAGE variable=local_in_x type=ram_2p impl=bram
+    #pragma HLS ARRAY_PARTITION variable=local_in_x type=complete dim=1
+
+    // 权重和模数数据量小，且需要极高并发，完全打散成寄存器
+    uint64_t local_w[LIMB_Q][MAX_OUT_COLS];
+    uint64_t local_mod[MAX_OUT_COLS];
+    #pragma HLS ARRAY_PARTITION variable=local_w complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_mod complete dim=0
+
+    // -----------------------------------------
+    // 2. Load Phase: 将全局 DDR 数据搬运到片上
+    // ----------------------------------------- 
+    Load_W: for (int q = 0; q < LIMB_Q; ++q) {
+        for (int p = 0; p < MAX_OUT_COLS; ++p) {
+            #pragma HLS PIPELINE II=1
+            local_w[q][p] = in_w[q][p];
+        }
+    }
+    
+    Load_Mod: for (int p = 0; p < MAX_OUT_COLS; ++p) {
+        #pragma HLS PIPELINE II=1
+        local_mod[p] = out_mod[p];
+    }
+
+    Load_X: for(int l = 0;l < LIMB_Q; ++l){
+        for(int r = 0;r < SQRT; ++r){
+            for(int c = 0;c < SQRT; ++c){
+                #pragma HLS PIPELINE II=1
+                local_in_x[l][r][c] =in_x[l][r][c];
+            }
+        }
+    }
+    // -----------------------------------------
+    // 3. Compute Phase: 纯片上脉动阵列计算
+    // -----------------------------------------
+    bconv_systolic(local_in_x, local_w, local_mod, sizeP);
+
+    // -----------------------------------------
+    // 4. Store Phase: 把计算生成的新结果写回 DDR
+    // -----------------------------------------
+    Store_X: for(int p =0; p< sizeP; ++p){
+        for(int r = 0; r < SQRT; ++r){
+            for(int c = 0; c < SQRT; ++c){
+                #pragma HLS PIPELINE II=1
+                in_x[LIMB_Q + p][r][c] = local_in_x[LIMB_Q + p][r][c];
+            }
+        }
+    }
+
 }
