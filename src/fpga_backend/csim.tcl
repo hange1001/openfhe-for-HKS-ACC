@@ -1,7 +1,7 @@
 open_project Solution
 
 # 使用 Auto 作为顶层函数测试 CKKS automorphism
-set_top BConvnew
+set_top BConv
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
