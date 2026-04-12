@@ -64,8 +64,6 @@ void MultMod(
   
 ){
     #pragma HLS INLINE
-    // 流水线优化：II=1 表示每个时钟周期都能处理一个新的输入
-    #pragma HLS PIPELINE II=1
 
 
     // 2. 全精度乘法 (Step 0)
