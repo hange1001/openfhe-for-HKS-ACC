@@ -27,7 +27,7 @@ add_files {
 # add_files -tb ./src/testbench.cpp -cflags $my_cflags
 
 open_solution "solution1"
-set_part xcu250-figd2104-2l-e
+set_part xcu55c-fsvh2892-2L-e
 create_clock -period 4ns
 
 csynth_design
