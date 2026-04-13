@@ -252,10 +252,11 @@ void NTT_Kernel(
 
     bool is_ntt
 ){
-    // ===== 大数组：按维度分 Bank =====
-    #pragma HLS ARRAY_PARTITION variable=in_memory complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory complete dim=1
-    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory complete dim=1
+    // in_memory[SQRT][SQRT]：内层循环按列（dim=2）展开，cyclic factor=8 匹配 UNROLL
+    #pragma HLS ARRAY_PARTITION variable=in_memory cyclic factor=8 dim=2
+    // twiddle[BU_NUM][RING_DIM]：按 BU_NUM（dim=1）展开访问，cyclic factor=8 匹配 UNROLL
+    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory cyclic factor=8 dim=1
+    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory cyclic factor=8 dim=1
 
     int InputIndex[SQRT], OutputIndex[SQRT];
     int TwiddleIndex[BU_NUM];
@@ -332,11 +333,12 @@ void Compute_NTT(
 
 ) {
 
-   #pragma HLS ARRAY_PARTITION variable=in_memory cyclic factor=8 dim=2
-    
-    // Twiddle 因子如果每次也是读 8 个，也可以一并改为 cyclic
-    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory cyclic factor=8 dim=1
-    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory cyclic factor=8 dim=1
+    // in_memory[MAX_LIMBS][SQRT][SQRT]：并行访问最内层列（dim=3）
+    #pragma HLS ARRAY_PARTITION variable=in_memory cyclic factor=8 dim=3
+
+    // twiddle_memory[MAX_LIMBS][BU_NUM][RING_DIM]：按 BU_NUM 展开访问（dim=2）
+    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory cyclic factor=8 dim=2
+    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory cyclic factor=8 dim=2
 
     for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++){
         NTT_Kernel(
