@@ -61,12 +61,17 @@ void read_data(
     uint64_t ReadData[SQRT],
     const uint64_t DataRAM[SQRT][SQRT]
 ) {
-    #pragma HLS INLINE
+    #pragma HLS INLINE off // 关闭内联，防止状态机爆炸
+    
+    // 提前计算移位和掩码，将取模运算转化为位运算 (Bitwise AND)
+    int shift_val = (STAGE >> 1) - j;
+    int mask = (1 << shift_val) - 1;
+
     for (int l = 0; l < SQRT; l++) {
         #pragma HLS UNROLL factor=8
         if (j < (STAGE >> 1)) {
-            int ReadAddr = (l - k + SQRT) % (1 << ((STAGE >> 1) - j)) +
-                           (k >> ((STAGE >> 1) - j)) * (SQRT >> j);
+            // 使用 & mask 替代 % (1 << shift_val)
+            int ReadAddr = ((l - k + SQRT) & mask) + (k >> shift_val) * (SQRT >> j);
             ReadData[l] = DataRAM[ReadAddr][l];
         } else {
             ReadData[l] = DataRAM[k][l];
@@ -166,13 +171,16 @@ void rewrite_data(
     uint64_t RepermuteData[SQRT],
     uint64_t DataRAM[SQRT][SQRT]
 ) {
-    #pragma HLS INLINE
+    #pragma HLS INLINE off // 关闭内联
+    
+    int shift_val = (STAGE >> 1) - j;
+    int mask = (1 << shift_val) - 1;
+
     for (int l = 0; l < SQRT; l++) {
         #pragma HLS UNROLL factor=8
         if (j < (STAGE >> 1)) {
-            int WriteAddr = (l - k + SQRT) % (1 << ((STAGE >> 1) - j)) + 
-                           (k >> ((STAGE >> 1) - j)) * (SQRT >> j);
-
+            // 使用 & mask 替代 % (1 << shift_val)
+            int WriteAddr = ((l - k + SQRT) & mask) + (k >> shift_val) * (SQRT >> j);
             DataRAM[WriteAddr][l] = RepermuteData[l];
         } else {
             DataRAM[k][l] = RepermuteData[l];
@@ -255,19 +263,20 @@ void NTT_Kernel(
     uint64_t ReadData[SQRT], PermuteData[SQRT], TwiddleFactor[BU_NUM];
     uint64_t NTTData[SQRT], RepermuteData[SQRT];
 
-    // ===== 临时数组：全部打散为寄存器 =====
-    #pragma HLS ARRAY_PARTITION variable=InputIndex complete
-    #pragma HLS ARRAY_PARTITION variable=OutputIndex complete
-    #pragma HLS ARRAY_PARTITION variable=TwiddleIndex complete
-    #pragma HLS ARRAY_PARTITION variable=ReadData complete
-    #pragma HLS ARRAY_PARTITION variable=PermuteData complete
-    #pragma HLS ARRAY_PARTITION variable=TwiddleFactor complete
-    #pragma HLS ARRAY_PARTITION variable=NTTData complete
-    #pragma HLS ARRAY_PARTITION variable=RepermuteData complete
+// ===== 核心修改：将 complete 替换为 cyclic，匹配 factor=8 的并行度 =====
+    #pragma HLS ARRAY_PARTITION variable=InputIndex cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=OutputIndex cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=TwiddleIndex cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=ReadData cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=PermuteData cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=TwiddleFactor cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=NTTData cyclic factor=8
+    #pragma HLS ARRAY_PARTITION variable=RepermuteData cyclic factor=8
 
     for (int j = 0; j < STAGE; j++){
         for (int k = 0; k < SQRT; k++){
-            #pragma HLS PIPELINE II=1
+            #pragma HLS LOOP_FLATTEN off
+            
             #pragma HLS DEPENDENCE variable=in_memory inter false
             if (is_ntt){
                 stage_index = j;
@@ -323,9 +332,11 @@ void Compute_NTT(
 
 ) {
 
-    #pragma HLS ARRAY_PARTITION variable=in_memory complete dim=3
-    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory complete dim=2
+   #pragma HLS ARRAY_PARTITION variable=in_memory cyclic factor=8 dim=2
+    
+    // Twiddle 因子如果每次也是读 8 个，也可以一并改为 cyclic
+    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle_memory cyclic factor=8 dim=1
+    #pragma HLS ARRAY_PARTITION variable=intt_twiddle_memory cyclic factor=8 dim=1
 
     for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++){
         NTT_Kernel(
