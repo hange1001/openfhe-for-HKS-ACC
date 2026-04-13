@@ -1,7 +1,7 @@
 open_project Solution
 # 设置你的顶层函数名（请确保它与 C++ 代码中的函数名一致）
 #set_top Top
-set_top testError
+set_top Top
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
