@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/tmp/ntt_tb)",
+      "Bash(g++ -std=c++14 -O2 -DFPGA_STANDALONE_TEST -DNTT_TB_STANDALONE -I include testbench/ntt_kernel_tb.cpp src/ntt_kernel.cpp src/arithmetic.cpp -o /tmp/ntt_tb_standalone)",
+      "Bash(/tmp/ntt_tb_standalone)",
+      "Bash(cat)",
+      "Bash(g++ -std=c++14 -O2 -I /tools/Xilinx/Vitis_HLS/2023.2/include -DFPGA_STANDALONE_TEST -I include -D__HLS_CSIM__ /tmp/probe_bconv_logic.cpp src/arithmetic.cpp src/bconv.cpp -o /tmp/probe_bconv)",
+      "Bash(/tmp/probe_bconv)",
+      "Bash(make csim:*)",
+      "Bash(/tools/Xilinx/Vitis_HLS/2023.2/tps/lnx64/gcc-8.3.0/bin/g++ -std=c++14 -O0 -g -I/tools/Xilinx/Vitis_HLS/2023.2/include -I./include -D__HLS_CSIM__ -D__HLS_COSIM__ -D__VITIS_HLS__ -D__xilinx_ip_top= -DAESL_TB -Wno-unknown-pragmas testbench/bconv_tb.cpp testbench/ntt_kernel_tb.cpp src/ntt_kernel.cpp src/arithmetic.cpp src/bconv.cpp -o /tmp/bconv_csim_test)",
+      "Bash(/tmp/bconv_csim_test)",
+      "Read(//opt/xilinx/**)",
+      "Bash(git add:*)"
+    ]
+  }
+}
