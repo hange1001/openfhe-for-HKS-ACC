@@ -11,7 +11,13 @@
       "Bash(/tools/Xilinx/Vitis_HLS/2023.2/tps/lnx64/gcc-8.3.0/bin/g++ -std=c++14 -O0 -g -I/tools/Xilinx/Vitis_HLS/2023.2/include -I./include -D__HLS_CSIM__ -D__HLS_COSIM__ -D__VITIS_HLS__ -D__xilinx_ip_top= -DAESL_TB -Wno-unknown-pragmas testbench/bconv_tb.cpp testbench/ntt_kernel_tb.cpp src/ntt_kernel.cpp src/arithmetic.cpp src/bconv.cpp -o /tmp/bconv_csim_test)",
       "Bash(/tmp/bconv_csim_test)",
       "Read(//opt/xilinx/**)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(xargs ls:*)",
+      "Read(//home/timhan/src/core/extras/**)",
+      "Bash(xargs -I {} ls -la {})"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

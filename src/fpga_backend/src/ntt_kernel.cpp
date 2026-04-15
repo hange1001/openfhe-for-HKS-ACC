@@ -295,11 +295,17 @@ void NTT_Kernel(
     // ============================================================
     INIT_ROWS:
     for (int i = 0; i < SQRT; i++) {
-        #pragma HLS PIPELINE II=1
-        INIT_COLS:
-        for (int l = 0; l < SQRT; l++) {
-            #pragma HLS UNROLL factor=PE_PARALLEL
-            buf_A[i][l] = in_memory[i][l];
+        INIT_BLOCKS:
+        // 每次跳过 PE_PARALLEL (如 8) 个元素
+        for (int l = 0; l < SQRT; l += PE_PARALLEL) {
+            #pragma HLS PIPELINE II=1
+            
+            INIT_UNROLL:
+            // 严格只展开这 PE_PARALLEL 个元素的拷贝
+            for (int p = 0; p < PE_PARALLEL; p++) {
+                #pragma HLS UNROLL
+                buf_A[i][l + p] = in_memory[i][l + p];
+            }
         }
     }
 
@@ -363,18 +369,21 @@ void NTT_Kernel(
 
     // ============================================================
     // 回写：将结果拷贝回 in_memory
-    // STAGE=12 为偶数 → 最后一级 j=11 (奇) 写 buf_A → 结果在 buf_A
     // ============================================================
     WRITEBACK_ROWS:
     for (int i = 0; i < SQRT; i++) {
-        #pragma HLS PIPELINE II=1
-        WRITEBACK_COLS:
-        for (int l = 0; l < SQRT; l++) {
-            #pragma HLS UNROLL factor=PE_PARALLEL
-            if ((STAGE & 1) == 0) {
-                in_memory[i][l] = buf_A[i][l];
-            } else {
-                in_memory[i][l] = buf_B[i][l];
+        WRITEBACK_BLOCKS:
+        for (int l = 0; l < SQRT; l += PE_PARALLEL) {
+            #pragma HLS PIPELINE II=1
+            
+            WRITEBACK_UNROLL:
+            for (int p = 0; p < PE_PARALLEL; p++) {
+                #pragma HLS UNROLL
+                if ((STAGE & 1) == 0) {
+                    in_memory[i][l + p] = buf_A[i][l + p];
+                } else {
+                    in_memory[i][l + p] = buf_B[i][l + p];
+                }
             }
         }
     }
