@@ -65,12 +65,13 @@ void MultMod(
 ){
     #pragma HLS INLINE off
     #pragma HLS PIPELINE II=1
-    #pragma HLS LATENCY min=4 max=4  // 锁定流水线深度，严格匹配 bconv.cpp 中 MULTMOD_LAT=4
+    //#pragma HLS LATENCY min=4 max=4  // 锁定流水线深度，严格匹配 bconv.cpp 中 MULTMOD_LAT=4
 
 
     // 2. 全精度乘法 (Step 0)
     // 直接用 *，HLS 会自动推断使用 DSP48
     uint128_t res_mult = (uint128_t)a * b;
+    #pragma HLS BIND_OP variable=res_mult op=mul impl=dsp latency=4
 
     // 3. Barrett 约减 - 估算商 q
     
@@ -80,6 +81,7 @@ void MultMod(
     // 计算 res_mult_high * m
     // 这里也是直接乘，不用 Karatsuba
     uint128_t res_mult_shift = (uint128_t)res_mult_high * m;
+    #pragma HLS BIND_OP variable=res_mult_shift op=mul impl=dsp latency=4
 
     // 右移得到商 q
     uint64_t q = (uint64_t)(res_mult_shift >> (k_half + 1));
@@ -87,7 +89,8 @@ void MultMod(
     // 4. 计算余数 r = z - q * mod
     // q * mod 只需要低 64 位结果即可，因为减法结果肯定在 64 位范围内
     uint64_t q_times_mod = q * mod;
-    
+    #pragma HLS BIND_OP variable=q_times_mod op=mul impl=dsp latency=4
+
     // 利用无符号溢出特性直接相减，得到正确余数
     uint64_t r = (uint64_t)res_mult - q_times_mod;
 
@@ -99,7 +102,7 @@ void MultMod(
     if (r >= mod) {
         r -= mod;
     }
-
+    
     // 写回结果
     res_mod = r;
 }

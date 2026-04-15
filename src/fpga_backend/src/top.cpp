@@ -93,16 +93,24 @@ void Top(
                 #pragma HLS PIPELINE II=1
                 M[i] = mem_in1[LIMB_Q*2 + i];
             }
-            init_P_Loop:
+            init_P_MOD:
             for (int j = 0; j < LIMB_P; j++){
-                // P模数从索引LIMB_Q开始，即索引3,4
-                int idx = LIMB_Q + j;
-                MODULUS[idx] = mem_in2[j];
-                K_HALF[idx] = mem_in2[LIMB_P + j];
-                M[idx] = mem_in2[LIMB_P*2 + j];
-                
+                #pragma HLS PIPELINE II=1
+                MODULUS[LIMB_Q + j] = mem_in2[j];
+            }
+            init_P_KHALF:
+            for (int j = 0; j < LIMB_P; j++){
+                #pragma HLS PIPELINE II=1
+                K_HALF[LIMB_Q + j] = mem_in2[LIMB_P + j];
+            }
+            init_P_M:
+            for (int j = 0; j < LIMB_P; j++){
+                #pragma HLS PIPELINE II=1
+                M[LIMB_Q + j] = mem_in2[LIMB_P*2 + j];
+
                 #ifndef __SYNTHESIS__
-                std::cout << "[FPGA Init] P[" << j << "] (idx=" << idx << "): MOD=" << MODULUS[idx] 
+                int idx = LIMB_Q + j;
+                std::cout << "[FPGA Init] P[" << j << "] (idx=" << idx << "): MOD=" << MODULUS[idx]
                           << ", K=" << K_HALF[idx] << ", M=" << M[idx] << std::endl;
                 #endif
             }

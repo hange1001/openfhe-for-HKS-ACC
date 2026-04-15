@@ -295,9 +295,10 @@ void NTT_Kernel(
     // ============================================================
     INIT_ROWS:
     for (int i = 0; i < SQRT; i++) {
+        #pragma HLS PIPELINE II=1
         INIT_COLS:
         for (int l = 0; l < SQRT; l++) {
-            #pragma HLS UNROLL
+            #pragma HLS UNROLL factor=PE_PARALLEL
             buf_A[i][l] = in_memory[i][l];
         }
     }
@@ -366,9 +367,10 @@ void NTT_Kernel(
     // ============================================================
     WRITEBACK_ROWS:
     for (int i = 0; i < SQRT; i++) {
+        #pragma HLS PIPELINE II=1
         WRITEBACK_COLS:
         for (int l = 0; l < SQRT; l++) {
-            #pragma HLS UNROLL
+            #pragma HLS UNROLL factor=PE_PARALLEL
             if ((STAGE & 1) == 0) {
                 in_memory[i][l] = buf_A[i][l];
             } else {
