@@ -75,7 +75,7 @@ void MultMod(
 
     // 3. Barrett 约减 - 估算商 q
     
-    // 提取高位 (相当于原来的位切片)
+    // 提取高位 (标准 Barrett: >> (k-1))
     uint64_t res_mult_high = (uint64_t)(res_mult >> (k_half - 1));
 
     // 计算 res_mult_high * m
@@ -83,16 +83,17 @@ void MultMod(
     uint128_t res_mult_shift = (uint128_t)res_mult_high * m;
     #pragma HLS BIND_OP variable=res_mult_shift op=mul impl=dsp latency=4
 
-    // 右移得到商 q
+    // 右移得到商 q (标准: >> (k+1))
     uint64_t q = (uint64_t)(res_mult_shift >> (k_half + 1));
     
     // 4. 计算余数 r = z - q * mod
-    // q * mod 只需要低 64 位结果即可，因为减法结果肯定在 64 位范围内
-    uint64_t q_times_mod = q * mod;
+    // q * mod 需要 128-bit，因为 q 和 mod 都是 64-bit
+    uint128_t q_times_mod = (uint128_t)q * mod;
     #pragma HLS BIND_OP variable=q_times_mod op=mul impl=dsp latency=4
 
-    // 利用无符号溢出特性直接相减，得到正确余数
-    uint64_t r = (uint64_t)res_mult - q_times_mod;
+    // 减法，结果 r < 3*mod < 2^64
+    uint128_t r_full = res_mult - q_times_mod;
+    uint64_t r = (uint64_t)r_full;
 
     // 5. 最终校正 (Correction)
     // Barrett 算法保证 r < 3 * mod，所以最多减两次

@@ -500,39 +500,67 @@ public:
         const uint64_t* w,              // 权重: [KERNEL_LIMB_Q × KERNEL_MAX_OUT_COLS]
         const uint64_t* out_mod,        // 输出模数: [sizeP]
         uint64_t* result,               // 输出: [sizeP × RING_DIM]
-        size_t ringDim, 
+        size_t ringDim,
         int sizeP                       // 实际输出列数
     ) {
     #ifdef OPENFHE_FPGA_ENABLE
         if (!m_is_ready) return;
-        
+
         std::cout << "=== [FPGA] Execute BConv === sizeP=" << sizeP << std::endl;
 
         try {
             // Buffer sizes
             size_t in_size = KERNEL_LIMB_Q * ringDim * sizeof(uint64_t);
-            // mem_in2 = weights + out_mod
-            size_t weights_count = KERNEL_LIMB_Q * KERNEL_MAX_OUT_COLS;
-            size_t mod_count = KERNEL_MAX_OUT_COLS;
-            size_t meta_size = (weights_count + mod_count) * sizeof(uint64_t);
             size_t out_size = sizeP * ringDim * sizeof(uint64_t);
-            
-            // Pack weights + moduli into single buffer
-            std::vector<uint64_t> meta_buffer(weights_count + mod_count, 0);
-            // Copy weights
+
+            // -------------------------------------------------------
+            // FPGA Kernel (top.cpp OP_BCONV) 从 mem_in2 的布局：
+            //   [0           .. LIMB_Q*MAX_OUT_COLS-1]  : weights  (15 个)
+            //   [LIMB_Q*MAX_OUT_COLS .. +MAX_OUT_COLS-1]: out_mod  (5 个)
+            //   [+MAX_OUT_COLS       .. +MAX_OUT_COLS-1]: k_half   (5 个)
+            //   [+MAX_OUT_COLS       .. +MAX_OUT_COLS-1]: m_barrett(5 个)
+            // 总共: 15 + 5 + 5 + 5 = 30 个 uint64_t
+            // -------------------------------------------------------
+            size_t weights_count = KERNEL_LIMB_Q * KERNEL_MAX_OUT_COLS;  // 15
+            size_t total_meta = weights_count + 3 * KERNEL_MAX_OUT_COLS; // 15 + 15 = 30
+            size_t meta_size = total_meta * sizeof(uint64_t);
+
+            std::vector<uint64_t> meta_buffer(total_meta, 0);
+
+            // (1) Copy weights [0..14]
             std::memcpy(meta_buffer.data(), w, weights_count * sizeof(uint64_t));
-            // Copy output moduli (padded with 0)
-            for (int i = 0; i < sizeP && i < KERNEL_MAX_OUT_COLS; i++) {
-                meta_buffer[weights_count + i] = out_mod[i];
+
+            // (2) Copy output moduli + 计算 Barrett 参数 k_half 和 m_barrett
+            size_t mod_offset   = weights_count;                       // 15
+            size_t khalf_offset = mod_offset + KERNEL_MAX_OUT_COLS;    // 20
+            size_t m_offset     = khalf_offset + KERNEL_MAX_OUT_COLS;  // 25
+
+            for (int i = 0; i < KERNEL_MAX_OUT_COLS; i++) {
+                if (i < sizeP) {
+                    uint64_t p = out_mod[i];
+                    meta_buffer[mod_offset + i] = p;
+
+                    // Barrett 参数：与 InitModuli 中一样
+                    int k = (int)std::ceil(std::log2((double)p));
+                    unsigned __int128 power = (unsigned __int128)1 << (2 * k);
+                    uint64_t m = (uint64_t)(power / p);
+
+                    meta_buffer[khalf_offset + i] = (uint64_t)k;   // k_half = k
+                    meta_buffer[m_offset + i]     = m;              // m_barrett = m
+                } else {
+                    meta_buffer[mod_offset + i]   = 0;
+                    meta_buffer[khalf_offset + i] = 0;
+                    meta_buffer[m_offset + i]     = 0;
+                }
             }
-            
+
             auto bo_in = xrt::bo(m_device, in_size, m_kernel_top.group_id(0));
             auto bo_meta = xrt::bo(m_device, meta_size, m_kernel_top.group_id(1));
             auto bo_out = xrt::bo(m_device, out_size, m_kernel_top.group_id(2));
 
             bo_in.write(x);
             bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-            
+
             bo_meta.write(meta_buffer.data());
             bo_meta.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 

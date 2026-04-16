@@ -11,7 +11,7 @@ xclbin Information
    Kernels:                Top
    Signature:              
    Content:                SW Emulation Binary
-   UUID (xclbin):          d8580c5b-39e9-1b61-a98c-4f800cf02839
+   UUID (xclbin):          4e7c35eb-31bf-0a4d-db52-3d09fe53d7fd
    UUID (IINTF):           a8880c2311a2a42b5fb76899d385acee
    Sections:               BITSTREAM, MEM_TOPOLOGY, IP_LAYOUT, CONNECTIVITY, 
                            BUILD_METADATA, EMBEDDED_METADATA, SYSTEM_METADATA, 
@@ -148,6 +148,12 @@ Ports
    Data Width:    64 bits
    Port Type:     addressable
 
+   Port:          M_AXI_GMEM2
+   Mode:          master
+   Range (bytes): 0xFFFFFFFF
+   Data Width:    64 bits
+   Port Type:     addressable
+
    Port:          S_AXI_CONTROL
    Mode:          slave
    Range (bytes): 0x4C
@@ -170,7 +176,7 @@ Instance:        Top_1
 
    Argument:          mem_out
    Register Offset:   0x28
-   Port:              M_AXI_GMEM0
+   Port:              M_AXI_GMEM2
    Memory:            DDR[0] (MEM_DDR4)
 
    Argument:          opcode

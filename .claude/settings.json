@@ -14,7 +14,9 @@
       "Bash(git add:*)",
       "Bash(xargs ls:*)",
       "Read(//home/timhan/src/core/extras/**)",
-      "Bash(xargs -I {} ls -la {})"
+      "Bash(xargs -I {} ls -la {})",
+      "Bash(XCL_EMULATION_MODE=sw_emu ./bin/examples/pke/test-fpga-modules)",
+      "Bash(grep -v \"^$\")"
     ],
     "additionalDirectories": [
       "/tmp"
