@@ -218,12 +218,13 @@ public:
         std::vector<uint64_t> K_vals(total_limbs), M_vals(total_limbs);
         for(size_t i=0; i<total_limbs; i++) {
             uint64_t p = m_stored_moduli[i];
-            int k = (int)std::ceil(std::log2((double)p));
-            unsigned __int128 power = (unsigned __int128)1 << (2 * k);
+            int pbits = 64 - __builtin_clzll(p);
+            int S = pbits + 62;  // 全精度总移位量，不再除以 2
+            unsigned __int128 power = (unsigned __int128)1 << S;
             uint64_t m = (uint64_t)(power / p);
-            K_vals[i] = k;
+            K_vals[i] = S;
             M_vals[i] = m;
-            std::cout << "  [Barrett] idx=" << i << ": mod=" << p << ", k=" << k << ", m=" << m << std::endl;
+            std::cout << "  [Barrett] idx=" << i << ": mod=" << p << ", S=" << S << ", m=" << m << std::endl;
         }
 
         std::vector<uint64_t> all_ntt_twiddles(total_limbs * N);
@@ -540,13 +541,14 @@ public:
                     uint64_t p = out_mod[i];
                     meta_buffer[mod_offset + i] = p;
 
-                    // Barrett 参数：与 InitModuli 中一样
-                    int k = (int)std::ceil(std::log2((double)p));
-                    unsigned __int128 power = (unsigned __int128)1 << (2 * k);
+                    // Barrett 参数：全精度总移位量 S = bitwidth(p) + 62
+                    int pbits = 64 - __builtin_clzll(p);
+                    int S = pbits + 62;
+                    unsigned __int128 power = (unsigned __int128)1 << S;
                     uint64_t m = (uint64_t)(power / p);
 
-                    meta_buffer[khalf_offset + i] = (uint64_t)k;   // k_half = k
-                    meta_buffer[m_offset + i]     = m;              // m_barrett = m
+                    meta_buffer[khalf_offset + i] = (uint64_t)S;   // S = 总移位量
+                    meta_buffer[m_offset + i]     = m;              // m_barrett
                 } else {
                     meta_buffer[mod_offset + i]   = 0;
                     meta_buffer[khalf_offset + i] = 0;

@@ -16,8 +16,10 @@
 //   使用 128-bit 中间量，不会溢出。
 //
 // Barrett 参数计算（与 arithmetic.cpp 中 MultMod 的逻辑保持一致）
-//   k_half = bit_width(mod)          // 等于 ceil(log2(mod+1))
-//   m      = floor( 2^(2*k_half) / mod )
+//   S = bit_width(mod) + 62      // 全精度总移位量
+//   m = floor( 2^S / mod )       // m 永远在 ~62-bit 安全区内
+
+#include <algorithm>
 // =============================================================================
 
 #include <iostream>
@@ -45,15 +47,16 @@ static uint64_t bit_width(uint64_t mod) {
     return bits;
 }
 
-// 根据 mod 计算 Barrett 参数
+// 根据 mod 计算 Barrett 参数（全精度版）
 static void compute_barrett(uint64_t mod,
-                             uint64_t &out_k_half,
+                             uint64_t &out_S,
                              uint64_t &out_m_barrett) {
     assert(mod > 1);
-    uint64_t k = bit_width(mod);
-    out_k_half = k;
-    // m = floor( 2^(2k) / mod )
-    unsigned __int128 num = (unsigned __int128)1 << (2 * k);
+    uint64_t pbits = bit_width(mod);
+    uint64_t S = pbits + 62;       // 全精度总移位量
+    out_S = S;
+    // m = floor( 2^S / mod )，m 永远在 ~62-bit 安全区内
+    unsigned __int128 num = (unsigned __int128)1 << S;
     out_m_barrett = (uint64_t)(num / mod);
 }
 
@@ -121,7 +124,7 @@ struct TestArrays {
     uint64_t (*golden)[SQRT][SQRT];         // [MAX_OUT_COLS][SQRT][SQRT]
     uint64_t in_w[LIMB_Q][MAX_OUT_COLS];
     uint64_t out_mod[MAX_OUT_COLS];
-    uint64_t out_k_half[MAX_OUT_COLS];
+    uint64_t out_S[MAX_OUT_COLS];
     uint64_t out_m_barrett[MAX_OUT_COLS];
 
     TestArrays() {
@@ -137,20 +140,20 @@ struct TestArrays {
         memset(golden, 0, sizeof(uint64_t) * MAX_OUT_COLS * SQRT * SQRT);
         memset(in_w, 0, sizeof(in_w));
         memset(out_mod, 0, sizeof(out_mod));
-        memset(out_k_half, 0, sizeof(out_k_half));
+        memset(out_S, 0, sizeof(out_S));
         memset(out_m_barrett, 0, sizeof(out_m_barrett));
     }
     // 设置一列模数及其 Barrett 参数
     void set_mod(int p, uint64_t mod) {
         out_mod[p] = mod;
-        compute_barrett(mod, out_k_half[p], out_m_barrett[p]);
+        compute_barrett(mod, out_S[p], out_m_barrett[p]);
     }
     // 运行 HW + SW，返回 error 数量
     int run_and_compare(int sizeP, const string &name) {
         // SW 黄金模型
         golden_bconv(in_x, in_w, out_mod, sizeP, golden);
         // HW
-        Compute_BConv(in_x, in_w, out_mod, out_k_half, out_m_barrett, sizeP);
+        Compute_BConv(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
         // 比较
         return compare_results(in_x, golden, sizeP, name);
     }
@@ -236,6 +239,8 @@ static int tc2_full_cols(unsigned seed) {
     };
     for (int p = 0; p < MAX_OUT_COLS; ++p) t.set_mod(p, mods[p]);
 
+    uint64_t min_mod = *min_element(mods, mods + MAX_OUT_COLS);
+
     for (int q = 0; q < LIMB_Q; ++q)
         for (int p = 0; p < MAX_OUT_COLS; ++p)
             t.in_w[q][p] = (uint64_t)rand() % mods[p];
@@ -243,7 +248,7 @@ static int tc2_full_cols(unsigned seed) {
     for (int q = 0; q < LIMB_Q; ++q)
         for (int r = 0; r < SQRT; ++r)
             for (int c = 0; c < SQRT; ++c)
-                t.in_x[q][r][c] = (uint64_t)rand() % mods[q % MAX_OUT_COLS];
+                t.in_x[q][r][c] = (uint64_t)rand() % min_mod;
 
     int err = t.run_and_compare(MAX_OUT_COLS, "TC-2");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
@@ -319,7 +324,7 @@ static int tc5_max_values() {
     for (int q = 0; q < LIMB_Q; ++q)
         for (int r = 0; r < SQRT; ++r)
             for (int c = 0; c < SQRT; ++c)
-                t.in_x[q][r][c] = mod0 - 1;   // 大于 mod1，但黄金模型内部会取模
+                t.in_x[q][r][c] = (mod0 - 1ULL) % mod1;   // 极限测试：输入 = (mod0-1) % mod1，确保 < mod1
 
     int err = t.run_and_compare(sizeP, "TC-5");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");

@@ -52,58 +52,44 @@ void Karatsuba(
 
 
 // =================================================
-// Barrett Modular Multiplication (纯 DSP 版本)
+// Barrett Modular Multiplication (全精度宽位宽版)
 // =================================================
 void MultMod(
     const uint64_t &a,
     const uint64_t &b,
     const uint64_t &mod,
     const uint64_t &m,
-    const uint64_t &k_half,
+    const uint64_t &S,      // 总移位量 S = bitwidth(mod) + 62
     uint64_t &res_mod
-
 ){
     #pragma HLS INLINE off
     #pragma HLS PIPELINE II=1
-    //#pragma HLS LATENCY min=4 max=4  // 锁定流水线深度，严格匹配 bconv.cpp 中 MULTMOD_LAT=4
 
+    if (mod == 0) {
+        res_mod = 0;
+        return;
+    }
 
-    // 2. 全精度乘法 (Step 0)
-    // 直接用 *，HLS 会自动推断使用 DSP48
-    uint128_t res_mult = (uint128_t)a * b;
+    // 1. 真实乘积（最高约 120-bit）
+    ap_uint<128> res_mult = (ap_uint<128>)a * b;
     #pragma HLS BIND_OP variable=res_mult op=mul impl=dsp latency=4
 
-    // 3. Barrett 约减 - 估算商 q
-    
-    // 提取高位 (标准 Barrett: >> (k-1))
-    uint64_t res_mult_high = (uint64_t)(res_mult >> (k_half - 1));
-
-    // 计算 res_mult_high * m
-    // 这里也是直接乘，不用 Karatsuba
-    uint128_t res_mult_shift = (uint128_t)res_mult_high * m;
+    // 2. 全精度：不截断任何低位，直接 128-bit × 64-bit → 192-bit
+    ap_uint<192> res_mult_shift = (ap_uint<192>)res_mult * m;
     #pragma HLS BIND_OP variable=res_mult_shift op=mul impl=dsp latency=4
 
-    // 右移得到商 q (标准: >> (k+1))
-    uint64_t q = (uint64_t)(res_mult_shift >> (k_half + 1));
-    
-    // 4. 计算余数 r = z - q * mod
-    // q * mod 需要 128-bit，因为 q 和 mod 都是 64-bit
-    uint128_t q_times_mod = (uint128_t)q * mod;
-    #pragma HLS BIND_OP variable=q_times_mod op=mul impl=dsp latency=4
+    // 3. 右移 S 位得到精准商 q
+    ap_uint<128> q = (ap_uint<128>)(res_mult_shift >> S);
 
-    // 减法，结果 r < 3*mod < 2^64
-    uint128_t r_full = res_mult - q_times_mod;
+    // 4. 余数 r = z - q * mod
+    ap_uint<128> q_times_mod = q * (ap_uint<128>)mod;
+    ap_uint<128> r_full = res_mult - q_times_mod;
     uint64_t r = (uint64_t)r_full;
 
-    // 5. 最终校正 (Correction)
-    // Barrett 算法保证 r < 3 * mod，所以最多减两次
-    if (r >= mod) {
-        r -= mod;
-    }
-    if (r >= mod) {
-        r -= mod;
-    }
-    
-    // 写回结果
+    // 5. 校正（全精度下误差极小，最多 3 次）
+    if (r >= mod) { r -= mod; }
+    if (r >= mod) { r -= mod; }
+    if (r >= mod) { r -= mod; }
+
     res_mod = r;
 }

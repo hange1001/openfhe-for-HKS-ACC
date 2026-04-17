@@ -211,25 +211,25 @@ void Top(
             }
             
             static uint64_t out_mod[MAX_OUT_COLS];
-            static uint64_t out_k_half[MAX_OUT_COLS];
+            static uint64_t out_S[MAX_OUT_COLS];
             static uint64_t out_m_barrett[MAX_OUT_COLS];
             int mod_offset = LIMB_Q * MAX_OUT_COLS;
             int khalf_offset = mod_offset + MAX_OUT_COLS;
             int m_offset     = khalf_offset + MAX_OUT_COLS;
             for (int p = 0; p < MAX_OUT_COLS; p++){
                 out_mod[p]      = mem_in2[mod_offset + p];
-                out_k_half[p]   = mem_in2[khalf_offset + p];
+                out_S[p]        = mem_in2[khalf_offset + p];
                 out_m_barrett[p]= mem_in2[m_offset + p];
             }
-            
+
             #ifndef __SYNTHESIS__
             std::cout << "[BCONV] sizeP=" << sizeP << std::endl;
             for (int p = 0; p < sizeP; p++) {
-                std::cout << "  out_mod[" << p << "] = " << out_mod[p] << ", k_half=" << out_k_half[p] << ", m_barrett=" << out_m_barrett[p] << std::endl;
+                std::cout << "  out_mod[" << p << "] = " << out_mod[p] << ", S=" << out_S[p] << ", m_barrett=" << out_m_barrett[p] << std::endl;
             }
             #endif
             // 计算 BConv, 结果写到 poly_buffer_1[LIMB_Q..LIMB_Q+sizeP-1]
-            Compute_BConv(poly_buffer_1, in_w, out_mod, out_k_half, out_m_barrett, sizeP);
+            Compute_BConv(poly_buffer_1, in_w, out_mod, out_S, out_m_barrett, sizeP);
             
             // Store sizeP limbs (输出)
             for (int l = 0; l < sizeP; l++) {

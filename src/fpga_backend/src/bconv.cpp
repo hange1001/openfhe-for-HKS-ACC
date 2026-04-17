@@ -19,7 +19,7 @@ void bconv_core(
     uint64_t out_x[MAX_OUT_COLS][RING_DIM],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
-    const uint64_t out_k_half[MAX_OUT_COLS],
+    const uint64_t out_S[MAX_OUT_COLS],
     const uint64_t out_m_barrett[MAX_OUT_COLS],
     int sizeP
 ) {
@@ -27,7 +27,7 @@ void bconv_core(
 
     #pragma HLS ARRAY_PARTITION variable=in_w          complete dim=0
     #pragma HLS ARRAY_PARTITION variable=out_mod       complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=out_k_half    complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out_S         complete dim=0
     #pragma HLS ARRAY_PARTITION variable=out_m_barrett complete dim=0
 
     // 外层：遍历每个系数，每拍处理一个系数的全部输出
@@ -45,19 +45,19 @@ void bconv_core(
             In_Row: for (int q = 0; q < LIMB_Q; ++q) {
             #pragma HLS UNROLL
                 MultMod(in_x[q][n], in_w[q][p],
-                        out_mod[p], out_m_barrett[p], out_k_half[p],
+                        out_mod[p], out_m_barrett[p], out_S[p],
                         prod[q]);
             }
 
-            // 加法树（LIMB_Q=3）：两级归约，纯组合逻辑，无跨迭代依赖
-            uint64_t s01 = prod[0] + prod[1];
+            // 加法树（LIMB_Q=3）：两级归约，使用uint128_t避免溢出
+            uint128_t s01 = (uint128_t)prod[0] + prod[1];
             if (s01 >= out_mod[p]) s01 -= out_mod[p];
 
-            uint64_t s = s01 + prod[2];
+            uint128_t s = s01 + prod[2];
             if (s >= out_mod[p]) s -= out_mod[p];
 
             if (p < sizeP) {
-                out_x[p][n] = s;
+                out_x[p][n] = (uint64_t)s;
             }
         }
     }
@@ -70,7 +70,7 @@ void Compute_BConv(
     uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
-    const uint64_t out_k_half[MAX_OUT_COLS],
+    const uint64_t out_S[MAX_OUT_COLS],
     const uint64_t out_m_barrett[MAX_OUT_COLS],
     int sizeP
 ) {
@@ -90,11 +90,11 @@ void Compute_BConv(
     // 权重、模数与 Barrett 常数数据量小，完全打散成寄存器
     uint64_t local_w[LIMB_Q][MAX_OUT_COLS];
     uint64_t local_mod[MAX_OUT_COLS];
-    uint64_t local_k_half[MAX_OUT_COLS];
+    uint64_t local_S[MAX_OUT_COLS];
     uint64_t local_m_barrett[MAX_OUT_COLS];
     #pragma HLS ARRAY_PARTITION variable=local_w          complete dim=0
     #pragma HLS ARRAY_PARTITION variable=local_mod        complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=local_k_half     complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_S          complete dim=0
     #pragma HLS ARRAY_PARTITION variable=local_m_barrett  complete dim=0
 
     // -----------------------------------------
@@ -110,7 +110,7 @@ void Compute_BConv(
     Load_Mod: for (int p = 0; p < MAX_OUT_COLS; ++p) {
         #pragma HLS PIPELINE II=1
         local_mod[p]       = out_mod[p];
-        local_k_half[p]    = out_k_half[p];
+        local_S[p]         = out_S[p];
         local_m_barrett[p] = out_m_barrett[p];
     }
 
@@ -128,7 +128,7 @@ void Compute_BConv(
     // 3. Compute Phase: 输入只读，输出只写，无冲突
     // -----------------------------------------
     bconv_core(local_in_x, local_out_x,
-               local_w, local_mod, local_k_half, local_m_barrett,
+               local_w, local_mod, local_S, local_m_barrett,
                sizeP);
 
     // -----------------------------------------
