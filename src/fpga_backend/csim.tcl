@@ -1,17 +1,18 @@
 open_project Solution
 
-set_top Compute_BConv
+set_top Compute_CG_NTT
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
-# 添加源文件（需包含 arithmetic.cpp，bconv.cpp 依赖 MultMod）
+# 添加源文件
 add_files {
     ./src/arithmetic.cpp
-    ./src/bconv.cpp
+    ./src/ntt_kernel.cpp
+    ./src/cg_ntt.cpp
 } -cflags $my_cflags
 
 # 添加测试文件（只包含 bconv_tb.cpp，避免多 main 冲突）
-add_files ./testbench/bconv_tb.cpp -cflags $my_cflags -tb
+add_files ./testbench/cg_ntt_tb.cpp -cflags $my_cflags -tb
 
 open_solution "solution1"
 set_part xcu55c-fsvh2892-2L-e

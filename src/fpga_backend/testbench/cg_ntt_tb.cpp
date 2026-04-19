@@ -80,15 +80,10 @@ static void compute_barrett_params(uint64_t mod,
 {
     uint64_t tmp = mod; int bits = 0;
     while (tmp) { tmp >>= 1; ++bits; }
-    uint64_t k = (uint64_t)bits;
-    K_HALF_out = k;
-    if (2 * k <= 127) {
-        unsigned __int128 numer = (unsigned __int128)1 << (2 * k);
-        M_out = (uint64_t)(numer / mod);
-    } else {
-        unsigned __int128 numer = (unsigned __int128)1 << 127;
-        M_out = (uint64_t)(numer / mod);
-    }
+    uint64_t S = (uint64_t)bits + 62;   // 全精度总移位量，与 MultMod 的 S 参数语义一致
+    K_HALF_out = S;
+    unsigned __int128 numer = (unsigned __int128)1 << S;
+    M_out = (uint64_t)(numer / mod);
 }
 
 // ============================================================
