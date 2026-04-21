@@ -229,7 +229,7 @@ void Top(
             }
             #endif
             // 计算 BConv, 结果写到 poly_buffer_1[LIMB_Q..LIMB_Q+sizeP-1]
-            Compute_BConv(poly_buffer_1, in_w, out_mod, out_S, out_m_barrett, sizeP);
+            Compute_BConv(poly_buffer_1, in_w, out_mod, out_S, out_m_barrett);
             
             // Store sizeP limbs (输出)
             for (int l = 0; l < sizeP; l++) {
