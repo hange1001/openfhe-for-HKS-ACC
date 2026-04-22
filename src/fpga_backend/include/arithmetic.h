@@ -1,7 +1,9 @@
 #ifndef ARITHMETIC_H
 #define ARITHMETIC_H
 
+#ifndef FPGA_STANDALONE_TEST
 #include <ap_int.h>
+#endif
 #include "define.h"   // 包含项目的全局定义
 
 // is_add: True, ModAdd; False, SubAdd

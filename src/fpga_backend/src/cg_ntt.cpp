@@ -252,6 +252,30 @@ void Compute_CG_NTT(
     int num_active_limbs,
     int mod_idx_offset
 ) {
+    // ============================================================
+    // 顶层 AXI 接口配置
+    // 大数组走 m_axi（外部 DDR），不同 bundle 对应不同物理端口
+    // ============================================================
+    #pragma HLS INTERFACE m_axi port=in_data         bundle=gmem0 offset=slave
+    #pragma HLS INTERFACE m_axi port=cg_ntt_twiddle  bundle=gmem1 offset=slave
+    #pragma HLS INTERFACE m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave
+    // 小参数表合并到同一通道
+    #pragma HLS INTERFACE m_axi port=modulus         bundle=gmem3 offset=slave
+    #pragma HLS INTERFACE m_axi port=K_HALF          bundle=gmem3 offset=slave
+    #pragma HLS INTERFACE m_axi port=M_barrett       bundle=gmem3 offset=slave
+
+    // 所有指针基地址 + 标量参数 + return 走 AXI4-Lite 控制总线
+    #pragma HLS INTERFACE s_axilite port=in_data
+    #pragma HLS INTERFACE s_axilite port=cg_ntt_twiddle
+    #pragma HLS INTERFACE s_axilite port=cg_intt_twiddle
+    #pragma HLS INTERFACE s_axilite port=modulus
+    #pragma HLS INTERFACE s_axilite port=K_HALF
+    #pragma HLS INTERFACE s_axilite port=M_barrett
+    #pragma HLS INTERFACE s_axilite port=is_ntt
+    #pragma HLS INTERFACE s_axilite port=num_active_limbs
+    #pragma HLS INTERFACE s_axilite port=mod_idx_offset
+    #pragma HLS INTERFACE s_axilite port=return
+
     #pragma HLS ARRAY_PARTITION variable=in_data cyclic factor=CG_PE_NUM dim=2
 
     // 旋转因子表：dim=1 (limb) 不拆，dim=2 (stage) complete，dim=3 cyclic

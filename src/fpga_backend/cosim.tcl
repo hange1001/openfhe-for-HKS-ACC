@@ -21,17 +21,19 @@ set proj_name "Solution/cosim_${top_func}"
 open_project -reset $proj_name
 
 set_top $top_func
-set my_cflags "-I./include -I/opt/xilinx/xrt/include $extra_cf"
+# 使用绝对路径，避免 HLS 把相对路径按工程子目录解析导致找不到源文件
+set inc_dir [file normalize ./include]
+set my_cflags "-I${inc_dir} -I/opt/xilinx/xrt/include $extra_cf"
 
 # 3. 动态添加 Source 文件
 foreach file $src_files {
-    add_files $file -cflags $my_cflags
+    add_files [file normalize $file] -cflags $my_cflags
 }
 
 # 4. 动态添加 Testbench 文件 (cosim 必需)
 if {[string length $tb_files] > 0} {
     foreach file $tb_files {
-        add_files $file -cflags $my_cflags -tb
+        add_files [file normalize $file] -cflags $my_cflags -tb
     }
 } else {
     puts "ERROR: Co-simulation requires a testbench! No TB defined for $top_func."

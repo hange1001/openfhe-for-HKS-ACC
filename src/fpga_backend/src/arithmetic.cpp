@@ -70,6 +70,27 @@ void MultMod(
         return;
     }
 
+#ifdef FPGA_STANDALONE_TEST
+    unsigned __int128 res_mult = (unsigned __int128)a * b;
+    uint64_t res_mult_H = (uint64_t)(res_mult >> 64);
+    uint64_t res_mult_L = (uint64_t)(res_mult);
+
+    unsigned __int128 p_high = (unsigned __int128)res_mult_H * m;
+    unsigned __int128 p_low  = (unsigned __int128)res_mult_L * m;
+
+    unsigned __int128 q = 0;
+    if (S > 64) {
+        q = (p_high >> (S - 64)) + (p_low >> S);
+    } else if (S < 64) {
+        q = (p_high << (64 - S)) + (p_low >> S);
+    } else {
+        q = p_high + (p_low >> 64);
+    }
+
+    unsigned __int128 q_times_mod = q * (unsigned __int128)mod;
+    unsigned __int128 r_full = res_mult - q_times_mod;
+    uint64_t r = (uint64_t)r_full;
+#else
     // 1. 真实乘积（最高约 120-bit）
     ap_uint<128> res_mult = (ap_uint<128>)a * b;
     #pragma HLS BIND_OP variable=res_mult op=mul impl=dsp latency=4
@@ -77,36 +98,25 @@ void MultMod(
     ap_uint<64> res_mult_H = res_mult.range(127,64);
     ap_uint<64> res_mult_L = res_mult.range(63,0);
 
-    // 2. 全精度：不截断任何低位，直接 128-bit × 64-bit → 192-bit
-    //ap_uint<192> res_mult_shift = (ap_uint<192>)res_mult * m;
-
     ap_uint<128> p_high = (ap_uint<128>)res_mult_H * m;
     ap_uint<128> p_low  = (ap_uint<128>)res_mult_L * m;
-
 
     #pragma HLS BIND_OP variable=p_high op=mul impl=dsp latency=4
     #pragma HLS BIND_OP variable=p_low op=mul impl=dsp latency=4
 
-    // 3. 右移 S 位得到精准商 q (提前在外部声明作用域)
     ap_uint<128> q = 0;
-    
     if (S > 64) {
-        // 高位部分右移 S-64，低位部分右移 S 
         q = (p_high >> (S - 64)) + (p_low >> S);
-    } 
-    else if (S < 64) {
-        // S较小时，高位部分需要补偿左移，低位部分右移 S
+    } else if (S < 64) {
         q = (p_high << (64 - S)) + (p_low >> S);
-    } 
-    else { 
-        // S == 64 的边界情况
+    } else {
         q = p_high + (p_low >> 64);
     }
 
-    // 4. 余数 r = z - q * mod
     ap_uint<128> q_times_mod = q * (ap_uint<128>)mod;
     ap_uint<128> r_full = res_mult - q_times_mod;
     uint64_t r = (uint64_t)r_full;
+#endif
 
     // 5. 校正（全精度下误差极小，最多 3 次）
     if (r >= mod) { r -= mod; }

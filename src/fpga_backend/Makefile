@@ -135,7 +135,7 @@ TB_Top  :=
 # 3. NTT kernel 子模块 (顶层函数: NTT_Kernel)
 SRC_NTT_Kernel := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/ntt_kernel.cpp
 TB_NTT_Kernel  := ./testbench/ntt_kernel_tb.cpp
-CF_NTT_Kernel  :=
+CF_NTT_Kernel  := -DNTT_TB_STANDALONE
 
 # 4. bconv 子模块 (优化版，顶层函数: Compute_BConv)
 SRC_Compute_BConv := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/bconv.cpp
@@ -147,6 +147,11 @@ CF_Compute_BConv  :=
 SRC_Compute_BConv_Naive := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/bconv_naive.cpp
 TB_Compute_BConv_Naive  := ./testbench/bconv_tb.cpp
 CF_Compute_BConv_Naive  := -DBCONV_USE_NAIVE
+
+# 6. bconv_systolic 子模块 (顶层函数: Compute_BConv_Systolic)
+SRC_Compute_BConv_Systolic := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/bconv_systolic.cpp
+TB_Compute_BConv_Systolic  := ./testbench/bconv_systolic_tb.cpp
+CF_Compute_BConv_Systolic  :=
 
 # 按需继续添加:
 # SRC_mod_add_kernel := $(SRC_DIR)/mod_add_kernel.cpp

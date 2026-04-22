@@ -47,6 +47,7 @@ void bconv_core(
                 MultMod(in_x[q][n], in_w[q][p],
                         out_mod[p], out_m_barrett[p], out_S[p],
                         prod[q]);
+
             }
 
             // 加法树（LIMB_Q=3）：两级归约，使用uint128_t避免溢出
