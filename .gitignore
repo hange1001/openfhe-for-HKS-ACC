@@ -79,14 +79,17 @@ src/fpga_backend/.ipcache/
 src/fpga_backend/_x/
 src/fpga_backend/Solution/
 src/fpga_backend/.Xil/
-*.xclbin
-*.xsa
-*.xo
-*.xse
-*.log
-*.jou
-*.str
-*.rpt
+src/fpga_backend/*.xclbin
+src/fpga_backend/*.xsa
+src/fpga_backend/*.xo
+src/fpga_backend/*.xse
+src/fpga_backend/*.log
+src/fpga_backend/*.jou
+src/fpga_backend/*.str
+src/fpga_backend/*.a
+vitis_hls.log
+# Hand-promoted reports in docs/reports/ are intentionally tracked
+!docs/reports/
 
 # HDL netlists / IP cache outputs
 *_sim_netlist.v

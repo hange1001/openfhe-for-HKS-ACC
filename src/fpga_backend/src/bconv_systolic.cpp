@@ -125,11 +125,11 @@ void Compute_BConv_Systolic(
     const uint64_t out_mod[MAX_OUT_COLS],
     int sizeP
 ) {
-    #pragma HLS INTERFACE m_axi port=in_x   bundle=gmem0 \
-        max_read_burst_length=64 max_write_burst_length=64 \
-        num_read_outstanding=8   num_write_outstanding=8
-    #pragma HLS INTERFACE m_axi port=in_w   bundle=gmem1 \
-        max_read_burst_length=64 num_read_outstanding=8
+    // in_x 其实是 top.cpp 里的片上 poly_buffer（BRAM），不是 DDR。
+    // 告诉 HLS dim=3 按 LOAD_PAR 交错 → 对外暴露 8 个物理端口
+    #pragma HLS ARRAY_PARTITION variable=in_x type=cyclic factor=LOAD_PAR dim=3
+
+    // 标量/小数组参数走 AXI-Lite 控制（仅 cosim 顶层需要；top.cpp 调用时会被忽略）
     #pragma HLS INTERFACE s_axilite port=out_mod bundle=control
     #pragma HLS INTERFACE s_axilite port=sizeP   bundle=control
     #pragma HLS INTERFACE s_axilite port=return  bundle=control
@@ -162,7 +162,7 @@ void Compute_BConv_Systolic(
         local_mod[p] = out_mod[p];
     }
 
-    // Load_X: 单拍突发读 LOAD_PAR 个连续系数（512-bit AXI burst）
+    // Load_X: in_x 的 dim=3 已 8 路划分，idx & SQRT_MASK 正好落在 8 个独立 bank
     Load_X: for (int l = 0; l < LIMB_Q; ++l) {
         for (int i = 0; i < RING_DIM; i += LOAD_PAR) {
             #pragma HLS PIPELINE II=1
@@ -176,7 +176,7 @@ void Compute_BConv_Systolic(
 
     bconv_systolic_core(local_in_x, local_out_x, local_w, local_mod, sizeP);
 
-    // Store_X: 单拍突发写回 LOAD_PAR 个连续系数
+    // Store_X: 同样走 8 端口并行写回
     Store_X: for (int p = 0; p < sizeP; ++p) {
         #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_OUT_COLS avg=3
         for (int i = 0; i < RING_DIM; i += LOAD_PAR) {
@@ -189,3 +189,4 @@ void Compute_BConv_Systolic(
         }
     }
 }
+

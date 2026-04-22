@@ -1,0 +1,451 @@
+
+
+================================================================
+== Synthesis Summary Report of 'Compute_BConv'
+================================================================
++ General Information: 
+    * Date:           Wed Apr 22 16:50:38 2026
+    * Version:        2023.2 (Build 4023990 on Oct 11 2023)
+    * Project:        cosim_Compute_BConv
+    * Solution:       solution1 (Vivado IP Flow Target)
+    * Product family: virtexuplusHBM
+    * Target device:  xcu55c-fsvh2892-2L-e
+    
+
++ Performance & Resource Estimates: 
+    
+    PS: '+' for module; 'o' for loop; '*' for dataflow
+    +---------------------------------------------------------------------+------+------+---------+-----------+----------+---------+-------+----------+----------+----------+------------+------------+-----+
+    |                               Modules                               | Issue|      | Latency |  Latency  | Iteration|         |  Trip |          |          |          |            |            |     |
+    |                               & Loops                               | Type | Slack| (cycles)|    (ns)   |  Latency | Interval| Count | Pipelined|   BRAM   |    DSP   |     FF     |     LUT    | URAM|
+    +---------------------------------------------------------------------+------+------+---------+-----------+----------+---------+-------+----------+----------+----------+------------+------------+-----+
+    |+ Compute_BConv                                                      |     -|  0.04|        -|          -|         -|        -|      -|        no|  120 (2%)|  870 (9%)|  40771 (1%)|  62010 (4%)|    -|
+    | + Compute_BConv_Pipeline_Load_W_VITIS_LOOP_105_1                    |     -|  0.99|       17|     85.000|         -|       17|      -|        no|         -|         -|   977 (~0%)|   144 (~0%)|    -|
+    |  o Load_W_VITIS_LOOP_105_1                                          |     -|  3.65|       15|     75.000|         2|        1|     15|       yes|         -|         -|           -|           -|    -|
+    | + Compute_BConv_Pipeline_Load_Mod                                   |     -|  2.30|        7|     35.000|         -|        7|      -|        no|         -|         -|   969 (~0%)|    58 (~0%)|    -|
+    |  o Load_Mod                                                         |     -|  3.65|        5|     25.000|         2|        1|      5|       yes|         -|         -|           -|           -|    -|
+    | + Compute_BConv_Pipeline_Load_X_VITIS_LOOP_120_2_VITIS_LOOP_121_3   |     -|  0.08|    12292|  6.146e+04|         -|    12292|      -|        no|         -|         -|   273 (~0%)|   374 (~0%)|    -|
+    |  o Load_X_VITIS_LOOP_120_2_VITIS_LOOP_121_3                         |     -|  3.65|    12290|  6.145e+04|         4|        1|  12288|       yes|         -|         -|           -|           -|    -|
+    | + Compute_BConv_Pipeline_Coeff_Loop                                 |     -|  0.04|     4115|  2.058e+04|         -|     4115|      -|        no|         -|  870 (9%)|  38298 (1%)|  60486 (4%)|    -|
+    |  o Coeff_Loop                                                       |     -|  3.65|     4113|  2.056e+04|        19|        1|   4096|       yes|         -|         -|           -|           -|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    |   + MultMod                                                         |     -|  0.04|       14|     70.000|         -|        1|      -|       yes|         -|  58 (~0%)|  2373 (~0%)|  3836 (~0%)|    -|
+    | + Compute_BConv_Pipeline_Store_X_VITIS_LOOP_139_4_VITIS_LOOP_140_5  |     -|  0.35|        -|          -|         -|        -|      -|        no|         -|         -|   206 (~0%)|   464 (~0%)|    -|
+    |  o Store_X_VITIS_LOOP_139_4_VITIS_LOOP_140_5                        |     -|  3.65|        -|          -|         4|        1|      -|       yes|         -|         -|           -|           -|    -|
+    +---------------------------------------------------------------------+------+------+---------+-----------+----------+---------+-------+----------+----------+----------+------------+------------+-----+
+
+
+================================================================
+== HW Interfaces
+================================================================
+* AP_MEMORY
++------------------------+-----------+----------+
+| Port                   | Direction | Bitwidth |
++------------------------+-----------+----------+
+| in_w_address0          | out       | 4        |
+| in_w_q0                | in        | 64       |
+| in_x_address0          | out       | 15       |
+| in_x_d0                | out       | 64       |
+| in_x_q0                | in        | 64       |
+| out_S_address0         | out       | 3        |
+| out_S_q0               | in        | 64       |
+| out_m_barrett_address0 | out       | 3        |
+| out_m_barrett_q0       | in        | 64       |
+| out_mod_address0       | out       | 3        |
+| out_mod_q0             | in        | 64       |
++------------------------+-----------+----------+
+
+* Other Ports
++-------+---------+-----------+----------+
+| Port  | Mode    | Direction | Bitwidth |
++-------+---------+-----------+----------+
+| sizeP | ap_none | in        | 32       |
++-------+---------+-----------+----------+
+
+* TOP LEVEL CONTROL
++-----------+------------+-----------------------------------+
+| Interface | Type       | Ports                             |
++-----------+------------+-----------------------------------+
+| ap_clk    | clock      | ap_clk                            |
+| ap_rst    | reset      | ap_rst                            |
+| ap_ctrl   | ap_ctrl_hs | ap_done ap_idle ap_ready ap_start |
++-----------+------------+-----------------------------------+
+
+
+================================================================
+== SW I/O Information
+================================================================
+* Top Function Arguments
++---------------+-----------+---------------------------+
+| Argument      | Direction | Datatype                  |
++---------------+-----------+---------------------------+
+| in_x          | inout     | long unsigned int*        |
+| in_w          | in        | long unsigned int const * |
+| out_mod       | in        | long unsigned int const * |
+| out_S         | in        | long unsigned int const * |
+| out_m_barrett | in        | long unsigned int const * |
+| sizeP         | in        | int                       |
++---------------+-----------+---------------------------+
+
+* SW-to-HW Mapping
++---------------+------------------------+---------+----------+
+| Argument      | HW Interface           | HW Type | HW Usage |
++---------------+------------------------+---------+----------+
+| in_x          | in_x_address0          | port    | offset   |
+| in_x          | in_x_ce0               | port    |          |
+| in_x          | in_x_we0               | port    |          |
+| in_x          | in_x_d0                | port    |          |
+| in_x          | in_x_q0                | port    |          |
+| in_w          | in_w_address0          | port    | offset   |
+| in_w          | in_w_ce0               | port    |          |
+| in_w          | in_w_q0                | port    |          |
+| out_mod       | out_mod_address0       | port    | offset   |
+| out_mod       | out_mod_ce0            | port    |          |
+| out_mod       | out_mod_q0             | port    |          |
+| out_S         | out_S_address0         | port    | offset   |
+| out_S         | out_S_ce0              | port    |          |
+| out_S         | out_S_q0               | port    |          |
+| out_m_barrett | out_m_barrett_address0 | port    | offset   |
+| out_m_barrett | out_m_barrett_ce0      | port    |          |
+| out_m_barrett | out_m_barrett_q0       | port    |          |
+| sizeP         | sizeP                  | port    |          |
++---------------+------------------------+---------+----------+
+
+
+================================================================
+== Bind Op Report
+================================================================
++---------------------------------------------------------------------+-----+--------+-------------+-----+--------+---------+
+| Name                                                                | DSP | Pragma | Variable    | Op  | Impl   | Latency |
++---------------------------------------------------------------------+-----+--------+-------------+-----+--------+---------+
+| + Compute_BConv                                                     | 870 |        |             |     |        |         |
+|  + Compute_BConv_Pipeline_Load_W_VITIS_LOOP_105_1                   | 0   |        |             |     |        |         |
+|    add_ln104_1_fu_294_p2                                            |     |        | add_ln104_1 | add | fabric | 0       |
+|    add_ln104_fu_306_p2                                              |     |        | add_ln104   | add | fabric | 0       |
+|    add_ln107_fu_346_p2                                              |     |        | add_ln107   | add | fabric | 0       |
+|    add_ln105_fu_357_p2                                              |     |        | add_ln105   | add | fabric | 0       |
+|  + Compute_BConv_Pipeline_Load_Mod                                  | 0   |        |             |     |        |         |
+|    add_ln111_fu_294_p2                                              |     |        | add_ln111   | add | fabric | 0       |
+|  + Compute_BConv_Pipeline_Load_X_VITIS_LOOP_120_2_VITIS_LOOP_121_3  | 0   |        |             |     |        |         |
+|    add_ln119_1_fu_189_p2                                            |     |        | add_ln119_1 | add | fabric | 0       |
+|    add_ln119_fu_204_p2                                              |     |        | add_ln119   | add | fabric | 0       |
+|    add_ln120_fu_250_p2                                              |     |        | add_ln120   | add | fabric | 0       |
+|    add_ln123_1_fu_294_p2                                            |     |        | add_ln123_1 | add | fabric | 0       |
+|    add_ln123_2_fu_324_p2                                            |     |        | add_ln123_2 | add | fabric | 0       |
+|    add_ln123_fu_334_p2                                              |     |        | add_ln123   | add | fabric | 0       |
+|    add_ln121_fu_340_p2                                              |     |        | add_ln121   | add | fabric | 0       |
+|    add_ln120_1_fu_346_p2                                            |     |        | add_ln120_1 | add | fabric | 0       |
+|  + Compute_BConv_Pipeline_Coeff_Loop                                | 870 |        |             |     |        |         |
+|    add_ln34_fu_808_p2                                               |     |        | add_ln34    | add | fabric | 0       |
+|    s01_fu_832_p2                                                    |     |        | s01         | add | fabric | 0       |
+|    sub_ln55_fu_853_p2                                               |     |        | sub_ln55    | sub | fabric | 0       |
+|    s_fu_873_p2                                                      |     |        | s           | add | fabric | 0       |
+|    sub_ln58_fu_1121_p2                                              |     |        | sub_ln58    | sub | fabric | 0       |
+|    s01_2_fu_889_p2                                                  |     |        | s01_2       | add | fabric | 0       |
+|    sub_ln55_1_fu_910_p2                                             |     |        | sub_ln55_1  | sub | fabric | 0       |
+|    s_1_fu_930_p2                                                    |     |        | s_1         | add | fabric | 0       |
+|    sub_ln58_1_fu_1143_p2                                            |     |        | sub_ln58_1  | sub | fabric | 0       |
+|    s01_4_fu_946_p2                                                  |     |        | s01_4       | add | fabric | 0       |
+|    sub_ln55_2_fu_967_p2                                             |     |        | sub_ln55_2  | sub | fabric | 0       |
+|    s_2_fu_987_p2                                                    |     |        | s_2         | add | fabric | 0       |
+|    sub_ln58_2_fu_1165_p2                                            |     |        | sub_ln58_2  | sub | fabric | 0       |
+|    s01_6_fu_1003_p2                                                 |     |        | s01_6       | add | fabric | 0       |
+|    sub_ln55_3_fu_1024_p2                                            |     |        | sub_ln55_3  | sub | fabric | 0       |
+|    s_3_fu_1044_p2                                                   |     |        | s_3         | add | fabric | 0       |
+|    sub_ln58_3_fu_1187_p2                                            |     |        | sub_ln58_3  | sub | fabric | 0       |
+|    s01_8_fu_1060_p2                                                 |     |        | s01_8       | add | fabric | 0       |
+|    sub_ln55_4_fu_1081_p2                                            |     |        | sub_ln55_4  | sub | fabric | 0       |
+|    s_4_fu_1101_p2                                                   |     |        | s_4         | add | fabric | 0       |
+|    sub_ln58_4_fu_1209_p2                                            |     |        | sub_ln58_4  | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_584)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_594)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_604)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_614)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_624)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_634)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_644)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_654)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_664)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_674)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_684)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_694)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_704)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_714)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|   + MultMod (grp_MultMod_fu_724)                                    | 58  |        |             |     |        |         |
+|     mul_64ns_64ns_128_5_1_U40                                       | 16  | yes    | mul_ln95    | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U41                                       | 16  | yes    | p_high      | mul | dsp    | 4       |
+|     mul_64ns_64ns_128_5_1_U42                                       | 16  | yes    | p_low       | mul | dsp    | 4       |
+|     add_ln109_fu_173_p2                                             |     |        | add_ln109   | add | fabric | 0       |
+|     q_fu_240_p2                                                     |     |        | q           | add | fabric | 0       |
+|     sub_ln111_fu_205_p2                                             |     |        | sub_ln111   | sub | fabric | 0       |
+|     q_1_fu_244_p2                                                   |     |        | q_1         | add | fabric | 0       |
+|     q_2_fu_234_p2                                                   |     |        | q_2         | add | fabric | 0       |
+|     mul_64s_64s_64_2_1_U39                                          | 10  |        | mul_ln117   | mul | auto   | 1       |
+|     r_fu_272_p2                                                     |     |        | r           | sub | fabric | 0       |
+|     r_1_fu_287_p2                                                   |     |        | r_1         | sub | fabric | 0       |
+|     r_3_fu_310_p2                                                   |     |        | r_3         | sub | fabric | 0       |
+|     r_5_fu_332_p2                                                   |     |        | r_5         | sub | fabric | 0       |
+|  + Compute_BConv_Pipeline_Store_X_VITIS_LOOP_139_4_VITIS_LOOP_140_5 | 0   |        |             |     |        |         |
+|    add_ln138_1_fu_225_p2                                            |     |        | add_ln138_1 | add | fabric | 0       |
+|    add_ln138_fu_371_p2                                              |     |        | add_ln138   | add | fabric | 0       |
+|    add_ln139_fu_294_p2                                              |     |        | add_ln139   | add | fabric | 0       |
+|    empty_fu_388_p2                                                  |     |        | empty       | add | fabric | 0       |
+|    add_ln142_1_fu_405_p2                                            |     |        | add_ln142_1 | add | fabric | 0       |
+|    add_ln142_2_fu_422_p2                                            |     |        | add_ln142_2 | add | fabric | 0       |
+|    add_ln142_fu_337_p2                                              |     |        | add_ln142   | add | fabric | 0       |
+|    add_ln140_fu_352_p2                                              |     |        | add_ln140   | add | fabric | 0       |
+|    add_ln139_1_fu_240_p2                                            |     |        | add_ln139_1 | add | fabric | 0       |
++---------------------------------------------------------------------+-----+--------+-------------+-----+--------+---------+
+
+
+================================================================
+== Storage Report
+================================================================
++-------------------+--------------+------+------+------+--------+---------------+------+---------+------------------+
+| Name              | Usage        | Type | BRAM | URAM | Pragma | Variable      | Impl | Latency | Bitwidth, Depth, |
+|                   |              |      |      |      |        |               |      |         | Banks            |
++-------------------+--------------+------+------+------+--------+---------------+------+---------+------------------+
+| + Compute_BConv   |              |      | 120  | 0    |        |               |      |         |                  |
+|   local_in_x_U    | ram_2p array |      | 15   |      | yes    | local_in_x    | bram | 1       | 64, 4096, 1      |
+|   local_in_x_3_U  | ram_2p array |      | 15   |      | yes    | local_in_x_3  | bram | 1       | 64, 4096, 1      |
+|   local_in_x_4_U  | ram_2p array |      | 15   |      | yes    | local_in_x_4  | bram | 1       | 64, 4096, 1      |
+|   local_out_x_U   | ram_2p array |      | 15   |      | yes    | local_out_x   | bram | 1       | 64, 4096, 1      |
+|   local_out_x_5_U | ram_2p array |      | 15   |      | yes    | local_out_x_5 | bram | 1       | 64, 4096, 1      |
+|   local_out_x_6_U | ram_2p array |      | 15   |      | yes    | local_out_x_6 | bram | 1       | 64, 4096, 1      |
+|   local_out_x_7_U | ram_2p array |      | 15   |      | yes    | local_out_x_7 | bram | 1       | 64, 4096, 1      |
+|   local_out_x_8_U | ram_2p array |      | 15   |      | yes    | local_out_x_8 | bram | 1       | 64, 4096, 1      |
++-------------------+--------------+------+------+------+--------+---------------+------+---------+------------------+
+
+
+================================================================
+== Pragma Report
+================================================================
+* Valid Pragma Syntax
++-----------------+---------------------------------------------+-------------------------------------------------------+
+| Type            | Options                                     | Location                                              |
++-----------------+---------------------------------------------+-------------------------------------------------------+
+| inline          |                                             | ../src/arithmetic.cpp:9 in addmod                     |
+| inline          | off                                         | ../src/arithmetic.cpp:65 in multmod                   |
+| pipeline        | II=1                                        | ../src/arithmetic.cpp:66 in multmod                   |
+| bind_op         | variable=res_mult op=mul impl=dsp latency=4 | ../src/arithmetic.cpp:96 in multmod, res_mult         |
+| bind_op         | variable=p_high op=mul impl=dsp latency=4   | ../src/arithmetic.cpp:104 in multmod, p_high          |
+| bind_op         | variable=p_low op=mul impl=dsp latency=4    | ../src/arithmetic.cpp:105 in multmod, p_low           |
+| inline          |                                             | ../src/bconv.cpp:26 in bconv_core                     |
+| array_partition | variable=in_w complete dim=0                | ../src/bconv.cpp:28 in bconv_core, in_w               |
+| array_partition | variable=out_mod complete dim=0             | ../src/bconv.cpp:29 in bconv_core, out_mod            |
+| array_partition | variable=out_S complete dim=0               | ../src/bconv.cpp:30 in bconv_core, out_S              |
+| array_partition | variable=out_m_barrett complete dim=0       | ../src/bconv.cpp:31 in bconv_core, out_m_barrett      |
+| pipeline        | II=1                                        | ../src/bconv.cpp:35 in bconv_core                     |
+| unroll          |                                             | ../src/bconv.cpp:39 in bconv_core                     |
+| array_partition | variable=prod complete                      | ../src/bconv.cpp:43 in bconv_core, prod               |
+| unroll          |                                             | ../src/bconv.cpp:46 in bconv_core                     |
+| bind_storage    | variable=local_in_x type=ram_2p impl=bram   | ../src/bconv.cpp:83 in compute_bconv, local_in_x      |
+| array_partition | variable=local_in_x type=complete dim=1     | ../src/bconv.cpp:84 in compute_bconv, local_in_x      |
+| bind_storage    | variable=local_out_x type=ram_2p impl=bram  | ../src/bconv.cpp:88 in compute_bconv, local_out_x     |
+| array_partition | variable=local_out_x type=complete dim=1    | ../src/bconv.cpp:89 in compute_bconv, local_out_x     |
+| array_partition | variable=local_w complete dim=0             | ../src/bconv.cpp:96 in compute_bconv, local_w         |
+| array_partition | variable=local_mod complete dim=0           | ../src/bconv.cpp:97 in compute_bconv, local_mod       |
+| array_partition | variable=local_S complete dim=0             | ../src/bconv.cpp:98 in compute_bconv, local_S         |
+| array_partition | variable=local_m_barrett complete dim=0     | ../src/bconv.cpp:99 in compute_bconv, local_m_barrett |
+| pipeline        | II=1                                        | ../src/bconv.cpp:106 in compute_bconv                 |
+| pipeline        | II=1                                        | ../src/bconv.cpp:112 in compute_bconv                 |
+| pipeline        | II=1                                        | ../src/bconv.cpp:122 in compute_bconv                 |
+| pipeline        | II=1                                        | ../src/bconv.cpp:141 in compute_bconv                 |
++-----------------+---------------------------------------------+-------------------------------------------------------+
+
+

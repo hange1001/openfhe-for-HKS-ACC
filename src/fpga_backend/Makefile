@@ -66,7 +66,9 @@ VPP_FLAGS += -I$(INC_DIR) -I$(SRC_DIR)
 # 2. 构建规则 (Vitis Flow - 保持不变)
 # ===================================================================
 
-.PHONY: all clean emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto
+REPORTS_OUT := ../../docs/reports/bconv
+
+.PHONY: all clean emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto report report_all
 
 all: $(HOST_LIB) $(XCLBIN) emconfig
 
@@ -201,7 +203,39 @@ cosim: check_module
 	@echo "-> Done. Check cosim reports/waveforms in Solution/cosim_$(MODULE)."
 
 # ===================================================================
-# 4. 清理
+# 4. 报告提拔 (将综合/仿真结果提升到 docs/reports/ 纳入 Git)
+# ===================================================================
+# 用法:
+#   make report                      # 提拔当前 MODULE 的报告 (默认 MODULE=Compute_CG_NTT)
+#   make report MODULE=Compute_BConv_Systolic
+#   make report_all                  # 提拔全部已知 BConv 模块的报告
+report: check_module
+	@SOLN_DIR=Solution/cosim_$(MODULE)/solution1; \
+	mkdir -p $(REPORTS_OUT); \
+	if [ -f "$$SOLN_DIR/syn/report/csynth.rpt" ]; then \
+		cp "$$SOLN_DIR/syn/report/csynth.rpt" "$(REPORTS_OUT)/$(MODULE)_csynth.rpt"; \
+		echo "  [+] $(MODULE)_csynth.rpt"; \
+	else \
+		echo "  [-] csynth.rpt not found (run 'make csynth MODULE=$(MODULE)' first)"; \
+	fi; \
+	if [ -f "$$SOLN_DIR/sim/report/$(MODULE)_cosim.rpt" ]; then \
+		cp "$$SOLN_DIR/sim/report/$(MODULE)_cosim.rpt" "$(REPORTS_OUT)/$(MODULE)_cosim.rpt"; \
+		echo "  [+] $(MODULE)_cosim.rpt"; \
+	else \
+		echo "  [-] $(MODULE)_cosim.rpt not found (run 'make cosim MODULE=$(MODULE)' first)"; \
+	fi
+	@echo "-> Reports updated in $(REPORTS_OUT)/"
+	@echo "-> Run: git add docs/reports/ && git commit"
+
+BCONV_MODULES := Compute_BConv_Naive Compute_BConv Compute_BConv_Systolic
+
+report_all:
+	@for m in $(BCONV_MODULES); do \
+		$(MAKE) --no-print-directory report MODULE=$$m; \
+	done
+
+# ===================================================================
+# 5. 清理
 # ===================================================================
 clean:
 	@echo "-> Cleaning local build artifacts..."
