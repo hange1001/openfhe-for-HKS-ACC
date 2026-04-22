@@ -139,6 +139,11 @@ SRC_NTT_Kernel := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/ntt_kernel.cpp
 TB_NTT_Kernel  := ./testbench/ntt_kernel_tb.cpp
 CF_NTT_Kernel  := -DNTT_TB_STANDALONE
 
+# 3b. Compute_NTT 子模块 (顶层函数: Compute_NTT，多 limb 包装 NTT_Kernel)
+SRC_Compute_NTT := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/ntt_kernel.cpp
+TB_Compute_NTT  := ./testbench/ntt_kernel_tb.cpp
+CF_Compute_NTT  := -DNTT_TB_STANDALONE
+
 # 4. bconv 子模块 (优化版，顶层函数: Compute_BConv)
 SRC_Compute_BConv := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/bconv.cpp
 TB_Compute_BConv  := ./testbench/bconv_tb.cpp

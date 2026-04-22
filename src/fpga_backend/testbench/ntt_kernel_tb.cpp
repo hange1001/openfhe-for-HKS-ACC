@@ -95,25 +95,15 @@ static void compute_barrett_params(uint64_t mod,
                                    uint64_t &K_HALF_out,
                                    uint64_t &M_out)
 {
-    // 与 arithmetic.cpp MultMod 中使用的计算方式一致：
-    //   k_half = bit width of mod（即 ceil(log2(mod+1))）
-    //   M      = floor(2^(2*k_half) / mod)
-    // 验证：(a*b >> (k_half-1)) * M >> (k_half+1)
-    //     = a*b * M >> (2*k_half)  ≈  a*b / mod  ✓
+    // 与 arithmetic.cpp MultMod 的 S 参数语义一致：S = bitwidth(mod) + 62
+    // M = floor(2^S / mod)
     uint64_t tmp = mod;
     int bits = 0;
     while (tmp) { tmp >>= 1; ++bits; }
-    uint64_t k = (uint64_t)bits;
-    K_HALF_out = k;
-
-    // M = floor(2^(2k) / mod)
-    if (2 * k <= 127) {
-        unsigned __int128 numer = (unsigned __int128)1 << (2 * k);
-        M_out = (uint64_t)(numer / mod);
-    } else {
-        unsigned __int128 numer = (unsigned __int128)1 << 127;
-        M_out = (uint64_t)(numer / mod);
-    }
+    uint64_t S = (uint64_t)bits + 62;
+    K_HALF_out = S;
+    unsigned __int128 numer = (unsigned __int128)1 << S;
+    M_out = (uint64_t)(numer / mod);
 }
 
 // ============================================================

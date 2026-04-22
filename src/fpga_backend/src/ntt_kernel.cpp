@@ -318,11 +318,21 @@ void NTT_Kernel(
     // ============================================================
     STAGE_LOOP:
     for (int j = 0; j < STAGE; j++) {
+        // 关键：禁止外层循环展平，保证 Ping-Pong 层级之间流水线排空后再进入下一 stage
+        // 否则 k 循环尾部的写操作与下一 j 首部的读操作会在同一 BRAM bank 同一地址冲突 → Co-Sim 卡死
+        #pragma HLS LOOP_FLATTEN off
+
         ROW_LOOP:
         for (int k = 0; k < SQRT; k++) {
-            #pragma HLS PIPELINE II=1
-            #pragma HLS DEPENDENCE variable=buf_A inter false
-            #pragma HLS DEPENDENCE variable=buf_B inter false
+            // 【刻意不写 PIPELINE II=1】
+            //   buf_A/buf_B 按 factor=PE_PARALLEL(=8) 切片，单周期最多吞吐 8 数据；
+            //   而每次 k 迭代底层需要 SQRT(=64) 宽度的读/写，II=1 会迫使 HLS 生成
+            //   残疾的交错调度状态机（并把内层循环强制全展），与 BRAM 端口物理带宽
+            //   冲突，Co-Sim 中立即死锁。让 HLS 自行推导 II（通常=8）即可。
+            // 标准依赖声明：跨迭代对 buf_A/buf_B 无 RAW/WAW 冲突（ping-pong 保证）
+            #pragma HLS dependence variable=buf_A type=inter dependent=false direction=RAW
+            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=RAW
+            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=WAW
 
             // -- 计算 stage 索引（NTT 正序，INTT 逆序）
             if (is_ntt) {

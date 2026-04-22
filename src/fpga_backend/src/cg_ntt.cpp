@@ -149,15 +149,21 @@ void CG_NTT_Kernel(
     // ============================================================
     STAGE_LOOP:
     for (int stage = 0; stage < STAGE; stage++) {
+        // 禁止与外层/内层展平，保证 ping-pong 在 stage 边界完成排空
+        #pragma HLS LOOP_FLATTEN off
 
         // NTT 正序（0,1,...,11），INTT 逆序（11,10,...,0）
         int actual_stage = is_ntt ? stage : (STAGE - 1 - stage);
 
         BUTTERFLY_LOOP:
         for (int i = 0; i < CG_HALF_N / CG_PE_NUM; i++) {
+            // 带宽核算：buf_A/buf_B cyclic factor=16 + ram_2p → 32 访问/周期，
+            // 每迭代实际需 8 PE × (2 读 + 2 写) = 32 访问，刚好吻合，II=1 可行。
             #pragma HLS PIPELINE II=1
-            #pragma HLS DEPENDENCE variable=buf_A inter false
-            #pragma HLS DEPENDENCE variable=buf_B inter false
+            // 标准依赖声明：ping-pong 保证跨迭代对 buf_A/buf_B 无 RAW/WAW 冲突
+            #pragma HLS dependence variable=buf_A type=inter dependent=false direction=RAW
+            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=RAW
+            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=WAW
 
             PE_UNROLL:
             for (int p = 0; p < CG_PE_NUM; p++) {
