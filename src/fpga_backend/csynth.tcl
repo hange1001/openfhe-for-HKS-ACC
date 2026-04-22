@@ -1,36 +1,35 @@
-# csynth.tcl
-# 检查环境变量 TOP_FUNCTION，若未设置则使用默认值 "Top"
-if { [info exists ::env(TOP_FUNCTION)] } {
-    set top_func $::env(TOP_FUNCTION)
-} else {
-    set top_func "Top"   ;# 默认顶层
-}
-puts "INFO: Synthesizing top function: $top_func"
+# ===================================================================
+# csynth.tcl - C Synthesis Script (由 Makefile 动态驱动)
+# ===================================================================
 
-# 项目目录带上模块名后缀，方便区分
-set proj_name "Solution_${top_func}"
+# 1. 从环境变量获取 Makefile 传来的参数
+set top_func  $::env(HLS_TOP_FUNC)
+set src_files $::env(HLS_SRC_FILES)
+set extra_cf  [expr {[info exists ::env(HLS_EXTRA_CFLAGS)] ? $::env(HLS_EXTRA_CFLAGS) : ""}]
+
+puts "======================================="
+puts "INFO: Running C Synthesis for: $top_func"
+puts "INFO: Source files : $src_files"
+puts "INFO: Extra cflags : $extra_cf"
+puts "======================================="
+
+# 2. 每个模块使用独立工程目录
+file mkdir Solution
+set proj_name "Solution/${top_func}"
 open_project $proj_name
 
 set_top $top_func
+set my_cflags "-I./include -I/opt/xilinx/xrt/include $extra_cf"
 
-set my_cflags "-I./include -I/opt/xilinx/xrt/include"
-
-add_files {
-    ./src/top.cpp
-    ./src/load.cpp
-    ./src/arithmetic.cpp
-    ./src/bconv.cpp
-    ./src/auto.cpp
-    ./src/mod_add_kernel.cpp
-    ./src/mod_sub_kernel.cpp
-    ./src/mod_mult_kernel.cpp
-    ./src/ntt_kernel.cpp
-    ./src/interleave.cpp
-    ./src/bconv_naive.cpp
-} -cflags $my_cflags
+# 3. 动态添加 Source 文件
+foreach file $src_files {
+    add_files $file -cflags $my_cflags
+}
 
 open_solution "solution1"
 set_part xcu55c-fsvh2892-2L-e
 create_clock -period 5ns
 
 csynth_design
+
+exit

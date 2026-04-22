@@ -31,7 +31,15 @@
 #include <string>
 
 #include <ap_int.h>
-#include "../include/bconv.h"   // Compute_BConv + define.h + arithmetic.h
+#ifdef BCONV_USE_NAIVE
+    #include "../include/bconv_naive.h"
+    #define BCONV_UUT  Compute_BConv_Naive
+    #define BCONV_TAG  "Naive"
+#else
+    #include "../include/bconv.h"   // Compute_BConv + define.h + arithmetic.h
+    #define BCONV_UUT  Compute_BConv
+    #define BCONV_TAG  "Optimized"
+#endif
 
 using namespace std;
 
@@ -153,7 +161,7 @@ struct TestArrays {
         // SW 黄金模型
         golden_bconv(in_x, in_w, out_mod, sizeP, golden);
         // HW
-        Compute_BConv(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
+        BCONV_UUT(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
         // 比较
         return compare_results(in_x, golden, sizeP, name);
     }
@@ -390,7 +398,7 @@ static int tc6_random_stress(int rounds = 4) {
 // ---------------------------------------------------------------------------
 int main() {
     cout << "============================================================\n";
-    cout << "   BConv Systolic Array Testbench\n";
+    cout << "   BConv Systolic Array Testbench  [" << BCONV_TAG << "]\n";
     cout << "   RING_DIM=" << RING_DIM
          << "  LIMB_Q=" << LIMB_Q
          << "  MAX_OUT_COLS=" << MAX_OUT_COLS << "\n";
