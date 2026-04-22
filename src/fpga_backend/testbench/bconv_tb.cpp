@@ -153,7 +153,7 @@ struct TestArrays {
         // SW 黄金模型
         golden_bconv(in_x, in_w, out_mod, sizeP, golden);
         // HW
-        Compute_BConv(in_x, in_w, out_mod, out_S, out_m_barrett);
+        Compute_BConv(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
         // 比较
         return compare_results(in_x, golden, sizeP, name);
     }

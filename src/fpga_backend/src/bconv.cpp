@@ -20,7 +20,8 @@ void bconv_core(
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
     const uint64_t out_S[MAX_OUT_COLS],
-    const uint64_t out_m_barrett[MAX_OUT_COLS]
+    const uint64_t out_m_barrett[MAX_OUT_COLS],
+    int sizeP
 ) {
     #pragma HLS INLINE
 
@@ -55,7 +56,7 @@ void bconv_core(
             uint128_t s = s01 + prod[2];
             if (s >= out_mod[p]) s -= out_mod[p];
 
-            if (p < LIMB_P) {
+            if (p < sizeP) {
                 out_x[p][n] = (uint64_t)s;
             }
         }
@@ -70,7 +71,8 @@ void Compute_BConv(
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
     const uint64_t out_S[MAX_OUT_COLS],
-    const uint64_t out_m_barrett[MAX_OUT_COLS]
+    const uint64_t out_m_barrett[MAX_OUT_COLS],
+    int sizeP
 ) {
     // ----------------------------------------------
     // 1. 片上存储空间（输入/输出分离，避免 full array load/store）
@@ -126,12 +128,13 @@ void Compute_BConv(
     // 3. Compute Phase: 输入只读，输出只写，无冲突
     // -----------------------------------------
     bconv_core(local_in_x, local_out_x,
-               local_w, local_mod, local_S, local_m_barrett);
+               local_w, local_mod, local_S, local_m_barrett,
+               sizeP);
 
     // -----------------------------------------
     // 4. Store Phase: 片上 1D → DDR 2D
     // -----------------------------------------
-    Store_X: for (int p = 0; p < LIMB_P; ++p) {
+    Store_X: for (int p = 0; p < sizeP; ++p) {
         for (int r = 0; r < SQRT; ++r) {
             for (int c = 0; c < SQRT; ++c) {
                 #pragma HLS PIPELINE II=1

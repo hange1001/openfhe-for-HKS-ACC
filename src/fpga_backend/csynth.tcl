@@ -1,13 +1,20 @@
-open_project Solution
-# 设置你的顶层函数名（请确保它与 C++ 代码中的函数名一致）
-#set_top Top
-set_top NTT_Kernel
+# csynth.tcl
+# 检查环境变量 TOP_FUNCTION，若未设置则使用默认值 "Top"
+if { [info exists ::env(TOP_FUNCTION)] } {
+    set top_func $::env(TOP_FUNCTION)
+} else {
+    set top_func "Top"   ;# 默认顶层
+}
+puts "INFO: Synthesizing top function: $top_func"
+
+# 项目目录带上模块名后缀，方便区分
+set proj_name "Solution_${top_func}"
+open_project $proj_name
+
+set_top $top_func
 
 set my_cflags "-I./include -I/opt/xilinx/xrt/include"
 
-# ================= 修改开始 =================
-
-# Add all source files (no comments inside block - TCL treats words as file names)
 add_files {
     ./src/top.cpp
     ./src/load.cpp
@@ -19,16 +26,11 @@ add_files {
     ./src/mod_mult_kernel.cpp
     ./src/ntt_kernel.cpp
     ./src/interleave.cpp
+    ./src/bconv_naive.cpp
 } -cflags $my_cflags
-
-# ================= 修改结束 =================
-
-# 注意：如果有测试文件（包含 main 函数），请使用 -tb 参数单独添加
-# add_files -tb ./src/testbench.cpp -cflags $my_cflags
 
 open_solution "solution1"
 set_part xcu55c-fsvh2892-2L-e
 create_clock -period 5ns
 
 csynth_design
-exit

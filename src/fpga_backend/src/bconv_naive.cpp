@@ -5,7 +5,8 @@ void Compute_BConv_Naive(
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
     const uint64_t out_k_half[MAX_OUT_COLS],
-    const uint64_t out_m_barrett[MAX_OUT_COLS]
+    const uint64_t out_m_barrett[MAX_OUT_COLS],
+    int sizeP
 ) {
     #pragma HLS INLINE
     
@@ -63,7 +64,7 @@ void Compute_BConv_Naive(
     // 3. Compute Phase: 朴素串行累加
     // -----------------------------------------
     Compute_Loop: for (int n = 0; n < RING_DIM; ++n) {
-        for (int p = 0; p < LIMB_P; ++p) {
+        for (int p = 0; p < sizeP; ++p) {
             #pragma HLS PIPELINE II=1
             uint64_t sum = 0;
             
@@ -83,7 +84,7 @@ void Compute_BConv_Naive(
     // -----------------------------------------
     // 4. Store Phase: 片上 1D → DDR 2D
     // -----------------------------------------
-    Store_X: for (int p = 0; p < LIMB_P; ++p) {
+    Store_X: for (int p = 0; p < sizeP; ++p) {
         for (int r = 0; r < SQRT; ++r) {
             for (int c = 0; c < SQRT; ++c) {
                 #pragma HLS PIPELINE II=1
