@@ -282,33 +282,67 @@ void Compute_CG_NTT(
     #pragma HLS INTERFACE s_axilite port=mod_idx_offset
     #pragma HLS INTERFACE s_axilite port=return
 
-    #pragma HLS ARRAY_PARTITION variable=in_data cyclic factor=CG_PE_NUM dim=2
+    // ============================================================
+    // 片上缓冲（Local BRAM）：m_axi 外部端口禁止切片，
+    // 否则 HLS 会为每个 bank 生成一个独立的 AXI Master 端口，
+    // 导致 Co-Sim 网表爆炸（上百路 AXI VIP）。
+    // 所以：外部总线只负责 burst 搬运，内部 BRAM 才做 partition。
+    // ============================================================
+    uint64_t local_in_data[RING_DIM];
+    uint64_t local_twiddle[STAGE][CG_HALF_N];
 
-    // 旋转因子表：dim=1 (limb) 不拆，dim=2 (stage) complete，dim=3 cyclic
-    #pragma HLS ARRAY_PARTITION variable=cg_ntt_twiddle  complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=cg_intt_twiddle complete dim=2
+    #pragma HLS ARRAY_PARTITION variable=local_in_data cyclic factor=CG_PE_NUM dim=1
+    #pragma HLS ARRAY_PARTITION variable=local_twiddle cyclic factor=CG_PE_NUM dim=2
 
     LIMB_LOOP:
     for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++) {
         #pragma HLS LOOP_TRIPCOUNT min=1 max=8 avg=3
+
+        // Burst 读入 in_data[l][*] → local_in_data
+        LOAD_IN:
+        for (int i = 0; i < RING_DIM; i++) {
+            #pragma HLS PIPELINE II=1
+            local_in_data[i] = in_data[l][i];
+        }
+
+        // Burst 读入旋转因子 → local_twiddle
+        // 注意：is_ntt 必须提到 PIPELINE 循环外部，否则 HLS burst 推断器
+        // 会因"每拍选择指针"而拒绝合并 burst，退化为单字读取。
         if (is_ntt) {
-            CG_NTT_Kernel(
-                in_data[l],
-                modulus[l],
-                K_HALF[l],
-                M_barrett[l],
-                cg_ntt_twiddle[l],
-                true
-            );
+            LOAD_NTT_TW_S:
+            for (int s = 0; s < STAGE; s++) {
+                LOAD_NTT_TW_I:
+                for (int i = 0; i < CG_HALF_N; i++) {
+                    #pragma HLS PIPELINE II=1
+                    local_twiddle[s][i] = cg_ntt_twiddle[l][s][i];
+                }
+            }
         } else {
-            CG_NTT_Kernel(
-                in_data[l],
-                modulus[l],
-                K_HALF[l],
-                M_barrett[l],
-                cg_intt_twiddle[l],
-                false
-            );
+            LOAD_INTT_TW_S:
+            for (int s = 0; s < STAGE; s++) {
+                LOAD_INTT_TW_I:
+                for (int i = 0; i < CG_HALF_N; i++) {
+                    #pragma HLS PIPELINE II=1
+                    local_twiddle[s][i] = cg_intt_twiddle[l][s][i];
+                }
+            }
+        }
+
+        // 计算（全部在片上 BRAM 完成）
+        CG_NTT_Kernel(
+            local_in_data,
+            modulus[l],
+            K_HALF[l],
+            M_barrett[l],
+            local_twiddle,
+            is_ntt
+        );
+
+        // Burst 写回 local_in_data → in_data[l][*]
+        STORE_OUT:
+        for (int i = 0; i < RING_DIM; i++) {
+            #pragma HLS PIPELINE II=1
+            in_data[l][i] = local_in_data[i];
         }
     }
 }

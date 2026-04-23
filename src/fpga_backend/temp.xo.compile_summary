@@ -9,10 +9,10 @@
 <ENTRY>
 {
  "type": "ET_CmdStep",
- "dateTimestamp": "Wed Apr 22 11:04:36 2026",
- "timestampMillis": "1776827076066",
+ "dateTimestamp": "Wed Apr 22 21:10:38 2026",
+ "timestampMillis": "1776863438158",
  "buildStep": {
-  "cmdId": "c2d668c8-6564-4449-bd67-71edf0c10cda",
+  "cmdId": "229f2877-6187-483d-9419-98573c0a6201",
   "name": "v++",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/temp/temp.steps.log",
   "commandLine": "/tools/Xilinx/Vitis/2023.2/bin/unwrapped/lnx64.o/v++  --vivado.prop \"run.__KERNEL__.{STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS}={-directive sdx_optimization_effort_high}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_route_design_summary steps {route_design} runs {impl_1} options {-max_paths 10}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_post_route_phys_opt_design_summary steps {post_route_phys_opt_design} runs {impl_1} options {-max_paths 10}\" -c -t sw_emu --platform xilinx_u250_gen3x16_xdma_4_1_202210_1 --save-temps -I./include -I./src -k Top -o temp.xo src/top.cpp src/load.cpp src/mod_add_kernel.cpp src/mod_mult_kernel.cpp src/mod_sub_kernel.cpp src/ntt_kernel.cpp src/arithmetic.cpp src/bconv.cpp src/interleave.cpp src/auto.cpp ",
@@ -48,10 +48,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Wed Apr 22 11:04:36 2026",
- "timestampMillis": "1776827076066",
+ "dateTimestamp": "Wed Apr 22 21:10:38 2026",
+ "timestampMillis": "1776863438158",
  "status": {
-  "cmdId": "c2d668c8-6564-4449-bd67-71edf0c10cda",
+  "cmdId": "229f2877-6187-483d-9419-98573c0a6201",
   "state": "CS_RUNNING"
  }
 }
@@ -59,8 +59,8 @@
 <ENTRY>
 {
  "type": "ET_FlowMetaData",
- "dateTimestamp": "Wed Apr 22 11:04:38 2026",
- "timestampMillis": "1776827078528",
+ "dateTimestamp": "Wed Apr 22 21:10:40 2026",
+ "timestampMillis": "1776863440611",
  "buildSummary": {
   "hardwarePlatform": "xilinx_u250_gen3x16_xdma_4_1_202210_1.xpfm",
   "hardwareDsa": "",
@@ -104,10 +104,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Wed Apr 22 11:04:38 2026",
- "timestampMillis": "1776827078533",
+ "dateTimestamp": "Wed Apr 22 21:10:40 2026",
+ "timestampMillis": "1776863440620",
  "buildStep": {
-  "cmdId": "ee77c1ee-eeed-4752-acfe-e700a4ef1854",
+  "cmdId": "ed73b684-2a6c-47b0-9785-5d8b19fc627b",
   "name": "vitis_hls",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/temp/Top/vitis_hls.log",
   "commandLine": "vitis_hls -f /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/temp/Top/Top.tcl -messageDb vitis_hls.pb",
@@ -126,10 +126,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Wed Apr 22 11:04:38 2026",
- "timestampMillis": "1776827078533",
+ "dateTimestamp": "Wed Apr 22 21:10:40 2026",
+ "timestampMillis": "1776863440620",
  "status": {
-  "cmdId": "ee77c1ee-eeed-4752-acfe-e700a4ef1854",
+  "cmdId": "ed73b684-2a6c-47b0-9785-5d8b19fc627b",
   "state": "CS_RUNNING"
  }
 }
@@ -137,10 +137,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Wed Apr 22 11:05:13 2026",
- "timestampMillis": "1776827113965",
+ "dateTimestamp": "Wed Apr 22 21:11:09 2026",
+ "timestampMillis": "1776863469798",
  "status": {
-  "cmdId": "ee77c1ee-eeed-4752-acfe-e700a4ef1854",
+  "cmdId": "ed73b684-2a6c-47b0-9785-5d8b19fc627b",
   "state": "CS_PASSED"
  }
 }
@@ -148,10 +148,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Wed Apr 22 11:05:13 2026",
- "timestampMillis": "1776827113978",
+ "dateTimestamp": "Wed Apr 22 21:11:09 2026",
+ "timestampMillis": "1776863469811",
  "status": {
-  "cmdId": "c2d668c8-6564-4449-bd67-71edf0c10cda",
+  "cmdId": "229f2877-6187-483d-9419-98573c0a6201",
   "state": "CS_PASSED"
  }
 }
@@ -159,8 +159,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Wed Apr 22 11:05:14 2026",
- "timestampMillis": "1776827114026",
+ "dateTimestamp": "Wed Apr 22 21:11:09 2026",
+ "timestampMillis": "1776863469854",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/reports/temp/v++_compile_temp_guidance.html",
   "name": "",
@@ -173,8 +173,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Wed Apr 22 11:05:14 2026",
- "timestampMillis": "1776827114027",
+ "dateTimestamp": "Wed Apr 22 21:11:09 2026",
+ "timestampMillis": "1776863469855",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/v++_compile_temp_guidance.pb3",
   "name": "",
