@@ -9,16 +9,8 @@
 //   Test 4 - Compute_CG_NTT 多 limb NTT→INTT 往返验证
 //   Test 5 - CG-NTT 输出重排后与标准 DIT-NTT 结果一致
 //
-// 编译：
-//   g++ -std=c++14 -O2 -DFPGA_STANDALONE_TEST \
-//       -I../include \
-//       cg_ntt_tb.cpp \
-//       ../src/cg_ntt.cpp \
-//       ../src/arithmetic.cpp \
-//       -o cg_ntt_tb && ./cg_ntt_tb
+// 编译：通过 make csim MODULE=Compute_CG_NTT 运行
 //============================================================================
-
-#define FPGA_STANDALONE_TEST
 
 #include <iostream>
 #include <iomanip>
@@ -376,6 +368,27 @@ static void test_cg_ntt_roundtrip() {
 }
 
 // ============================================================
+// Pack/Unpack 辅助：uint64_t 数组 ↔ ap_uint<512> 数组
+// ============================================================
+
+static void pack_data(const uint64_t *src, ap_uint<512> *dst, int num_u64) {
+    for (int i = 0; i < num_u64 / PACK_RATIO; i++) {
+        ap_uint<512> pack;
+        for (int j = 0; j < PACK_RATIO; j++)
+            pack.range((j + 1) * 64 - 1, j * 64) = src[i * PACK_RATIO + j];
+        dst[i] = pack;
+    }
+}
+
+static void unpack_data(const ap_uint<512> *src, uint64_t *dst, int num_u64) {
+    for (int i = 0; i < num_u64 / PACK_RATIO; i++) {
+        ap_uint<512> pack = src[i];
+        for (int j = 0; j < PACK_RATIO; j++)
+            dst[i * PACK_RATIO + j] = pack.range((j + 1) * 64 - 1, j * 64);
+    }
+}
+
+// ============================================================
 // Test 4：Compute_CG_NTT 多 limb NTT→INTT 往返验证
 // ============================================================
 static void test_compute_cg_ntt_roundtrip() {
@@ -389,6 +402,7 @@ static void test_compute_cg_ntt_roundtrip() {
     uint64_t root_2N     = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
     uint64_t inv_root_2N = sw_powmod(root_2N, MOD - 2, MOD);
 
+    // 生成 uint64_t 旋转因子表，然后 pack 成 ap_uint<512>
     static uint64_t ntt_tw[MAX_LIMBS][STAGE][CG_HALF_N];
     static uint64_t intt_tw[MAX_LIMBS][STAGE][CG_HALF_N];
     for (int li = 0; li < MAX_LIMBS; li++) {
@@ -396,11 +410,17 @@ static void test_compute_cg_ntt_roundtrip() {
         build_cg_twiddle(intt_tw[li], RING_DIM, MOD, inv_root_2N);
     }
 
+    static ap_uint<512> packed_ntt_tw[MAX_LIMBS * PACKED_TW_SIZE];
+    static ap_uint<512> packed_intt_tw[MAX_LIMBS * PACKED_TW_SIZE];
+    pack_data((const uint64_t *)ntt_tw,  packed_ntt_tw,  MAX_LIMBS * STAGE * CG_HALF_N);
+    pack_data((const uint64_t *)intt_tw, packed_intt_tw, MAX_LIMBS * STAGE * CG_HALF_N);
+
     uint64_t modulus[MAX_LIMBS], K_HALF[MAX_LIMBS], M[MAX_LIMBS];
     for (int li = 0; li < MAX_LIMBS; li++) {
         modulus[li] = MOD; K_HALF[li] = K_HALF_val; M[li] = M_val;
     }
 
+    // 生成随机数据
     static uint64_t data[MAX_LIMBS][RING_DIM];
     static uint64_t backup[MAX_LIMBS][RING_DIM];
     std::mt19937_64 rng(654321);
@@ -409,9 +429,14 @@ static void test_compute_cg_ntt_roundtrip() {
         for (int i = 0; i < RING_DIM; i++)
             data[li][i] = backup[li][i] = dis(rng);
 
-    // 全部 limb 往返
-    Compute_CG_NTT(data, ntt_tw, intt_tw, modulus, K_HALF, M, true,  MAX_LIMBS, 0);
-    Compute_CG_NTT(data, ntt_tw, intt_tw, modulus, K_HALF, M, false, MAX_LIMBS, 0);
+    // Pack → 调用 → Unpack
+    static ap_uint<512> packed_data[MAX_LIMBS * PACKED_RING_DIM];
+    pack_data((const uint64_t *)data, packed_data, MAX_LIMBS * RING_DIM);
+
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, true,  MAX_LIMBS, 0);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, false, MAX_LIMBS, 0);
+
+    unpack_data(packed_data, (uint64_t *)data, MAX_LIMBS * RING_DIM);
 
     bool recovered = true;
     for (int li = 0; li < MAX_LIMBS && recovered; li++)
@@ -423,15 +448,16 @@ static void test_compute_cg_ntt_roundtrip() {
     for (int li = 0; li < MAX_LIMBS; li++)
         for (int i = 0; i < RING_DIM; i++)
             data[li][i] = backup[li][i] = dis(rng);
-    Compute_CG_NTT(data, ntt_tw, intt_tw, modulus, K_HALF, M, true,  2, 1);
-    Compute_CG_NTT(data, ntt_tw, intt_tw, modulus, K_HALF, M, false, 2, 1);
+
+    pack_data((const uint64_t *)data, packed_data, MAX_LIMBS * RING_DIM);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, true,  2, 1);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, false, 2, 1);
+    unpack_data(packed_data, (uint64_t *)data, MAX_LIMBS * RING_DIM);
 
     bool partial_ok = true;
-    // limb 1, 2 应恢复
     for (int li = 1; li <= 2 && partial_ok; li++)
         for (int i = 0; i < RING_DIM && partial_ok; i++)
             if (data[li][i] != backup[li][i]) partial_ok = false;
-    // limb 0 不应被修改
     for (int i = 0; i < RING_DIM && partial_ok; i++)
         if (data[0][i] != backup[0][i]) partial_ok = false;
     check(partial_ok, "Compute_CG_NTT: num=2, offset=1 往返正确且不影响其他 limb");

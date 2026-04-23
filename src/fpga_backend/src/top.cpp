@@ -2,6 +2,7 @@
 #include "../include/load.h"
 #include "../include/arithmetic.h"
 #include "../include/ntt_kernel.h"
+#include "../include/cg_ntt.h"
 #include "../include/interleave.h"
 #include "../include/mod_mult_kernel.h"
 #include "../include/mod_add_kernel.h"

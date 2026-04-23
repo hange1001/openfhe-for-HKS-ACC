@@ -1,0 +1,586 @@
+
+
+================================================================
+== Synthesis Summary Report of 'Compute_CG_NTT'
+================================================================
++ General Information: 
+    * Date:           Thu Apr 23 14:08:16 2026
+    * Version:        2023.2 (Build 4023990 on Oct 11 2023)
+    * Project:        cosim_Compute_CG_NTT
+    * Solution:       solution1 (Vivado IP Flow Target)
+    * Product family: virtexuplusHBM
+    * Target device:  xcu55c-fsvh2892-2L-e
+    
+
++ Performance & Resource Estimates: 
+    
+    PS: '+' for module; 'o' for loop; '*' for dataflow
+    +---------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+----------+----------+-------------+------------+---------+
+    |                   Modules                   | Issue|      | Latency |  Latency  | Iteration|         | Trip |          |          |          |             |            |         |
+    |                   & Loops                   | Type | Slack| (cycles)|    (ns)   |  Latency | Interval| Count| Pipelined|   BRAM   |    DSP   |      FF     |     LUT    |   URAM  |
+    +---------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+----------+----------+-------------+------------+---------+
+    |+ Compute_CG_NTT                             |     -|  0.00|   117153|  5.858e+05|         -|   117154|     -|        no|  174 (4%)|  348 (3%)|   40713 (1%)|  56498 (4%)|  8 (~0%)|
+    | o LIMB_LOOP                                 |     -|  3.65|   117152|  5.858e+05|     14644|        -|     8|        no|         -|         -|            -|           -|        -|
+    |  + Compute_CG_NTT_Pipeline_LOAD_IN          |     -|  0.00|      515|  2.575e+03|         -|      515|     -|        no|         -|         -|    547 (~0%)|    84 (~0%)|        -|
+    |   o LOAD_IN                                 |     -|  3.65|      513|  2.565e+03|         3|        1|   512|       yes|         -|         -|            -|           -|        -|
+    |  + Compute_CG_NTT_Pipeline_LOAD_INTT_TW     |     -|  0.00|     3075|  1.538e+04|         -|     3075|     -|        no|         -|         -|    553 (~0%)|    87 (~0%)|        -|
+    |   o LOAD_INTT_TW                            |     -|  3.65|     3073|  1.536e+04|         3|        1|  3072|       yes|         -|         -|            -|           -|        -|
+    |  + Compute_CG_NTT_Pipeline_LOAD_NTT_TW      |     -|  0.00|     3075|  1.538e+04|         -|     3075|     -|        no|         -|         -|    553 (~0%)|    87 (~0%)|        -|
+    |   o LOAD_NTT_TW                             |     -|  3.65|     3073|  1.536e+04|         3|        1|  3072|       yes|         -|         -|            -|           -|        -|
+    |  + CG_NTT_Kernel                            |     -|  0.04|    10499|  5.250e+04|         -|    10499|     -|        no|   64 (1%)|  348 (3%)|  25068 (~0%)|  43734 (3%)|        -|
+    |   + CG_NTT_Kernel_Pipeline_INIT_LOOP        |     -|  1.25|      514|  2.570e+03|         -|      514|     -|        no|         -|         -|     22 (~0%)|    73 (~0%)|        -|
+    |    o INIT_LOOP                              |     -|  3.65|      512|  2.560e+03|         2|        1|   512|       yes|         -|         -|            -|           -|        -|
+    |   + CG_NTT_Kernel_Pipeline_WRITEBACK_LOOP   |     -|  0.84|      514|  2.570e+03|         -|      514|     -|        no|         -|         -|     23 (~0%)|   577 (~0%)|        -|
+    |    o WRITEBACK_LOOP                         |     -|  3.65|      512|  2.560e+03|         2|        1|   512|       yes|         -|         -|            -|           -|        -|
+    |   o STAGE_LOOP                              |     -|  3.65|     9468|  4.734e+04|       789|        -|    12|        no|         -|         -|            -|           -|        -|
+    |    + CG_NTT_Kernel_Pipeline_BUTTERFLY_LOOP  |     -|  0.04|      787|  3.935e+03|         -|      787|     -|        no|         -|  348 (3%)|  24943 (~0%)|  41293 (3%)|        -|
+    |     o BUTTERFLY_LOOP                        |    II|  3.65|      785|  3.925e+03|        21|        3|   256|       yes|         -|         -|            -|           -|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |      + MultMod                              |     -|  0.04|       14|     70.000|         -|        1|     -|       yes|         -|  58 (~0%)|   2438 (~0%)|  3850 (~0%)|        -|
+    |  + Compute_CG_NTT_Pipeline_STORE_OUT        |     -|  0.00|      515|  2.575e+03|         -|      515|     -|        no|         -|         -|    527 (~0%)|    84 (~0%)|        -|
+    |   o STORE_OUT                               |     -|  3.65|      513|  2.565e+03|         3|        1|   512|       yes|         -|         -|            -|           -|        -|
+    +---------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+----------+----------+-------------+------------+---------+
+
+
+================================================================
+== HW Interfaces
+================================================================
+* M_AXI
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| Interface   | Data Width | Address Width | Latency | Offset | Register | Max Widen | Max Read     | Max Write    | Num Read    | Num Write   | Resource Estimate |
+|             | (SW->HW)   |               |         |        |          | Bitwidth  | Burst Length | Burst Length | Outstanding | Outstanding |                   |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| m_axi_gmem0 | 512 -> 512 | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=30           |
+| m_axi_gmem1 | 512 -> 512 | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=30           |
+| m_axi_gmem2 | 512 -> 512 | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=30           |
+| m_axi_gmem3 | 64 -> 64   | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=4            |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+
+* S_AXILITE Interfaces
++---------------+------------+---------------+--------+----------+
+| Interface     | Data Width | Address Width | Offset | Register |
++---------------+------------+---------------+--------+----------+
+| s_axi_control | 32         | 7             | 16     | 0        |
++---------------+------------+---------------+--------+----------+
+
+* S_AXILITE Registers
++---------------+-------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| Interface     | Register          | Offset | Width | Access | Description                      | Bit Fields                                                           |
++---------------+-------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| s_axi_control | CTRL              | 0x00   | 32    | RW     | Control signals                  | 0=AP_START 1=AP_DONE 2=AP_IDLE 3=AP_READY 7=AUTO_RESTART 9=INTERRUPT |
+| s_axi_control | GIER              | 0x04   | 32    | RW     | Global Interrupt Enable Register | 0=Enable                                                             |
+| s_axi_control | IP_IER            | 0x08   | 32    | RW     | IP Interrupt Enable Register     | 0=CHAN0_INT_EN 1=CHAN1_INT_EN                                        |
+| s_axi_control | IP_ISR            | 0x0c   | 32    | RW     | IP Interrupt Status Register     | 0=CHAN0_INT_ST 1=CHAN1_INT_ST                                        |
+| s_axi_control | in_data_1         | 0x10   | 32    | W      | Data signal of in_data           |                                                                      |
+| s_axi_control | in_data_2         | 0x14   | 32    | W      | Data signal of in_data           |                                                                      |
+| s_axi_control | cg_ntt_twiddle_1  | 0x1c   | 32    | W      | Data signal of cg_ntt_twiddle    |                                                                      |
+| s_axi_control | cg_ntt_twiddle_2  | 0x20   | 32    | W      | Data signal of cg_ntt_twiddle    |                                                                      |
+| s_axi_control | cg_intt_twiddle_1 | 0x28   | 32    | W      | Data signal of cg_intt_twiddle   |                                                                      |
+| s_axi_control | cg_intt_twiddle_2 | 0x2c   | 32    | W      | Data signal of cg_intt_twiddle   |                                                                      |
+| s_axi_control | modulus_1         | 0x34   | 32    | W      | Data signal of modulus           |                                                                      |
+| s_axi_control | modulus_2         | 0x38   | 32    | W      | Data signal of modulus           |                                                                      |
+| s_axi_control | K_HALF_1          | 0x40   | 32    | W      | Data signal of K_HALF            |                                                                      |
+| s_axi_control | K_HALF_2          | 0x44   | 32    | W      | Data signal of K_HALF            |                                                                      |
+| s_axi_control | M_barrett_1       | 0x4c   | 32    | W      | Data signal of M_barrett         |                                                                      |
+| s_axi_control | M_barrett_2       | 0x50   | 32    | W      | Data signal of M_barrett         |                                                                      |
+| s_axi_control | is_ntt            | 0x58   | 32    | W      | Data signal of is_ntt            |                                                                      |
+| s_axi_control | num_active_limbs  | 0x60   | 32    | W      | Data signal of num_active_limbs  |                                                                      |
+| s_axi_control | mod_idx_offset    | 0x68   | 32    | W      | Data signal of mod_idx_offset    |                                                                      |
++---------------+-------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+
+* TOP LEVEL CONTROL
++-----------+------------+-----------+
+| Interface | Type       | Ports     |
++-----------+------------+-----------+
+| ap_clk    | clock      | ap_clk    |
+| ap_rst_n  | reset      | ap_rst_n  |
+| interrupt | interrupt  | interrupt |
+| ap_ctrl   | ap_ctrl_hs |           |
++-----------+------------+-----------+
+
+
+================================================================
+== SW I/O Information
+================================================================
+* Top Function Arguments
++------------------+-----------+---------------------------+
+| Argument         | Direction | Datatype                  |
++------------------+-----------+---------------------------+
+| in_data          | inout     | ap_uint<512>*             |
+| cg_ntt_twiddle   | in        | ap_uint<512> const *      |
+| cg_intt_twiddle  | in        | ap_uint<512> const *      |
+| modulus          | in        | long unsigned int const * |
+| K_HALF           | in        | long unsigned int const * |
+| M_barrett        | in        | long unsigned int const * |
+| is_ntt           | in        | bool                      |
+| num_active_limbs | in        | int                       |
+| mod_idx_offset   | in        | int                       |
++------------------+-----------+---------------------------+
+
+* SW-to-HW Mapping
++------------------+---------------+-----------+----------+---------------------------------------------+
+| Argument         | HW Interface  | HW Type   | HW Usage | HW Info                                     |
++------------------+---------------+-----------+----------+---------------------------------------------+
+| in_data          | m_axi_gmem0   | interface |          |                                             |
+| in_data          | s_axi_control | register  | offset   | name=in_data_1 offset=0x10 range=32         |
+| in_data          | s_axi_control | register  | offset   | name=in_data_2 offset=0x14 range=32         |
+| cg_ntt_twiddle   | m_axi_gmem1   | interface |          |                                             |
+| cg_ntt_twiddle   | s_axi_control | register  | offset   | name=cg_ntt_twiddle_1 offset=0x1c range=32  |
+| cg_ntt_twiddle   | s_axi_control | register  | offset   | name=cg_ntt_twiddle_2 offset=0x20 range=32  |
+| cg_intt_twiddle  | m_axi_gmem2   | interface |          |                                             |
+| cg_intt_twiddle  | s_axi_control | register  | offset   | name=cg_intt_twiddle_1 offset=0x28 range=32 |
+| cg_intt_twiddle  | s_axi_control | register  | offset   | name=cg_intt_twiddle_2 offset=0x2c range=32 |
+| modulus          | m_axi_gmem3   | interface |          |                                             |
+| modulus          | s_axi_control | register  | offset   | name=modulus_1 offset=0x34 range=32         |
+| modulus          | s_axi_control | register  | offset   | name=modulus_2 offset=0x38 range=32         |
+| K_HALF           | m_axi_gmem3   | interface |          |                                             |
+| K_HALF           | s_axi_control | register  | offset   | name=K_HALF_1 offset=0x40 range=32          |
+| K_HALF           | s_axi_control | register  | offset   | name=K_HALF_2 offset=0x44 range=32          |
+| M_barrett        | m_axi_gmem3   | interface |          |                                             |
+| M_barrett        | s_axi_control | register  | offset   | name=M_barrett_1 offset=0x4c range=32       |
+| M_barrett        | s_axi_control | register  | offset   | name=M_barrett_2 offset=0x50 range=32       |
+| is_ntt           | s_axi_control | register  |          | name=is_ntt offset=0x58 range=32            |
+| num_active_limbs | s_axi_control | register  |          | name=num_active_limbs offset=0x60 range=32  |
+| mod_idx_offset   | s_axi_control | register  |          | name=mod_idx_offset offset=0x68 range=32    |
++------------------+---------------+-----------+----------+---------------------------------------------+
+
+
+================================================================
+== M_AXI Burst Information
+================================================================
+ Note: All burst requests might be further partitioned into multiple requests during RTL generation based on max_read_burst_length or max_write_burst_length settings.
+
+* Inferred Burst Summary
++--------------+-----------+--------+-------+--------------+-----------------------------------------------------------------------------+
+| HW Interface | Direction | Length | Width | Loop         | Loop Location                                                               |
++--------------+-----------+--------+-------+--------------+-----------------------------------------------------------------------------+
+| m_axi_gmem0  | read      | 512    | 512   | LOAD_IN      | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:298:9  |
+| m_axi_gmem0  | write     | 512    | 512   | STORE_OUT    | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:346:9  |
+| m_axi_gmem1  | read      | 3072   | 512   | LOAD_NTT_TW  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:310:13 |
+| m_axi_gmem2  | read      | 3072   | 512   | LOAD_INTT_TW | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:322:13 |
++--------------+-----------+--------+-------+--------------+-----------------------------------------------------------------------------+
+
+* All M_AXI Variable Accesses
++--------------+-----------------+-----------------------------------------------------------------------------+-----------+--------------+--------+--------------+-----------------------------------------------------------------------------+------------+--------------------------------------------------------------------------------------------------------+
+| HW Interface | Variable        | Access Location                                                             | Direction | Burst Status | Length | Loop         | Loop Location                                                               | Resolution | Problem                                                                                                |
++--------------+-----------------+-----------------------------------------------------------------------------+-----------+--------------+--------+--------------+-----------------------------------------------------------------------------+------------+--------------------------------------------------------------------------------------------------------+
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:300:22 | read      | Widen Fail   |        | LOAD_IN      | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:298:9  | 214-353    | Could not widen since type i512 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:300:22 | read      | Fail         |        |              |                                                                             | 214-231    | Access is clobbered by store                                                                           |
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:300:22 | read      | Inferred     | 512    | LOAD_IN      | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:298:9  |            |                                                                                                        |
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:353:46 | write     | Widen Fail   |        | STORE_OUT    | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:346:9  | 214-353    | Could not widen since type i512 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:353:46 | write     | Fail         |        |              |                                                                             | 214-231    | Access is clobbered by load                                                                            |
+| m_axi_gmem0  | in_data         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:353:46 | write     | Inferred     | 512    | STORE_OUT    | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:346:9  |            |                                                                                                        |
+| m_axi_gmem1  | cg_ntt_twiddle  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:312:22 | read      | Widen Fail   |        | LOAD_NTT_TW  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:310:13 | 214-353    | Could not widen since type i512 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_gmem1  | cg_ntt_twiddle  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:312:22 | read      | Fail         |        | LIMB_LOOP    | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:293:5  | 214-232    | Access call is in the conditional branch                                                               |
+| m_axi_gmem1  | cg_ntt_twiddle  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:312:22 | read      | Inferred     | 3072   | LOAD_NTT_TW  | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:310:13 |            |                                                                                                        |
+| m_axi_gmem2  | cg_intt_twiddle | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:324:22 | read      | Widen Fail   |        | LOAD_INTT_TW | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:322:13 | 214-353    | Could not widen since type i512 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_gmem2  | cg_intt_twiddle | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:324:22 | read      | Fail         |        | LIMB_LOOP    | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:293:5  | 214-232    | Access call is in the conditional branch                                                               |
+| m_axi_gmem2  | cg_intt_twiddle | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:324:22 | read      | Inferred     | 3072   | LOAD_INTT_TW | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:322:13 |            |                                                                                                        |
+| m_axi_gmem3  | modulus         | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:337:13 | read      | Fail         |        |              |                                                                             | 214-231    | Access is clobbered by load                                                                            |
+| m_axi_gmem3  | K_HALF          | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:338:13 | read      | Fail         |        |              |                                                                             | 214-231    | Access is clobbered by load                                                                            |
+| m_axi_gmem3  | M_barrett       | /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp:339:13 | read      | Fail         |        |              |                                                                             | 214-231    | Access is clobbered by load                                                                            |
++--------------+-----------------+-----------------------------------------------------------------------------+-----------+--------------+--------+--------------+-----------------------------------------------------------------------------+------------+--------------------------------------------------------------------------------------------------------+
+
+    * Resolution URL: docs.xilinx.com/access/sources/dita/topic?Doc_Version=2023.2%20English&url=ug1448-hls-guidance&resourceid=XXX-YYY.html (replace XXX-YYY with column value)
+
+================================================================
+== Bind Op Report
+================================================================
++-------------------------------------------+-----+--------+----------------+-----+--------+---------+
+| Name                                      | DSP | Pragma | Variable       | Op  | Impl   | Latency |
++-------------------------------------------+-----+--------+----------------+-----+--------+---------+
+| + Compute_CG_NTT                          | 348 |        |                |     |        |         |
+|   add_fu_423_p2                           |     |        | add            | add | fabric | 0       |
+|   add_ln293_1_fu_462_p2                   |     |        | add_ln293_1    | add | fabric | 0       |
+|   tmp_fu_472_p2                           |     |        | tmp            | add | fabric | 0       |
+|   empty_fu_485_p2                         |     |        | empty          | add | fabric | 0       |
+|   empty_103_fu_524_p2                     |     |        | empty_103      | sub | fabric | 0       |
+|   empty_104_fu_530_p2                     |     |        | empty_104      | add | fabric | 0       |
+|   empty_105_fu_535_p2                     |     |        | empty_105      | add | fabric | 0       |
+|   add_ln337_fu_595_p2                     |     |        | add_ln337      | add | fabric | 0       |
+|   add_ln338_fu_610_p2                     |     |        | add_ln338      | add | fabric | 0       |
+|   add_ln339_fu_625_p2                     |     |        | add_ln339      | add | fabric | 0       |
+|   add_ln293_fu_640_p2                     |     |        | add_ln293      | add | fabric | 0       |
+|  + Compute_CG_NTT_Pipeline_LOAD_IN        | 0   |        |                |     |        |         |
+|    add_ln298_fu_231_p2                    |     |        | add_ln298      | add | fabric | 0       |
+|  + Compute_CG_NTT_Pipeline_LOAD_INTT_TW   | 0   |        |                |     |        |         |
+|    add_ln322_fu_231_p2                    |     |        | add_ln322      | add | fabric | 0       |
+|  + Compute_CG_NTT_Pipeline_LOAD_NTT_TW    | 0   |        |                |     |        |         |
+|    add_ln310_fu_231_p2                    |     |        | add_ln310      | add | fabric | 0       |
+|  + CG_NTT_Kernel                          | 348 |        |                |     |        |         |
+|    add_i_fu_395_p2                        |     |        | add_i          | add | fabric | 0       |
+|    stage_2_fu_420_p2                      |     |        | stage_2        | add | fabric | 0       |
+|    sub_ln156_fu_431_p2                    |     |        | sub_ln156      | sub | fabric | 0       |
+|   + CG_NTT_Kernel_Pipeline_INIT_LOOP      | 0   |        |                |     |        |         |
+|     add_ln131_fu_494_p2                   |     |        | add_ln131      | add | fabric | 0       |
+|   + CG_NTT_Kernel_Pipeline_BUTTERFLY_LOOP | 348 |        |                |     |        |         |
+|     add_ln159_fu_2610_p2                  |     |        | add_ln159      | add | fabric | 0       |
+|     add_ln196_fu_2656_p2                  |     |        | add_ln196      | add | fabric | 0       |
+|     add_ln12_2_fu_3107_p2                 |     |        | add_ln12_2     | add | fabric | 0       |
+|     temp_res_1_fu_3111_p2                 |     |        | temp_res_1     | add | fabric | 0       |
+|     sub_ln13_1_fu_3561_p2                 |     |        | sub_ln13_1     | sub | fabric | 0       |
+|     add_ln23_1_fu_2929_p2                 |     |        | add_ln23_1     | add | fabric | 0       |
+|     input1_temp_60_fu_3133_p2             |     |        | input1_temp_60 | sub | fabric | 0       |
+|     out_u_2_fu_3601_p2                    |     |        | out_u_2        | add | fabric | 0       |
+|     out_v_2_fu_4537_p2                    |     |        | out_v_2        | add | fabric | 0       |
+|     add_ln12_8_fu_3147_p2                 |     |        | add_ln12_8     | add | fabric | 0       |
+|     temp_res_4_fu_3153_p2                 |     |        | temp_res_4     | add | fabric | 0       |
+|     sub_ln13_4_fu_3612_p2                 |     |        | sub_ln13_4     | sub | fabric | 0       |
+|     add_ln23_4_fu_2940_p2                 |     |        | add_ln23_4     | add | fabric | 0       |
+|     input1_temp_59_fu_3176_p2             |     |        | input1_temp_59 | sub | fabric | 0       |
+|     out_u_7_fu_3652_p2                    |     |        | out_u_7        | add | fabric | 0       |
+|     out_v_7_fu_4010_p2                    |     |        | out_v_7        | add | fabric | 0       |
+|     add_ln12_14_fu_3191_p2                |     |        | add_ln12_14    | add | fabric | 0       |
+|     temp_res_7_fu_3197_p2                 |     |        | temp_res_7     | add | fabric | 0       |
+|     sub_ln13_7_fu_3663_p2                 |     |        | sub_ln13_7     | sub | fabric | 0       |
+|     add_ln23_7_fu_2951_p2                 |     |        | add_ln23_7     | add | fabric | 0       |
+|     input1_temp_57_fu_3220_p2             |     |        | input1_temp_57 | sub | fabric | 0       |
+|     out_u_12_fu_3703_p2                   |     |        | out_u_12       | add | fabric | 0       |
+|     out_v_12_fu_4589_p2                   |     |        | out_v_12       | add | fabric | 0       |
+|     add_ln12_20_fu_3235_p2                |     |        | add_ln12_20    | add | fabric | 0       |
+|     temp_res_10_fu_3241_p2                |     |        | temp_res_10    | add | fabric | 0       |
+|     sub_ln13_10_fu_3714_p2                |     |        | sub_ln13_10    | sub | fabric | 0       |
+|     add_ln23_10_fu_2962_p2                |     |        | add_ln23_10    | add | fabric | 0       |
+|     input1_temp_55_fu_3264_p2             |     |        | input1_temp_55 | sub | fabric | 0       |
+|     out_u_17_fu_3754_p2                   |     |        | out_u_17       | add | fabric | 0       |
+|     out_v_17_fu_4062_p2                   |     |        | out_v_17       | add | fabric | 0       |
+|     add_ln12_24_fu_3279_p2                |     |        | add_ln12_24    | add | fabric | 0       |
+|     temp_res_12_fu_3285_p2                |     |        | temp_res_12    | add | fabric | 0       |
+|     sub_ln13_12_fu_3765_p2                |     |        | sub_ln13_12    | sub | fabric | 0       |
+|     add_ln23_12_fu_2973_p2                |     |        | add_ln23_12    | add | fabric | 0       |
+|     input1_temp_53_fu_3308_p2             |     |        | input1_temp_53 | sub | fabric | 0       |
+|     out_u_20_fu_3805_p2                   |     |        | out_u_20       | add | fabric | 0       |
+|     out_v_20_fu_4624_p2                   |     |        | out_v_20       | add | fabric | 0       |
+|     add_ln12_26_fu_3323_p2                |     |        | add_ln12_26    | add | fabric | 0       |
+|     temp_res_13_fu_3329_p2                |     |        | temp_res_13    | add | fabric | 0       |
+|     sub_ln13_13_fu_3816_p2                |     |        | sub_ln13_13    | sub | fabric | 0       |
+|     add_ln23_13_fu_2984_p2                |     |        | add_ln23_13    | add | fabric | 0       |
+|     grp_MultMod_fu_2478_a_val             |     |        | input1_temp_51 | sub | fabric | 0       |
+|     out_u_21_fu_3856_p2                   |     |        | out_u_21       | add | fabric | 0       |
+|     out_v_21_fu_4111_p2                   |     |        | out_v_21       | add | fabric | 0       |
+|     add_ln12_28_fu_3367_p2                |     |        | add_ln12_28    | add | fabric | 0       |
+|     temp_res_14_fu_3373_p2                |     |        | temp_res_14    | add | fabric | 0       |
+|     sub_ln13_14_fu_3867_p2                |     |        | sub_ln13_14    | sub | fabric | 0       |
+|     add_ln23_14_fu_3396_p2                |     |        | add_ln23_14    | add | fabric | 0       |
+|     input1_temp_49_fu_3409_p2             |     |        | input1_temp_49 | sub | fabric | 0       |
+|     out_u_22_fu_3907_p2                   |     |        | out_u_22       | add | fabric | 0       |
+|     out_v_22_fu_4676_p2                   |     |        | out_v_22       | add | fabric | 0       |
+|     add_ln12_30_fu_3423_p2                |     |        | add_ln12_30    | add | fabric | 0       |
+|     temp_res_15_fu_3429_p2                |     |        | temp_res_15    | add | fabric | 0       |
+|     sub_ln13_15_fu_3918_p2                |     |        | sub_ln13_15    | sub | fabric | 0       |
+|     add_ln23_15_fu_3452_p2                |     |        | add_ln23_15    | add | fabric | 0       |
+|     input1_temp_47_fu_3465_p2             |     |        | input1_temp_47 | sub | fabric | 0       |
+|     out_u_23_fu_3958_p2                   |     |        | out_u_23       | add | fabric | 0       |
+|     out_v_23_fu_4727_p2                   |     |        | out_v_23       | add | fabric | 0       |
+|     add_ln12_fu_4141_p2                   |     |        | add_ln12       | add | fabric | 0       |
+|     temp_res_fu_4146_p2                   |     |        | temp_res       | add | fabric | 0       |
+|     sub_ln13_fu_4163_p2                   |     |        | sub_ln13       | sub | fabric | 0       |
+|     add_ln23_fu_4187_p2                   |     |        | add_ln23       | add | fabric | 0       |
+|     input1_temp_76_fu_4198_p2             |     |        | input1_temp_76 | sub | fabric | 0       |
+|     add_ln12_4_fu_4758_p2                 |     |        | add_ln12_4     | add | fabric | 0       |
+|     temp_res_2_fu_4764_p2                 |     |        | temp_res_2     | add | fabric | 0       |
+|     sub_ln13_2_fu_4781_p2                 |     |        | sub_ln13_2     | sub | fabric | 0       |
+|     add_ln23_2_fu_4806_p2                 |     |        | add_ln23_2     | add | fabric | 0       |
+|     input1_temp_74_fu_4819_p2             |     |        | input1_temp_74 | sub | fabric | 0       |
+|     add_ln12_6_fu_4213_p2                 |     |        | add_ln12_6     | add | fabric | 0       |
+|     temp_res_3_fu_4219_p2                 |     |        | temp_res_3     | add | fabric | 0       |
+|     sub_ln13_3_fu_4236_p2                 |     |        | sub_ln13_3     | sub | fabric | 0       |
+|     add_ln23_3_fu_4261_p2                 |     |        | add_ln23_3     | add | fabric | 0       |
+|     input1_temp_72_fu_4274_p2             |     |        | input1_temp_72 | sub | fabric | 0       |
+|     add_ln12_10_fu_4834_p2                |     |        | add_ln12_10    | add | fabric | 0       |
+|     temp_res_5_fu_4840_p2                 |     |        | temp_res_5     | add | fabric | 0       |
+|     sub_ln13_5_fu_4857_p2                 |     |        | sub_ln13_5     | sub | fabric | 0       |
+|     add_ln23_5_fu_4882_p2                 |     |        | add_ln23_5     | add | fabric | 0       |
+|     input1_temp_70_fu_4895_p2             |     |        | input1_temp_70 | sub | fabric | 0       |
+|     add_ln12_12_fu_4289_p2                |     |        | add_ln12_12    | add | fabric | 0       |
+|     temp_res_6_fu_4295_p2                 |     |        | temp_res_6     | add | fabric | 0       |
+|     sub_ln13_6_fu_4312_p2                 |     |        | sub_ln13_6     | sub | fabric | 0       |
+|     add_ln23_6_fu_4337_p2                 |     |        | add_ln23_6     | add | fabric | 0       |
+|     input1_temp_68_fu_4350_p2             |     |        | input1_temp_68 | sub | fabric | 0       |
+|     add_ln12_16_fu_4909_p2                |     |        | add_ln12_16    | add | fabric | 0       |
+|     temp_res_8_fu_4914_p2                 |     |        | temp_res_8     | add | fabric | 0       |
+|     sub_ln13_8_fu_4931_p2                 |     |        | sub_ln13_8     | sub | fabric | 0       |
+|     add_ln23_8_fu_4955_p2                 |     |        | add_ln23_8     | add | fabric | 0       |
+|     input1_temp_66_fu_4968_p2             |     |        | input1_temp_66 | sub | fabric | 0       |
+|     add_ln12_18_fu_4365_p2                |     |        | add_ln12_18    | add | fabric | 0       |
+|     temp_res_9_fu_4371_p2                 |     |        | temp_res_9     | add | fabric | 0       |
+|     sub_ln13_9_fu_4388_p2                 |     |        | sub_ln13_9     | sub | fabric | 0       |
+|     add_ln23_9_fu_4413_p2                 |     |        | add_ln23_9     | add | fabric | 0       |
+|     input1_temp_64_fu_4426_p2             |     |        | input1_temp_64 | sub | fabric | 0       |
+|     add_ln12_22_fu_4441_p2                |     |        | add_ln12_22    | add | fabric | 0       |
+|     temp_res_11_fu_4447_p2                |     |        | temp_res_11    | add | fabric | 0       |
+|     sub_ln13_11_fu_4464_p2                |     |        | sub_ln13_11    | sub | fabric | 0       |
+|     add_ln23_11_fu_4489_p2                |     |        | add_ln23_11    | add | fabric | 0       |
+|     input1_temp_62_fu_4502_p2             |     |        | input1_temp_62 | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2433)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2442)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2451)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2460)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2469)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|    + MultMod (grp_MultMod_fu_2478)        | 58  |        |                |     |        |         |
+|      mul_64ns_64ns_128_5_0_U56            | 16  | yes    | mul_ln95       | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U57            | 16  | yes    | p_high         | mul | dsp    | 4       |
+|      mul_64ns_64ns_128_5_0_U58            | 16  | yes    | p_low          | mul | dsp    | 4       |
+|      add_ln109_fu_173_p2                  |     |        | add_ln109      | add | fabric | 0       |
+|      q_fu_240_p2                          |     |        | q              | add | fabric | 0       |
+|      sub_ln111_fu_205_p2                  |     |        | sub_ln111      | sub | fabric | 0       |
+|      q_1_fu_244_p2                        |     |        | q_1            | add | fabric | 0       |
+|      q_2_fu_234_p2                        |     |        | q_2            | add | fabric | 0       |
+|      mul_64s_64s_64_2_0_U55               | 10  |        | mul_ln117      | mul | auto   | 1       |
+|      r_fu_272_p2                          |     |        | r              | sub | fabric | 0       |
+|      r_1_fu_287_p2                        |     |        | r_1            | sub | fabric | 0       |
+|      r_3_fu_310_p2                        |     |        | r_3            | sub | fabric | 0       |
+|      r_5_fu_332_p2                        |     |        | r_5            | sub | fabric | 0       |
+|   + CG_NTT_Kernel_Pipeline_WRITEBACK_LOOP | 0   |        |                |     |        |         |
+|     add_ln231_fu_414_p2                   |     |        | add_ln231      | add | fabric | 0       |
+|  + Compute_CG_NTT_Pipeline_STORE_OUT      | 0   |        |                |     |        |         |
+|    add_ln346_fu_208_p2                    |     |        | add_ln346      | add | fabric | 0       |
++-------------------------------------------+-----+--------+----------------+-----+--------+---------+
+
+
+================================================================
+== Storage Report
+================================================================
++---------------------+--------------+-----------+------+------+--------+-----------------+------+---------+------------------+
+| Name                | Usage        | Type      | BRAM | URAM | Pragma | Variable        | Impl | Latency | Bitwidth, Depth, |
+|                     |              |           |      |      |        |                 |      |         | Banks            |
++---------------------+--------------+-----------+------+------+--------+-----------------+------+---------+------------------+
+| + Compute_CG_NTT    |              |           | 174  | 8    |        |                 |      |         |                  |
+|   control_s_axi_U   | interface    | s_axilite |      |      |        |                 |      |         |                  |
+|   gmem0_m_axi_U     | interface    | m_axi     | 30   |      |        |                 |      |         |                  |
+|   gmem1_m_axi_U     | interface    | m_axi     | 30   |      |        |                 |      |         |                  |
+|   gmem2_m_axi_U     | interface    | m_axi     | 30   |      |        |                 |      |         |                  |
+|   gmem3_m_axi_U     | interface    | m_axi     | 4    |      |        |                 |      |         |                  |
+|   local_in_data_U   | ram_1p array |           | 2    |      |        | local_in_data   | auto | 1       | 64, 512, 1       |
+|   local_in_data_1_U | ram_1p array |           | 2    |      |        | local_in_data_1 | auto | 1       | 64, 512, 1       |
+|   local_in_data_2_U | ram_1p array |           | 2    |      |        | local_in_data_2 | auto | 1       | 64, 512, 1       |
+|   local_in_data_3_U | ram_1p array |           | 2    |      |        | local_in_data_3 | auto | 1       | 64, 512, 1       |
+|   local_in_data_4_U | ram_1p array |           | 2    |      |        | local_in_data_4 | auto | 1       | 64, 512, 1       |
+|   local_in_data_5_U | ram_1p array |           | 2    |      |        | local_in_data_5 | auto | 1       | 64, 512, 1       |
+|   local_in_data_6_U | ram_1p array |           | 2    |      |        | local_in_data_6 | auto | 1       | 64, 512, 1       |
+|   local_in_data_7_U | ram_1p array |           | 2    |      |        | local_in_data_7 | auto | 1       | 64, 512, 1       |
+|   local_twiddle_U   | ram_1p array |           |      | 1    |        | local_twiddle   | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_1_U | ram_1p array |           |      | 1    |        | local_twiddle_1 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_2_U | ram_1p array |           |      | 1    |        | local_twiddle_2 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_3_U | ram_1p array |           |      | 1    |        | local_twiddle_3 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_4_U | ram_1p array |           |      | 1    |        | local_twiddle_4 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_5_U | ram_1p array |           |      | 1    |        | local_twiddle_5 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_6_U | ram_1p array |           |      | 1    |        | local_twiddle_6 | auto | 1       | 64, 3072, 1      |
+|   local_twiddle_7_U | ram_1p array |           |      | 1    |        | local_twiddle_7 | auto | 1       | 64, 3072, 1      |
+|  + CG_NTT_Kernel    |              |           | 64   | 0    |        |                 |      |         |                  |
+|    buf_A_U          | ram_2p array |           | 2    |      | yes    | buf_A           | bram | 1       | 64, 256, 1       |
+|    buf_A_1_U        | ram_2p array |           | 2    |      | yes    | buf_A_1         | bram | 1       | 64, 256, 1       |
+|    buf_A_2_U        | ram_2p array |           | 2    |      | yes    | buf_A_2         | bram | 1       | 64, 256, 1       |
+|    buf_A_3_U        | ram_2p array |           | 2    |      | yes    | buf_A_3         | bram | 1       | 64, 256, 1       |
+|    buf_A_4_U        | ram_2p array |           | 2    |      | yes    | buf_A_4         | bram | 1       | 64, 256, 1       |
+|    buf_A_5_U        | ram_2p array |           | 2    |      | yes    | buf_A_5         | bram | 1       | 64, 256, 1       |
+|    buf_A_6_U        | ram_2p array |           | 2    |      | yes    | buf_A_6         | bram | 1       | 64, 256, 1       |
+|    buf_A_7_U        | ram_2p array |           | 2    |      | yes    | buf_A_7         | bram | 1       | 64, 256, 1       |
+|    buf_A_8_U        | ram_2p array |           | 2    |      | yes    | buf_A_8         | bram | 1       | 64, 256, 1       |
+|    buf_A_9_U        | ram_2p array |           | 2    |      | yes    | buf_A_9         | bram | 1       | 64, 256, 1       |
+|    buf_A_10_U       | ram_2p array |           | 2    |      | yes    | buf_A_10        | bram | 1       | 64, 256, 1       |
+|    buf_A_11_U       | ram_2p array |           | 2    |      | yes    | buf_A_11        | bram | 1       | 64, 256, 1       |
+|    buf_A_12_U       | ram_2p array |           | 2    |      | yes    | buf_A_12        | bram | 1       | 64, 256, 1       |
+|    buf_A_13_U       | ram_2p array |           | 2    |      | yes    | buf_A_13        | bram | 1       | 64, 256, 1       |
+|    buf_A_14_U       | ram_2p array |           | 2    |      | yes    | buf_A_14        | bram | 1       | 64, 256, 1       |
+|    buf_A_15_U       | ram_2p array |           | 2    |      | yes    | buf_A_15        | bram | 1       | 64, 256, 1       |
+|    buf_B_U          | ram_2p array |           | 2    |      | yes    | buf_B           | bram | 1       | 64, 256, 1       |
+|    buf_B_1_U        | ram_2p array |           | 2    |      | yes    | buf_B_1         | bram | 1       | 64, 256, 1       |
+|    buf_B_2_U        | ram_2p array |           | 2    |      | yes    | buf_B_2         | bram | 1       | 64, 256, 1       |
+|    buf_B_3_U        | ram_2p array |           | 2    |      | yes    | buf_B_3         | bram | 1       | 64, 256, 1       |
+|    buf_B_4_U        | ram_2p array |           | 2    |      | yes    | buf_B_4         | bram | 1       | 64, 256, 1       |
+|    buf_B_5_U        | ram_2p array |           | 2    |      | yes    | buf_B_5         | bram | 1       | 64, 256, 1       |
+|    buf_B_6_U        | ram_2p array |           | 2    |      | yes    | buf_B_6         | bram | 1       | 64, 256, 1       |
+|    buf_B_7_U        | ram_2p array |           | 2    |      | yes    | buf_B_7         | bram | 1       | 64, 256, 1       |
+|    buf_B_8_U        | ram_2p array |           | 2    |      | yes    | buf_B_8         | bram | 1       | 64, 256, 1       |
+|    buf_B_9_U        | ram_2p array |           | 2    |      | yes    | buf_B_9         | bram | 1       | 64, 256, 1       |
+|    buf_B_10_U       | ram_2p array |           | 2    |      | yes    | buf_B_10        | bram | 1       | 64, 256, 1       |
+|    buf_B_11_U       | ram_2p array |           | 2    |      | yes    | buf_B_11        | bram | 1       | 64, 256, 1       |
+|    buf_B_12_U       | ram_2p array |           | 2    |      | yes    | buf_B_12        | bram | 1       | 64, 256, 1       |
+|    buf_B_13_U       | ram_2p array |           | 2    |      | yes    | buf_B_13        | bram | 1       | 64, 256, 1       |
+|    buf_B_14_U       | ram_2p array |           | 2    |      | yes    | buf_B_14        | bram | 1       | 64, 256, 1       |
+|    buf_B_15_U       | ram_2p array |           | 2    |      | yes    | buf_B_15        | bram | 1       | 64, 256, 1       |
++---------------------+--------------+-----------+------+------+--------+-----------------+------+---------+------------------+
+
+
+================================================================
+== Pragma Report
+================================================================
+* Valid Pragma Syntax
++-----------------+------------------------------------------------------------------+---------------------------------------------------------------+
+| Type            | Options                                                          | Location                                                      |
++-----------------+------------------------------------------------------------------+---------------------------------------------------------------+
+| inline          |                                                                  | ../src/arithmetic.cpp:9 in addmod                             |
+| inline          | off                                                              | ../src/arithmetic.cpp:65 in multmod                           |
+| pipeline        | II=1                                                             | ../src/arithmetic.cpp:66 in multmod                           |
+| bind_op         | variable=res_mult op=mul impl=dsp latency=4                      | ../src/arithmetic.cpp:96 in multmod, res_mult                 |
+| bind_op         | variable=p_high op=mul impl=dsp latency=4                        | ../src/arithmetic.cpp:104 in multmod, p_high                  |
+| bind_op         | variable=p_low op=mul impl=dsp latency=4                         | ../src/arithmetic.cpp:105 in multmod, p_low                   |
+| inline          |                                                                  | ../src/cg_ntt.cpp:31 in flatten_2d_to_1d                      |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:34 in flatten_2d_to_1d                      |
+| unroll          | factor=PE_PARALLEL                                               | ../src/cg_ntt.cpp:37 in flatten_2d_to_1d                      |
+| inline          |                                                                  | ../src/cg_ntt.cpp:47 in reshape_1d_to_2d                      |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:50 in reshape_1d_to_2d                      |
+| unroll          | factor=PE_PARALLEL                                               | ../src/cg_ntt.cpp:53 in reshape_1d_to_2d                      |
+| inline          | off                                                              | ../src/cg_ntt.cpp:71 in cg_ntt_reorder                        |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:79 in cg_ntt_reorder                        |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:93 in cg_ntt_reorder                        |
+| array_partition | variable=buf_A cyclic factor=16 dim=1                            | ../src/cg_ntt.cpp:118 in cg_ntt_kernel, buf_A                 |
+| array_partition | variable=buf_B cyclic factor=16 dim=1                            | ../src/cg_ntt.cpp:119 in cg_ntt_kernel, buf_B                 |
+| bind_storage    | variable=buf_A type=ram_2p impl=bram                             | ../src/cg_ntt.cpp:120 in cg_ntt_kernel, buf_A                 |
+| bind_storage    | variable=buf_B type=ram_2p impl=bram                             | ../src/cg_ntt.cpp:121 in cg_ntt_kernel, buf_B                 |
+| array_partition | variable=cg_twiddle cyclic factor=CG_PE_NUM dim=2                | ../src/cg_ntt.cpp:125 in cg_ntt_kernel, cg_twiddle            |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:132 in cg_ntt_kernel                        |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:135 in cg_ntt_kernel                        |
+| loop_flatten    | off                                                              | ../src/cg_ntt.cpp:153 in cg_ntt_kernel                        |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:162 in cg_ntt_kernel                        |
+| dependence      | variable=buf_A type=inter dependent=false direction=RAW          | ../src/cg_ntt.cpp:164 in cg_ntt_kernel, buf_A                 |
+| dependence      | variable=buf_B type=inter dependent=false direction=RAW          | ../src/cg_ntt.cpp:165 in cg_ntt_kernel, buf_B                 |
+| dependence      | variable=buf_B type=inter dependent=false direction=WAW          | ../src/cg_ntt.cpp:166 in cg_ntt_kernel, buf_B                 |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:170 in cg_ntt_kernel                        |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:232 in cg_ntt_kernel                        |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:235 in cg_ntt_kernel                        |
+| interface       | m_axi port=in_data bundle=gmem0 offset=slave depth=4096          | ../src/cg_ntt.cpp:265 in compute_cg_ntt, in_data              |
+| interface       | m_axi port=cg_ntt_twiddle bundle=gmem1 offset=slave depth=24576  | ../src/cg_ntt.cpp:266 in compute_cg_ntt, cg_ntt_twiddle       |
+| interface       | m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave depth=24576 | ../src/cg_ntt.cpp:267 in compute_cg_ntt, cg_intt_twiddle      |
+| interface       | m_axi port=modulus bundle=gmem3 offset=slave depth=8             | ../src/cg_ntt.cpp:268 in compute_cg_ntt, modulus              |
+| interface       | m_axi port=K_HALF bundle=gmem3 offset=slave depth=8              | ../src/cg_ntt.cpp:269 in compute_cg_ntt, K_HALF               |
+| interface       | m_axi port=M_barrett bundle=gmem3 offset=slave depth=8           | ../src/cg_ntt.cpp:270 in compute_cg_ntt, M_barrett            |
+| interface       | s_axilite port=in_data                                           | ../src/cg_ntt.cpp:272 in compute_cg_ntt, in_data              |
+| interface       | s_axilite port=cg_ntt_twiddle                                    | ../src/cg_ntt.cpp:273 in compute_cg_ntt, cg_ntt_twiddle       |
+| interface       | s_axilite port=cg_intt_twiddle                                   | ../src/cg_ntt.cpp:274 in compute_cg_ntt, cg_intt_twiddle      |
+| interface       | s_axilite port=modulus                                           | ../src/cg_ntt.cpp:275 in compute_cg_ntt, modulus              |
+| interface       | s_axilite port=K_HALF                                            | ../src/cg_ntt.cpp:276 in compute_cg_ntt, K_HALF               |
+| interface       | s_axilite port=M_barrett                                         | ../src/cg_ntt.cpp:277 in compute_cg_ntt, M_barrett            |
+| interface       | s_axilite port=is_ntt                                            | ../src/cg_ntt.cpp:278 in compute_cg_ntt, is_ntt               |
+| interface       | s_axilite port=num_active_limbs                                  | ../src/cg_ntt.cpp:279 in compute_cg_ntt, num_active_limbs     |
+| interface       | s_axilite port=mod_idx_offset                                    | ../src/cg_ntt.cpp:280 in compute_cg_ntt, mod_idx_offset       |
+| interface       | s_axilite port=return                                            | ../src/cg_ntt.cpp:281 in compute_cg_ntt, return               |
+| array_partition | variable=local_in_data cyclic factor=CG_PE_NUM dim=1             | ../src/cg_ntt.cpp:289 in compute_cg_ntt, local_in_data        |
+| array_partition | variable=local_twiddle cyclic factor=CG_PE_NUM dim=2             | ../src/cg_ntt.cpp:290 in compute_cg_ntt, local_twiddle        |
+| loop_tripcount  | min=1 max=8 avg=3                                                | ../src/cg_ntt.cpp:294 in compute_cg_ntt                       |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:299 in compute_cg_ntt                       |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:302 in compute_cg_ntt                       |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:311 in compute_cg_ntt                       |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:315 in compute_cg_ntt                       |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:323 in compute_cg_ntt                       |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:327 in compute_cg_ntt                       |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:347 in compute_cg_ntt                       |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:350 in compute_cg_ntt                       |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:4 in compute_indices                    |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:21 in generate_input_index              |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:29 in generate_input_index              |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:38 in generate_output_index             |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:47 in generate_output_index             |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:64 in read_data                         |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:71 in read_data                         |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:87 in permutate_data                    |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:89 in permutate_data                    |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:95 in generate_twiddle_index            |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:97 in generate_twiddle_index            |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:111 in permute_twiddle_factors          |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:115 in permute_twiddle_factors          |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:133 in compute_core                     |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:137 in compute_core                     |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:163 in repermute_data                   |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:165 in repermute_data                   |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:176 in rewrite_data                     |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:182 in rewrite_data                     |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:206 in configurable_pe                  |
+| array_partition | variable=buf_A cyclic factor=PE_PARALLEL dim=2                   | ../src/ntt_kernel.cpp:265 in ntt_kernel, buf_A                |
+| array_partition | variable=buf_B cyclic factor=PE_PARALLEL dim=2                   | ../src/ntt_kernel.cpp:266 in ntt_kernel, buf_B                |
+| array_partition | variable=in_memory cyclic factor=PE_PARALLEL dim=2               | ../src/ntt_kernel.cpp:269 in ntt_kernel, in_memory            |
+| array_partition | variable=ntt_twiddle_memory complete dim=1                       | ../src/ntt_kernel.cpp:272 in ntt_kernel, ntt_twiddle_memory   |
+| array_partition | variable=intt_twiddle_memory complete dim=1                      | ../src/ntt_kernel.cpp:273 in ntt_kernel, intt_twiddle_memory  |
+| array_partition | variable=InputIndex complete                                     | ../src/ntt_kernel.cpp:284 in ntt_kernel, InputIndex           |
+| array_partition | variable=OutputIndex complete                                    | ../src/ntt_kernel.cpp:285 in ntt_kernel, OutputIndex          |
+| array_partition | variable=TwiddleIndex complete                                   | ../src/ntt_kernel.cpp:286 in ntt_kernel, TwiddleIndex         |
+| array_partition | variable=ReadData complete                                       | ../src/ntt_kernel.cpp:287 in ntt_kernel, ReadData             |
+| array_partition | variable=PermuteData complete                                    | ../src/ntt_kernel.cpp:288 in ntt_kernel, PermuteData          |
+| array_partition | variable=TwiddleFactor complete                                  | ../src/ntt_kernel.cpp:289 in ntt_kernel, TwiddleFactor        |
+| array_partition | variable=NTTData complete                                        | ../src/ntt_kernel.cpp:290 in ntt_kernel, NTTData              |
+| array_partition | variable=RepermuteData complete                                  | ../src/ntt_kernel.cpp:291 in ntt_kernel, RepermuteData        |
+| pipeline        | II=1                                                             | ../src/ntt_kernel.cpp:301 in ntt_kernel                       |
+| unroll          |                                                                  | ../src/ntt_kernel.cpp:306 in ntt_kernel                       |
+| loop_flatten    | off                                                              | ../src/ntt_kernel.cpp:323 in ntt_kernel                       |
+| dependence      | variable=buf_A type=inter dependent=false direction=RAW          | ../src/ntt_kernel.cpp:333 in ntt_kernel, buf_A                |
+| dependence      | variable=buf_B type=inter dependent=false direction=RAW          | ../src/ntt_kernel.cpp:334 in ntt_kernel, buf_B                |
+| dependence      | variable=buf_B type=inter dependent=false direction=WAW          | ../src/ntt_kernel.cpp:335 in ntt_kernel, buf_B                |
+| pipeline        | II=1                                                             | ../src/ntt_kernel.cpp:387 in ntt_kernel                       |
+| unroll          |                                                                  | ../src/ntt_kernel.cpp:391 in ntt_kernel                       |
+| array_partition | variable=in_memory cyclic factor=PE_PARALLEL dim=3               | ../src/ntt_kernel.cpp:422 in compute_ntt, in_memory           |
+| array_partition | variable=ntt_twiddle_memory complete dim=2                       | ../src/ntt_kernel.cpp:425 in compute_ntt, ntt_twiddle_memory  |
+| array_partition | variable=intt_twiddle_memory complete dim=2                      | ../src/ntt_kernel.cpp:426 in compute_ntt, intt_twiddle_memory |
+| loop_tripcount  | min=1 max=5 avg=3                                                | ../src/ntt_kernel.cpp:430 in compute_ntt                      |
++-----------------+------------------------------------------------------------------+---------------------------------------------------------------+
+
+

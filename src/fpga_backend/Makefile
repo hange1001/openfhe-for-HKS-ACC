@@ -30,6 +30,9 @@ KERNEL_SRC += $(SRC_DIR)/arithmetic.cpp
 KERNEL_SRC += $(SRC_DIR)/bconv.cpp
 KERNEL_SRC += $(SRC_DIR)/interleave.cpp
 KERNEL_SRC += $(SRC_DIR)/auto.cpp
+KERNEL_SRC += $(SRC_DIR)/cg_ntt.cpp
+KERNEL_SRC += $(SRC_DIR)/bconv_naive.cpp
+KERNEL_SRC += $(SRC_DIR)/bconv_systolic.cpp
 
 KERNEL_NAME := Top
 

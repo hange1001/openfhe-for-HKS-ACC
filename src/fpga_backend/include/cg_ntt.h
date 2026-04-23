@@ -30,6 +30,11 @@
 static const int CG_HALF_N  = RING_DIM / 2;   // 2048：蝶形跨度
 static const int CG_PE_NUM  = PE_PARALLEL;     // 8：并行 PE 数（复用 define.h 的 PE_PARALLEL）
 
+// 512-bit 总线打包参数
+static const int PACK_RATIO     = 512 / 64;                        // 8
+static const int PACKED_RING_DIM = RING_DIM / PACK_RATIO;          // 512
+static const int PACKED_TW_SIZE  = (STAGE * CG_HALF_N) / PACK_RATIO; // 3072
+
 // =========================================================
 // 核心：单 limb CG-NTT / INTT
 // =========================================================
@@ -58,9 +63,9 @@ extern "C" {
 // 与现有 Compute_NTT 接口风格一致，方便在 top.cpp 中集成
 extern "C" {
     void Compute_CG_NTT(
-        uint64_t in_data[MAX_LIMBS][RING_DIM],
-        const uint64_t cg_ntt_twiddle[MAX_LIMBS][STAGE][CG_HALF_N],
-        const uint64_t cg_intt_twiddle[MAX_LIMBS][STAGE][CG_HALF_N],
+        ap_uint<512> *in_data,
+        const ap_uint<512> *cg_ntt_twiddle,
+        const ap_uint<512> *cg_intt_twiddle,
         const uint64_t modulus[MAX_LIMBS],
         const uint64_t K_HALF[MAX_LIMBS],
         const uint64_t M_barrett[MAX_LIMBS],

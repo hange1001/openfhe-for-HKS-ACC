@@ -248,9 +248,9 @@ void CG_NTT_Kernel(
 // ============================================================
 
 void Compute_CG_NTT(
-    uint64_t in_data[MAX_LIMBS][RING_DIM],
-    const uint64_t cg_ntt_twiddle[MAX_LIMBS][STAGE][CG_HALF_N],
-    const uint64_t cg_intt_twiddle[MAX_LIMBS][STAGE][CG_HALF_N],
+    ap_uint<512> *in_data,
+    const ap_uint<512> *cg_ntt_twiddle,
+    const ap_uint<512> *cg_intt_twiddle,
     const uint64_t modulus[MAX_LIMBS],
     const uint64_t K_HALF[MAX_LIMBS],
     const uint64_t M_barrett[MAX_LIMBS],
@@ -260,17 +260,15 @@ void Compute_CG_NTT(
 ) {
     // ============================================================
     // 顶层 AXI 接口配置
-    // 大数组走 m_axi（外部 DDR），不同 bundle 对应不同物理端口
+    // ap_uint<512> 指针 → HLS 自动生成 512-bit m_axi 端口
     // ============================================================
-    #pragma HLS INTERFACE m_axi port=in_data         bundle=gmem0 offset=slave
-    #pragma HLS INTERFACE m_axi port=cg_ntt_twiddle  bundle=gmem1 offset=slave
-    #pragma HLS INTERFACE m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave
-    // 小参数表合并到同一通道
-    #pragma HLS INTERFACE m_axi port=modulus         bundle=gmem3 offset=slave
-    #pragma HLS INTERFACE m_axi port=K_HALF          bundle=gmem3 offset=slave
-    #pragma HLS INTERFACE m_axi port=M_barrett       bundle=gmem3 offset=slave
+   #pragma HLS INTERFACE m_axi port=in_data         bundle=gmem0 offset=slave depth=4096
+    #pragma HLS INTERFACE m_axi port=cg_ntt_twiddle  bundle=gmem1 offset=slave depth=24576
+    #pragma HLS INTERFACE m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave depth=24576
+    #pragma HLS INTERFACE m_axi port=modulus         bundle=gmem3 offset=slave depth=8
+    #pragma HLS INTERFACE m_axi port=K_HALF          bundle=gmem3 offset=slave depth=8
+    #pragma HLS INTERFACE m_axi port=M_barrett       bundle=gmem3 offset=slave depth=8
 
-    // 所有指针基地址 + 标量参数 + return 走 AXI4-Lite 控制总线
     #pragma HLS INTERFACE s_axilite port=in_data
     #pragma HLS INTERFACE s_axilite port=cg_ntt_twiddle
     #pragma HLS INTERFACE s_axilite port=cg_intt_twiddle
@@ -283,10 +281,7 @@ void Compute_CG_NTT(
     #pragma HLS INTERFACE s_axilite port=return
 
     // ============================================================
-    // 片上缓冲（Local BRAM）：m_axi 外部端口禁止切片，
-    // 否则 HLS 会为每个 bank 生成一个独立的 AXI Master 端口，
-    // 导致 Co-Sim 网表爆炸（上百路 AXI VIP）。
-    // 所以：外部总线只负责 burst 搬运，内部 BRAM 才做 partition。
+    // 片上缓冲（Local BRAM/URAM）
     // ============================================================
     uint64_t local_in_data[RING_DIM];
     uint64_t local_twiddle[STAGE][CG_HALF_N];
@@ -298,32 +293,40 @@ void Compute_CG_NTT(
     for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++) {
         #pragma HLS LOOP_TRIPCOUNT min=1 max=8 avg=3
 
-        // Burst 读入 in_data[l][*] → local_in_data
+        // 512-bit burst 读入 in_data → local_in_data
         LOAD_IN:
-        for (int i = 0; i < RING_DIM; i++) {
+        for (int i = 0; i < PACKED_RING_DIM; i++) {
             #pragma HLS PIPELINE II=1
-            local_in_data[i] = in_data[l][i];
+            ap_uint<512> pack = in_data[l * PACKED_RING_DIM + i];
+            for (int j = 0; j < PACK_RATIO; j++) {
+                #pragma HLS UNROLL
+                local_in_data[i * PACK_RATIO + j] = pack.range((j + 1) * 64 - 1, j * 64);
+            }
         }
 
-        // Burst 读入旋转因子 → local_twiddle
-        // 注意：is_ntt 必须提到 PIPELINE 循环外部，否则 HLS burst 推断器
-        // 会因"每拍选择指针"而拒绝合并 burst，退化为单字读取。
+        // 512-bit burst 读入旋转因子 → local_twiddle
         if (is_ntt) {
-            LOAD_NTT_TW_S:
-            for (int s = 0; s < STAGE; s++) {
-                LOAD_NTT_TW_I:
-                for (int i = 0; i < CG_HALF_N; i++) {
-                    #pragma HLS PIPELINE II=1
-                    local_twiddle[s][i] = cg_ntt_twiddle[l][s][i];
+            LOAD_NTT_TW:
+            for (int i = 0; i < PACKED_TW_SIZE; i++) {
+                #pragma HLS PIPELINE II=1
+                ap_uint<512> pack = cg_ntt_twiddle[l * PACKED_TW_SIZE + i];
+                int base = i * PACK_RATIO;
+                for (int j = 0; j < PACK_RATIO; j++) {
+                    #pragma HLS UNROLL
+                    int idx = base + j;
+                    local_twiddle[idx / CG_HALF_N][idx % CG_HALF_N] = pack.range((j + 1) * 64 - 1, j * 64);
                 }
             }
         } else {
-            LOAD_INTT_TW_S:
-            for (int s = 0; s < STAGE; s++) {
-                LOAD_INTT_TW_I:
-                for (int i = 0; i < CG_HALF_N; i++) {
-                    #pragma HLS PIPELINE II=1
-                    local_twiddle[s][i] = cg_intt_twiddle[l][s][i];
+            LOAD_INTT_TW:
+            for (int i = 0; i < PACKED_TW_SIZE; i++) {
+                #pragma HLS PIPELINE II=1
+                ap_uint<512> pack = cg_intt_twiddle[l * PACKED_TW_SIZE + i];
+                int base = i * PACK_RATIO;
+                for (int j = 0; j < PACK_RATIO; j++) {
+                    #pragma HLS UNROLL
+                    int idx = base + j;
+                    local_twiddle[idx / CG_HALF_N][idx % CG_HALF_N] = pack.range((j + 1) * 64 - 1, j * 64);
                 }
             }
         }
@@ -338,11 +341,16 @@ void Compute_CG_NTT(
             is_ntt
         );
 
-        // Burst 写回 local_in_data → in_data[l][*]
+        // 512-bit burst 写回 local_in_data → in_data
         STORE_OUT:
-        for (int i = 0; i < RING_DIM; i++) {
+        for (int i = 0; i < PACKED_RING_DIM; i++) {
             #pragma HLS PIPELINE II=1
-            in_data[l][i] = local_in_data[i];
+            ap_uint<512> pack;
+            for (int j = 0; j < PACK_RATIO; j++) {
+                #pragma HLS UNROLL
+                pack.range((j + 1) * 64 - 1, j * 64) = local_in_data[i * PACK_RATIO + j];
+            }
+            in_data[l * PACKED_RING_DIM + i] = pack;
         }
     }
 }
