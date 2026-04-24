@@ -9,10 +9,10 @@
 <ENTRY>
 {
  "type": "ET_CmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:41 2026",
- "timestampMillis": "1777012301489",
+ "dateTimestamp": "Fri Apr 24 16:30:41 2026",
+ "timestampMillis": "1777019441944",
  "buildStep": {
-  "cmdId": "cda009f9-ec3f-4396-9d96-86d86d793518",
+  "cmdId": "6ad1c3ec-cfb8-4c0c-a3b9-7da0eb852845",
   "name": "v++",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/link.steps.log",
   "commandLine": "/tools/Xilinx/Vitis/2023.2/bin/unwrapped/lnx64.o/v++  --vivado.prop \"run.__KERNEL__.{STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS}={-directive sdx_optimization_effort_high}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_route_design_summary steps {route_design} runs {impl_1} options {-max_paths 10}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_post_route_phys_opt_design_summary steps {post_route_phys_opt_design} runs {impl_1} options {-max_paths 10}\" -l -t sw_emu --platform xilinx_u250_gen3x16_xdma_4_1_202210_1 --save-temps -I./include -I./src --config connectivity.ini -o fhe_kernels_sw_emu.xclbin temp.xo ",
@@ -44,10 +44,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:41 2026",
- "timestampMillis": "1777012301489",
+ "dateTimestamp": "Fri Apr 24 16:30:41 2026",
+ "timestampMillis": "1777019441944",
  "status": {
-  "cmdId": "cda009f9-ec3f-4396-9d96-86d86d793518",
+  "cmdId": "6ad1c3ec-cfb8-4c0c-a3b9-7da0eb852845",
   "state": "CS_RUNNING"
  }
 }
@@ -55,8 +55,8 @@
 <ENTRY>
 {
  "type": "ET_FlowMetaData",
- "dateTimestamp": "Fri Apr 24 14:31:43 2026",
- "timestampMillis": "1777012303859",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444057",
  "buildSummary": {
   "hardwarePlatform": "xilinx_u250_gen3x16_xdma_4_1_202210_1.xpfm",
   "hardwareDsa": "",
@@ -115,8 +115,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304035",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444219",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/systemDiagramModel.json",
   "name": "",
@@ -129,10 +129,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304036",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444220",
  "buildStep": {
-  "cmdId": "38c58897-f452-4877-b8b9-bc334aa68754",
+  "cmdId": "b1097b48-6e59-4034-ac0e-127487ed5724",
   "name": "regiongen",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_regiongen.log",
   "commandLine": "/tools/Xilinx/Vitis/2023.2/bin/../runtime/bin/regiongen_new -v -m /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.xml -r /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.rtd -t alg -o xcl_top",
@@ -155,10 +155,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304036",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444220",
  "status": {
-  "cmdId": "38c58897-f452-4877-b8b9-bc334aa68754",
+  "cmdId": "b1097b48-6e59-4034-ac0e-127487ed5724",
   "state": "CS_RUNNING"
  }
 }
@@ -166,10 +166,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304785",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444919",
  "status": {
-  "cmdId": "38c58897-f452-4877-b8b9-bc334aa68754",
+  "cmdId": "b1097b48-6e59-4034-ac0e-127487ed5724",
   "state": "CS_PASSED"
  }
 }
@@ -177,10 +177,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304787",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444921",
  "buildStep": {
-  "cmdId": "64de784c-c38d-4f2b-a0d0-932dee9dfbd8",
+  "cmdId": "6948464b-0424-44bc-a366-c514b36483b4",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/load.o -MP -MF obj/load.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/load.cpp -o obj/load.o",
@@ -226,10 +226,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:44 2026",
- "timestampMillis": "1777012304787",
+ "dateTimestamp": "Fri Apr 24 16:30:44 2026",
+ "timestampMillis": "1777019444921",
  "status": {
-  "cmdId": "64de784c-c38d-4f2b-a0d0-932dee9dfbd8",
+  "cmdId": "6948464b-0424-44bc-a366-c514b36483b4",
   "state": "CS_RUNNING"
  }
 }
@@ -237,10 +237,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:45 2026",
- "timestampMillis": "1777012305621",
+ "dateTimestamp": "Fri Apr 24 16:30:45 2026",
+ "timestampMillis": "1777019445650",
  "status": {
-  "cmdId": "64de784c-c38d-4f2b-a0d0-932dee9dfbd8",
+  "cmdId": "6948464b-0424-44bc-a366-c514b36483b4",
   "state": "CS_PASSED"
  }
 }
@@ -248,10 +248,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:45 2026",
- "timestampMillis": "1777012305622",
+ "dateTimestamp": "Fri Apr 24 16:30:45 2026",
+ "timestampMillis": "1777019445651",
  "buildStep": {
-  "cmdId": "4eb23eb6-0a90-4152-9f5a-2e4a427b6bbd",
+  "cmdId": "95fec51d-b383-4629-aaf7-04e9ea4d9442",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/cg_ntt.o -MP -MF obj/cg_ntt.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/cg_ntt.cpp -o obj/cg_ntt.o",
@@ -297,10 +297,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:45 2026",
- "timestampMillis": "1777012305622",
+ "dateTimestamp": "Fri Apr 24 16:30:45 2026",
+ "timestampMillis": "1777019445651",
  "status": {
-  "cmdId": "4eb23eb6-0a90-4152-9f5a-2e4a427b6bbd",
+  "cmdId": "95fec51d-b383-4629-aaf7-04e9ea4d9442",
   "state": "CS_RUNNING"
  }
 }
@@ -308,10 +308,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:46 2026",
- "timestampMillis": "1777012306408",
+ "dateTimestamp": "Fri Apr 24 16:30:46 2026",
+ "timestampMillis": "1777019446369",
  "status": {
-  "cmdId": "4eb23eb6-0a90-4152-9f5a-2e4a427b6bbd",
+  "cmdId": "95fec51d-b383-4629-aaf7-04e9ea4d9442",
   "state": "CS_PASSED"
  }
 }
@@ -319,10 +319,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:46 2026",
- "timestampMillis": "1777012306409",
+ "dateTimestamp": "Fri Apr 24 16:30:46 2026",
+ "timestampMillis": "1777019446370",
  "buildStep": {
-  "cmdId": "be0d9934-ee97-4fee-94c2-e79e7d37c83e",
+  "cmdId": "3851be69-b2d9-4071-97cd-5bb94b1fe136",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/ntt_kernel.o -MP -MF obj/ntt_kernel.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/ntt_kernel.cpp -o obj/ntt_kernel.o",
@@ -368,10 +368,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:46 2026",
- "timestampMillis": "1777012306409",
+ "dateTimestamp": "Fri Apr 24 16:30:46 2026",
+ "timestampMillis": "1777019446370",
  "status": {
-  "cmdId": "be0d9934-ee97-4fee-94c2-e79e7d37c83e",
+  "cmdId": "3851be69-b2d9-4071-97cd-5bb94b1fe136",
   "state": "CS_RUNNING"
  }
 }
@@ -379,10 +379,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307112",
+ "dateTimestamp": "Fri Apr 24 16:30:48 2026",
+ "timestampMillis": "1777019448470",
  "status": {
-  "cmdId": "be0d9934-ee97-4fee-94c2-e79e7d37c83e",
+  "cmdId": "3851be69-b2d9-4071-97cd-5bb94b1fe136",
   "state": "CS_PASSED"
  }
 }
@@ -390,10 +390,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307113",
+ "dateTimestamp": "Fri Apr 24 16:30:48 2026",
+ "timestampMillis": "1777019448471",
  "buildStep": {
-  "cmdId": "eda2c0d4-3898-493c-8d5a-53b589a2785b",
+  "cmdId": "5d1c5ecd-da62-4396-8e2f-b1265cf8157a",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/interleave.o -MP -MF obj/interleave.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/interleave.cpp -o obj/interleave.o",
@@ -439,10 +439,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307113",
+ "dateTimestamp": "Fri Apr 24 16:30:48 2026",
+ "timestampMillis": "1777019448472",
  "status": {
-  "cmdId": "eda2c0d4-3898-493c-8d5a-53b589a2785b",
+  "cmdId": "5d1c5ecd-da62-4396-8e2f-b1265cf8157a",
   "state": "CS_RUNNING"
  }
 }
@@ -450,10 +450,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307793",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449085",
  "status": {
-  "cmdId": "eda2c0d4-3898-493c-8d5a-53b589a2785b",
+  "cmdId": "5d1c5ecd-da62-4396-8e2f-b1265cf8157a",
   "state": "CS_PASSED"
  }
 }
@@ -461,10 +461,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307794",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449086",
  "buildStep": {
-  "cmdId": "2230893c-3b0d-4b9f-a0a8-340bd31c1299",
+  "cmdId": "f4314352-7b8d-47ae-913a-63ed383af83d",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_mult_kernel.o -MP -MF obj/mod_mult_kernel.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_mult_kernel.cpp -o obj/mod_mult_kernel.o",
@@ -510,10 +510,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:47 2026",
- "timestampMillis": "1777012307795",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449086",
  "status": {
-  "cmdId": "2230893c-3b0d-4b9f-a0a8-340bd31c1299",
+  "cmdId": "f4314352-7b8d-47ae-913a-63ed383af83d",
   "state": "CS_RUNNING"
  }
 }
@@ -521,10 +521,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:48 2026",
- "timestampMillis": "1777012308450",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449683",
  "status": {
-  "cmdId": "2230893c-3b0d-4b9f-a0a8-340bd31c1299",
+  "cmdId": "f4314352-7b8d-47ae-913a-63ed383af83d",
   "state": "CS_PASSED"
  }
 }
@@ -532,10 +532,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:48 2026",
- "timestampMillis": "1777012308451",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449684",
  "buildStep": {
-  "cmdId": "7653da53-f6fe-4a4b-bc1d-085bd5ed4c04",
+  "cmdId": "4d882135-e101-4708-831e-8691df6171f3",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_sub_kernel.o -MP -MF obj/mod_sub_kernel.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_sub_kernel.cpp -o obj/mod_sub_kernel.o",
@@ -581,10 +581,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:48 2026",
- "timestampMillis": "1777012308451",
+ "dateTimestamp": "Fri Apr 24 16:30:49 2026",
+ "timestampMillis": "1777019449684",
  "status": {
-  "cmdId": "7653da53-f6fe-4a4b-bc1d-085bd5ed4c04",
+  "cmdId": "4d882135-e101-4708-831e-8691df6171f3",
   "state": "CS_RUNNING"
  }
 }
@@ -592,10 +592,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:49 2026",
- "timestampMillis": "1777012309149",
+ "dateTimestamp": "Fri Apr 24 16:30:50 2026",
+ "timestampMillis": "1777019450296",
  "status": {
-  "cmdId": "7653da53-f6fe-4a4b-bc1d-085bd5ed4c04",
+  "cmdId": "4d882135-e101-4708-831e-8691df6171f3",
   "state": "CS_PASSED"
  }
 }
@@ -603,10 +603,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:49 2026",
- "timestampMillis": "1777012309150",
+ "dateTimestamp": "Fri Apr 24 16:30:50 2026",
+ "timestampMillis": "1777019450297",
  "buildStep": {
-  "cmdId": "b8230457-ae56-4890-a4b6-68247a25bb06",
+  "cmdId": "5ebc91e4-a3a7-4c26-a963-fd05a5bc8149",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/top.o -MP -MF obj/top.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/top.cpp -o obj/top.o",
@@ -652,10 +652,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:49 2026",
- "timestampMillis": "1777012309150",
+ "dateTimestamp": "Fri Apr 24 16:30:50 2026",
+ "timestampMillis": "1777019450297",
  "status": {
-  "cmdId": "b8230457-ae56-4890-a4b6-68247a25bb06",
+  "cmdId": "5ebc91e4-a3a7-4c26-a963-fd05a5bc8149",
   "state": "CS_RUNNING"
  }
 }
@@ -663,10 +663,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:50 2026",
- "timestampMillis": "1777012310001",
+ "dateTimestamp": "Fri Apr 24 16:30:51 2026",
+ "timestampMillis": "1777019451097",
  "status": {
-  "cmdId": "b8230457-ae56-4890-a4b6-68247a25bb06",
+  "cmdId": "5ebc91e4-a3a7-4c26-a963-fd05a5bc8149",
   "state": "CS_PASSED"
  }
 }
@@ -674,10 +674,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:50 2026",
- "timestampMillis": "1777012310002",
+ "dateTimestamp": "Fri Apr 24 16:30:51 2026",
+ "timestampMillis": "1777019451098",
  "buildStep": {
-  "cmdId": "2e10e8d0-1e0f-4887-89fa-a8eef5deeaa7",
+  "cmdId": "733cb4d9-b678-48bb-a4fd-e97eac36870a",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/bconv_systolic.o -MP -MF obj/bconv_systolic.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv_systolic.cpp -o obj/bconv_systolic.o",
@@ -723,10 +723,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:50 2026",
- "timestampMillis": "1777012310002",
+ "dateTimestamp": "Fri Apr 24 16:30:51 2026",
+ "timestampMillis": "1777019451098",
  "status": {
-  "cmdId": "2e10e8d0-1e0f-4887-89fa-a8eef5deeaa7",
+  "cmdId": "733cb4d9-b678-48bb-a4fd-e97eac36870a",
   "state": "CS_RUNNING"
  }
 }
@@ -734,10 +734,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:51 2026",
- "timestampMillis": "1777012311159",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452163",
  "status": {
-  "cmdId": "2e10e8d0-1e0f-4887-89fa-a8eef5deeaa7",
+  "cmdId": "733cb4d9-b678-48bb-a4fd-e97eac36870a",
   "state": "CS_PASSED"
  }
 }
@@ -745,10 +745,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:51 2026",
- "timestampMillis": "1777012311159",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452163",
  "buildStep": {
-  "cmdId": "c500dd86-2a9c-4d72-8eb4-0864edda8e1c",
+  "cmdId": "9d73efcb-efb6-4a2c-9ad5-d8a4e60070cb",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/bconv_naive.o -MP -MF obj/bconv_naive.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv_naive.cpp -o obj/bconv_naive.o",
@@ -794,10 +794,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:51 2026",
- "timestampMillis": "1777012311160",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452164",
  "status": {
-  "cmdId": "c500dd86-2a9c-4d72-8eb4-0864edda8e1c",
+  "cmdId": "9d73efcb-efb6-4a2c-9ad5-d8a4e60070cb",
   "state": "CS_RUNNING"
  }
 }
@@ -805,10 +805,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312053",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452895",
  "status": {
-  "cmdId": "c500dd86-2a9c-4d72-8eb4-0864edda8e1c",
+  "cmdId": "9d73efcb-efb6-4a2c-9ad5-d8a4e60070cb",
   "state": "CS_PASSED"
  }
 }
@@ -816,10 +816,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312054",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452896",
  "buildStep": {
-  "cmdId": "82110a5f-d938-4f0c-89ce-8aa77d67e61f",
+  "cmdId": "5519eacb-9093-4983-a1dd-63b70cec46ea",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/bconv.o -MP -MF obj/bconv.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/bconv.cpp -o obj/bconv.o",
@@ -865,10 +865,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312054",
+ "dateTimestamp": "Fri Apr 24 16:30:52 2026",
+ "timestampMillis": "1777019452896",
  "status": {
-  "cmdId": "82110a5f-d938-4f0c-89ce-8aa77d67e61f",
+  "cmdId": "5519eacb-9093-4983-a1dd-63b70cec46ea",
   "state": "CS_RUNNING"
  }
 }
@@ -876,10 +876,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312876",
+ "dateTimestamp": "Fri Apr 24 16:30:53 2026",
+ "timestampMillis": "1777019453645",
  "status": {
-  "cmdId": "82110a5f-d938-4f0c-89ce-8aa77d67e61f",
+  "cmdId": "5519eacb-9093-4983-a1dd-63b70cec46ea",
   "state": "CS_PASSED"
  }
 }
@@ -887,10 +887,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312877",
+ "dateTimestamp": "Fri Apr 24 16:30:53 2026",
+ "timestampMillis": "1777019453645",
  "buildStep": {
-  "cmdId": "047b9562-10ca-41ed-ab46-6dbf40cced43",
+  "cmdId": "cff3a3f3-4dd5-402b-b03f-a4e49f4073a3",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/arithmetic.o -MP -MF obj/arithmetic.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/arithmetic.cpp -o obj/arithmetic.o",
@@ -936,10 +936,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:52 2026",
- "timestampMillis": "1777012312878",
+ "dateTimestamp": "Fri Apr 24 16:30:53 2026",
+ "timestampMillis": "1777019453646",
  "status": {
-  "cmdId": "047b9562-10ca-41ed-ab46-6dbf40cced43",
+  "cmdId": "cff3a3f3-4dd5-402b-b03f-a4e49f4073a3",
   "state": "CS_RUNNING"
  }
 }
@@ -947,10 +947,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:53 2026",
- "timestampMillis": "1777012313912",
+ "dateTimestamp": "Fri Apr 24 16:30:54 2026",
+ "timestampMillis": "1777019454567",
  "status": {
-  "cmdId": "047b9562-10ca-41ed-ab46-6dbf40cced43",
+  "cmdId": "cff3a3f3-4dd5-402b-b03f-a4e49f4073a3",
   "state": "CS_PASSED"
  }
 }
@@ -958,10 +958,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:53 2026",
- "timestampMillis": "1777012313913",
+ "dateTimestamp": "Fri Apr 24 16:30:54 2026",
+ "timestampMillis": "1777019454567",
  "buildStep": {
-  "cmdId": "861acb5b-88bd-440f-83c7-8bd6b9f8b5d8",
+  "cmdId": "e6c91a3f-e620-47b3-8805-23b513b62b05",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/auto.o -MP -MF obj/auto.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/auto.cpp -o obj/auto.o",
@@ -1007,10 +1007,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:53 2026",
- "timestampMillis": "1777012313913",
+ "dateTimestamp": "Fri Apr 24 16:30:54 2026",
+ "timestampMillis": "1777019454568",
  "status": {
-  "cmdId": "861acb5b-88bd-440f-83c7-8bd6b9f8b5d8",
+  "cmdId": "e6c91a3f-e620-47b3-8805-23b513b62b05",
   "state": "CS_RUNNING"
  }
 }
@@ -1018,10 +1018,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:55 2026",
- "timestampMillis": "1777012315546",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455181",
  "status": {
-  "cmdId": "861acb5b-88bd-440f-83c7-8bd6b9f8b5d8",
+  "cmdId": "e6c91a3f-e620-47b3-8805-23b513b62b05",
   "state": "CS_PASSED"
  }
 }
@@ -1029,10 +1029,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:55 2026",
- "timestampMillis": "1777012315547",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455182",
  "buildStep": {
-  "cmdId": "543fee3a-0b69-495f-ba90-da2fcdaacb6a",
+  "cmdId": "62f1faf1-9c52-4f92-8318-42baf99654f2",
   "name": "gcc",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_kernel_gcc.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/gcc -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /usr/include/x86_64-linux-gnu -std=c++14 -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src -fPIC -g -c -DHLS_STREAM_THREAD_SAFE -MD -MT obj/mod_add_kernel.o -MP -MF obj/mod_add_kernel.Cd /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/xo/Top/Top/cpu_sources/mod_add_kernel.cpp -o obj/mod_add_kernel.o",
@@ -1078,10 +1078,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:55 2026",
- "timestampMillis": "1777012315548",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455183",
  "status": {
-  "cmdId": "543fee3a-0b69-495f-ba90-da2fcdaacb6a",
+  "cmdId": "62f1faf1-9c52-4f92-8318-42baf99654f2",
   "state": "CS_RUNNING"
  }
 }
@@ -1089,10 +1089,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316214",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455777",
  "status": {
-  "cmdId": "543fee3a-0b69-495f-ba90-da2fcdaacb6a",
+  "cmdId": "62f1faf1-9c52-4f92-8318-42baf99654f2",
   "state": "CS_PASSED"
  }
 }
@@ -1100,10 +1100,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316215",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455778",
  "buildStep": {
-  "cmdId": "623ab4c1-dc75-41c8-806c-9f94a07e70c1",
+  "cmdId": "c7bb473e-283d-4de5-9fdf-213b7f5f8458",
   "name": "ar",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top_ar.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/binutils-2.26/bin/ar -cr /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/Top.csim_cu.a /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/top.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/arithmetic.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/interleave.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/bconv_naive.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/cg_ntt.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/mod_add_kernel.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/mod_mult_kernel.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/bconv_systolic.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/auto.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/ntt_kernel.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/mod_sub_kernel.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/bconv.o /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/Top/obj/load.o",
@@ -1132,10 +1132,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316216",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455778",
  "status": {
-  "cmdId": "623ab4c1-dc75-41c8-806c-9f94a07e70c1",
+  "cmdId": "c7bb473e-283d-4de5-9fdf-213b7f5f8458",
   "state": "CS_RUNNING"
  }
 }
@@ -1143,10 +1143,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316229",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455790",
  "status": {
-  "cmdId": "623ab4c1-dc75-41c8-806c-9f94a07e70c1",
+  "cmdId": "c7bb473e-283d-4de5-9fdf-213b7f5f8458",
   "state": "CS_PASSED"
  }
 }
@@ -1154,10 +1154,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316230",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455791",
  "buildStep": {
-  "cmdId": "9298ee94-af6e-40fd-8c16-ea9d9e2b8c6e",
+  "cmdId": "555a90d0-0737-4aa5-8154-6de1af411bad",
   "name": "g++",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xcl_top_gpp.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/g++ -I . -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../common/technology/autopilot/opencl -I /tools/Xilinx/Vitis/2023.2/bin/../data/emulation/include -I /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/auto_cc/include -fPIC -g -DHLS_STREAM_THREAD_SAFE -std=c++14 -fpermissive -c -MD -MT obj/xcl_top.o -MP -MF obj/xcl_top.CXXd xcl_top.cpp -o obj/xcl_top.o",
@@ -1198,10 +1198,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:56 2026",
- "timestampMillis": "1777012316231",
+ "dateTimestamp": "Fri Apr 24 16:30:55 2026",
+ "timestampMillis": "1777019455791",
  "status": {
-  "cmdId": "9298ee94-af6e-40fd-8c16-ea9d9e2b8c6e",
+  "cmdId": "555a90d0-0737-4aa5-8154-6de1af411bad",
   "state": "CS_RUNNING"
  }
 }
@@ -1209,10 +1209,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317159",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456624",
  "status": {
-  "cmdId": "9298ee94-af6e-40fd-8c16-ea9d9e2b8c6e",
+  "cmdId": "555a90d0-0737-4aa5-8154-6de1af411bad",
   "state": "CS_PASSED"
  }
 }
@@ -1220,10 +1220,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317161",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456625",
  "buildStep": {
-  "cmdId": "1d853bb0-e209-429f-911a-4ffcb37e3957",
+  "cmdId": "d090916d-6484-4515-bf25-bdec11bebc3d",
   "name": "g++",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_top_gpp.log",
   "commandLine": "/tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/g++ -fPIC -DHLS_STREAM_THREAD_SAFE -std=c++14 -Wall -shared -Wl,--whole-archive,-soname,fhe_kernels_sw_emu.so -o fhe_kernels_sw_emu.so Top/Top.csim_cu.a obj/xcl_top.o -Wl,--no-whole-archive -Wl,--as-needed -L /tools/Xilinx/Vitis_HLS/2023.2/bin/../lib/lnx64.o -lhlsmathsim -L /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/fpo_v7_1 -lgmp -lmpfr -lIp_floating_point_v7_1_bitacc_cmodel -Wl,-rpath,/tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/fpo_v7_1 -L /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/fft_v9_1 -lIp_xfft_v9_1_bitacc_cmodel -L /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/tools/fir_v7_0 -lgmp -lIp_fir_compiler_v7_2_bitacc_cmodel -L /tools/Xilinx/Vitis_HLS/2023.2/bin/../lnx64/lib/csim -lhlsmc++-GCC46 -L /tools/Xilinx/Vivado/2023.2/tps/lnx64/gcc-8.3.0/bin/../lib/gcc/x86_64-pc-linux-gnu/6.2.0/ -lgcov",
@@ -1271,10 +1271,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317161",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456626",
  "status": {
-  "cmdId": "1d853bb0-e209-429f-911a-4ffcb37e3957",
+  "cmdId": "d090916d-6484-4515-bf25-bdec11bebc3d",
   "state": "CS_RUNNING"
  }
 }
@@ -1282,10 +1282,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317363",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456773",
  "status": {
-  "cmdId": "1d853bb0-e209-429f-911a-4ffcb37e3957",
+  "cmdId": "d090916d-6484-4515-bf25-bdec11bebc3d",
   "state": "CS_PASSED"
  }
 }
@@ -1293,8 +1293,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317438",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456837",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xml.rtd",
   "name": "",
@@ -1307,10 +1307,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317439",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456838",
  "buildStep": {
-  "cmdId": "16693615-5ada-4488-bacf-66a8f442ceea",
+  "cmdId": "7a2bc021-3f24-44e9-9f62-eaa28da17501",
   "name": "xclbinutil",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xclbinutil.log",
   "commandLine": "/tools/Xilinx/Vitis/2023.2/bin/xclbinutil --add-section BITSTREAM:RAW:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.so --force --target sw_emu --add-section :JSON:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.rtd --append-section :JSON:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/appendSection.rtd --add-section CLOCK_FREQ_TOPOLOGY:JSON:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_xml.rtd --add-section BUILD_METADATA:JSON:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu_build.rtd --add-section EMBEDDED_METADATA:RAW:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/fhe_kernels_sw_emu.xml --add-section SYSTEM_METADATA:RAW:/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/link/int/systemDiagramModel.json --output /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/fhe_kernels_sw_emu.xclbin",
@@ -1343,10 +1343,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317440",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456839",
  "status": {
-  "cmdId": "16693615-5ada-4488-bacf-66a8f442ceea",
+  "cmdId": "7a2bc021-3f24-44e9-9f62-eaa28da17501",
   "state": "CS_RUNNING"
  }
 }
@@ -1354,10 +1354,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317513",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456903",
  "status": {
-  "cmdId": "16693615-5ada-4488-bacf-66a8f442ceea",
+  "cmdId": "7a2bc021-3f24-44e9-9f62-eaa28da17501",
   "state": "CS_PASSED"
  }
 }
@@ -1365,10 +1365,10 @@
 <ENTRY>
 {
  "type": "ET_SubCmdStep",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317514",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456904",
  "buildStep": {
-  "cmdId": "897c8aca-c198-4b56-a714-c73075308e1d",
+  "cmdId": "3b36783b-fca3-45ac-ad45-a41fbb9170e0",
   "name": "xclbinutil",
   "logFile": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/fhe_kernels_sw_emu.xclbin.info",
   "commandLine": "/tools/Xilinx/Vitis/2023.2/bin/xclbinutil --quiet --info --input /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/fhe_kernels_sw_emu.xclbin",
@@ -1386,10 +1386,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317515",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456904",
  "status": {
-  "cmdId": "897c8aca-c198-4b56-a714-c73075308e1d",
+  "cmdId": "3b36783b-fca3-45ac-ad45-a41fbb9170e0",
   "state": "CS_RUNNING"
  }
 }
@@ -1397,10 +1397,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317566",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456947",
  "status": {
-  "cmdId": "897c8aca-c198-4b56-a714-c73075308e1d",
+  "cmdId": "3b36783b-fca3-45ac-ad45-a41fbb9170e0",
   "state": "CS_PASSED"
  }
 }
@@ -1408,8 +1408,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317570",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456951",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/logs/optraceViewer.html",
   "name": "",
@@ -1422,10 +1422,10 @@
 <ENTRY>
 {
  "type": "ET_Status",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317570",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456952",
  "status": {
-  "cmdId": "cda009f9-ec3f-4396-9d96-86d86d793518",
+  "cmdId": "6ad1c3ec-cfb8-4c0c-a3b9-7da0eb852845",
   "state": "CS_PASSED"
  }
 }
@@ -1433,8 +1433,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317610",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456988",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/reports/link/v++_link_fhe_kernels_sw_emu_guidance.html",
   "name": "",
@@ -1447,8 +1447,8 @@
 <ENTRY>
 {
  "type": "ET_Report",
- "dateTimestamp": "Fri Apr 24 14:31:57 2026",
- "timestampMillis": "1777012317611",
+ "dateTimestamp": "Fri Apr 24 16:30:56 2026",
+ "timestampMillis": "1777019456988",
  "report": {
   "path": "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/_x/v++_link_fhe_kernels_sw_emu_guidance.pb3",
   "name": "",

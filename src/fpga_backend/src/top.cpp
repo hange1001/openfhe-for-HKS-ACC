@@ -29,12 +29,13 @@ static uint64_t K_HALF[MAX_LIMBS];
 static uint64_t M[MAX_LIMBS];
 
 // ------------------------
-// Store the TwiddleFactor
-// PE_PARALLEL 个独立副本消除 UNROLL factor 的 bank 冲突
+// Store the CG-NTT TwiddleFactor
+// CG-NTT 每 limb 需要 STAGE × CG_HALF_N = 12 × 2048 = 24576 个旋转因子
+// （相比标准 NTT 的 RING_DIM=4096，扩容 6 倍，但省去 PE_PARALLEL 副本）
 // 绑定到 URAM（U55C 有 960 块 URAM ≈ 34MB，远大于 BRAM）
 // ------------------------
-static uint64_t NTTTwiddleFactor[MAX_LIMBS][PE_PARALLEL][RING_DIM];
-static uint64_t INTTTwiddleFactor[MAX_LIMBS][PE_PARALLEL][RING_DIM];
+static uint64_t NTTTwiddleFactor[MAX_LIMBS][STAGE][CG_HALF_N];
+static uint64_t INTTTwiddleFactor[MAX_LIMBS][STAGE][CG_HALF_N];
 
 void Top(
     const uint64_t *mem_in1,
@@ -66,10 +67,14 @@ void Top(
     #pragma HLS BIND_STORAGE variable=poly_buffer_2 type=ram_2p impl=bram
     #pragma HLS BIND_STORAGE variable=result_buffer type=ram_2p impl=bram
 
-    // Twiddle Factor: PE_PARALLEL 个独立副本，complete dim=2 物理隔离，URAM 存储
-    // 注意：rom_1p + uram 在 U55C 上非法；且 OP_INIT 需要写入，必须用 ram 类型
+    // CG-NTT Twiddle Factor: [MAX_LIMBS][STAGE][CG_HALF_N]
+    // stage 维 complete 展开（共 12 层），CG_HALF_N 维 cyclic=PE_PARALLEL
+    // → STAGE 层物理隔离，每层内 8 PE 同时读无 Bank Conflict
+    // 注意：rom_1p + uram 在 U55C 上非法；OP_INIT 需要写入，必须用 ram_2p
     #pragma HLS ARRAY_PARTITION variable=NTTTwiddleFactor complete dim=2
+    #pragma HLS ARRAY_PARTITION variable=NTTTwiddleFactor cyclic factor=PE_PARALLEL dim=3
     #pragma HLS ARRAY_PARTITION variable=INTTTwiddleFactor complete dim=2
+    #pragma HLS ARRAY_PARTITION variable=INTTTwiddleFactor cyclic factor=PE_PARALLEL dim=3
     #pragma HLS BIND_STORAGE variable=NTTTwiddleFactor type=ram_2p impl=uram
     #pragma HLS BIND_STORAGE variable=INTTTwiddleFactor type=ram_2p impl=uram
 
@@ -117,34 +122,31 @@ void Top(
                 #endif
             }
             // mem_in1 布局: [MODULUS×LIMB_Q] [K_HALF×LIMB_Q] [M×LIMB_Q]
-            //               [NTT_TF : MAX_LIMBS × RING_DIM]   ← Host 只传 RING_DIM 个/limb
+            //               [NTT_TF : MAX_LIMBS × STAGE × CG_HALF_N]
+            //               CG-NTT 每 limb 共 24576 个旋转因子，Host 端预计算
             // mem_in2 布局: [MODULUS×LIMB_P] [K_HALF×LIMB_P] [M×LIMB_P]
-            //               [INTT_TF: MAX_LIMBS × RING_DIM]   ← 同上
-            //
-            // BU_NUM 是 FPGA 内部并行度，Host 不感知；
-            // 加载时将每 limb 的 RING_DIM 个 TF 广播给所有 BU。
-            static const int NTT_TF_BASE  = LIMB_Q * 3;   // mem_in1 中 NTT_TF 起始偏移
-            static const int INTT_TF_BASE = LIMB_P * 3;   // mem_in2 中 INTT_TF 起始偏移
+            //               [INTT_TF: MAX_LIMBS × STAGE × CG_HALF_N]
+            static const int CG_TF_SIZE   = STAGE * CG_HALF_N;    // 24576
+            static const int NTT_TF_BASE  = LIMB_Q * 3;           // mem_in1 中 NTT_TF 起始偏移
+            static const int INTT_TF_BASE = LIMB_P * 3;           // mem_in2 中 INTT_TF 起始偏移
 
             init_NTTTwiddle_Loop:
             for (int l = 0; l < MAX_LIMBS; l++){
-                for (int t = 0; t < RING_DIM; t++){
-                    #pragma HLS PIPELINE II=1
-                    uint64_t tf_val = mem_in1[NTT_TF_BASE + l * RING_DIM + t];
-                    for (int b = 0; b < PE_PARALLEL; b++){
-                        #pragma HLS UNROLL
-                        NTTTwiddleFactor[l][b][t] = tf_val;
+                for (int s = 0; s < STAGE; s++){
+                    for (int t = 0; t < CG_HALF_N; t++){
+                        #pragma HLS PIPELINE II=1
+                        NTTTwiddleFactor[l][s][t] =
+                            mem_in1[NTT_TF_BASE + l * CG_TF_SIZE + s * CG_HALF_N + t];
                     }
                 }
             }
             init_INTTTwiddle_Loop:
             for (int l = 0; l < MAX_LIMBS; l++){
-                for (int t = 0; t < RING_DIM; t++){
-                    #pragma HLS PIPELINE II=1
-                    uint64_t tf_val = mem_in2[INTT_TF_BASE + l * RING_DIM + t];
-                    for (int b = 0; b < PE_PARALLEL; b++){
-                        #pragma HLS UNROLL
-                        INTTTwiddleFactor[l][b][t] = tf_val;
+                for (int s = 0; s < STAGE; s++){
+                    for (int t = 0; t < CG_HALF_N; t++){
+                        #pragma HLS PIPELINE II=1
+                        INTTTwiddleFactor[l][s][t] =
+                            mem_in2[INTT_TF_BASE + l * CG_TF_SIZE + s * CG_HALF_N + t];
                     }
                 }
             }
@@ -173,25 +175,55 @@ void Top(
             break;
 
 
-        case OP_NTT:
+        case OP_NTT: {
+            // CG-NTT 正向变换
+            // ① 从 DDR 加载多项式到片上 poly_buffer_1（2D BRAM）
             Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
+            // ② 逐 limb 调用 CG-NTT Kernel（全程片上，零额外 DDR 流量）
+            //    flatten_2d_to_1d: [SQRT][SQRT] → [RING_DIM]（位截取，0周期）
+            //    CG_NTT_Kernel:    12 层完美洗牌蝶形，顺序消费 NTTTwiddleFactor
+            //    reshape_1d_to_2d: [RING_DIM] → [SQRT][SQRT]（位截取，0周期）
+            //    CG-NTT 天然使用完美洗牌网络，无需 InterLeave
+            NTT_CG_LIMB_LOOP:
             for (int l = mod_index; l < mod_index + num_active_limbs; l++){
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=5 avg=3
-                InterLeave(poly_buffer_1[l], true);
+                uint64_t flat[RING_DIM];
+                uint64_t flat_out[RING_DIM];
+                #pragma HLS ARRAY_PARTITION variable=flat     cyclic factor=PE_PARALLEL dim=1
+                #pragma HLS ARRAY_PARTITION variable=flat_out cyclic factor=PE_PARALLEL dim=1
+                flatten_2d_to_1d(poly_buffer_1[l], flat);
+                CG_NTT_Kernel(flat, flat_out, MODULUS[l], K_HALF[l], M[l],
+                              NTTTwiddleFactor[l], true);
+                reshape_1d_to_2d(flat_out, poly_buffer_1[l]);
             }
-            Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, true, num_active_limbs, mod_index);
+            // ③ 将结果写回 DDR
             Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
+        }
 
-        case OP_INTT:
+        case OP_INTT: {
+            // CG-NTT 逆向变换（INTT）
+            // ① 从 DDR 加载多项式到片上 poly_buffer_1
             Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-            Compute_NTT(poly_buffer_1, NTTTwiddleFactor, INTTTwiddleFactor, MODULUS, K_HALF, M, false, num_active_limbs, mod_index);
+            // ② 逐 limb 调用 CG-INTT Kernel
+            //    INTT 方向：stage 11→0，每层 unshuffle 读写（完美逆洗牌）
+            //    无需 InterLeave，CG-NTT 几何结构天然消除显式交叉开关
+            INTT_CG_LIMB_LOOP:
             for (int l = mod_index; l < mod_index + num_active_limbs; l++){
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=5 avg=3
-                InterLeave(poly_buffer_1[l], false);
+                uint64_t flat[RING_DIM];
+                uint64_t flat_out[RING_DIM];
+                #pragma HLS ARRAY_PARTITION variable=flat     cyclic factor=PE_PARALLEL dim=1
+                #pragma HLS ARRAY_PARTITION variable=flat_out cyclic factor=PE_PARALLEL dim=1
+                flatten_2d_to_1d(poly_buffer_1[l], flat);
+                CG_NTT_Kernel(flat, flat_out, MODULUS[l], K_HALF[l], M[l],
+                              INTTTwiddleFactor[l], false);
+                reshape_1d_to_2d(flat_out, poly_buffer_1[l]);
             }
+            // ③ 将结果写回 DDR
             Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
             break;
+        }
 
     
         case OP_BCONV: {

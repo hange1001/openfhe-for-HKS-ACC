@@ -46,9 +46,17 @@
 #define OP_BCONV  6
 #define OP_AUTO   7
 
-#define MAX_LIMBS 5 
+// ---- 必须与 FPGA 端 define.h 保持一致 ----
+// MAX_LIMBS = LIMB_Q (3) + MAX_OUT_COLS (5) = 8
+// OP_INIT 时 FPGA 会按 MAX_LIMBS 个 limb 读取 CG-NTT 旋转因子表，
+// 若 Host 端分配不足会发生 AXI 越界。
+#define MAX_LIMBS 8
+#define FPGA_LIMB_Q 3
+#define FPGA_LIMB_P 2
 #define FPGA_RING_DIM  4096
-#define STAGE_NUM 12 
+#define STAGE_NUM 12
+#define CG_HALF_N  (FPGA_RING_DIM / 2)          // 2048
+#define CG_TF_SIZE (STAGE_NUM * CG_HALF_N)      // 12 * 2048 = 24576
 
 inline std::string GetXclbinPath() {
     const char* mode = std::getenv("XCL_EMULATION_MODE");
@@ -164,6 +172,50 @@ public:
     }
 
 
+    // ---------------------------------------------------------
+    // CG-NTT 旋转因子预计算（Host 端）
+    //
+    // 输出布局：out[s * CG_HALF_N + t]，s ∈ [0, STAGE_NUM)，t ∈ [0, CG_HALF_N)
+    // 算法：模拟 perfect-shuffle 路由网络，记录每层实际使用的 ψ 幂次。
+    //   - 初始排列 perm[i] = bit_reverse(i, STAGE_NUM)
+    //   - 每经过一层，新排列：np[2i]=perm[i]，np[2i+1]=perm[i+N/2]
+    //   - 第 s 层、位置 i 的指数 = (perm[i] mod 2^s) * N / 2^s
+    //
+    // 与 FPGA 端 cg_ntt.cpp 中 cg_twiddle[s][t] 的顺序完全匹配。
+    // root_2N 是 2N-th primitive root of unity（ψ）。
+    // ---------------------------------------------------------
+    static int BitReverse(int x, int bits) {
+        int r = 0;
+        for (int b = 0; b < bits; b++) { r = (r << 1) | (x & 1); x >>= 1; }
+        return r;
+    }
+
+    static void BuildCgTwiddle(
+        uint64_t* out,              // 长度 = STAGE_NUM * CG_HALF_N
+        int n,                      // FPGA_RING_DIM = 4096
+        uint64_t mod,
+        uint64_t root_2N            // ψ 或 ψ^-1
+    ) {
+        std::vector<int> perm(n);
+        for (int i = 0; i < n; i++) perm[i] = BitReverse(i, STAGE_NUM);
+
+        for (int s = 0; s < STAGE_NUM; s++) {
+            int half_group = 1 << s;
+            for (int i = 0; i < CG_HALF_N; i++) {
+                int logical_a   = perm[i];
+                int pos_in_half = logical_a % half_group;
+                uint64_t exp    = (uint64_t)pos_in_half * ((uint64_t)n / (uint64_t)half_group);
+                out[s * CG_HALF_N + i] = Power(root_2N, exp % (2 * (uint64_t)n), mod);
+            }
+            std::vector<int> np(n);
+            for (int i = 0; i < CG_HALF_N; i++) {
+                np[2 * i]     = perm[i];
+                np[2 * i + 1] = perm[i + CG_HALF_N];
+            }
+            perm = np;
+        }
+    }
+
     static std::vector<int> GenerateTwiddleIndices(int n) {
         std::vector<int> index = {0};
         for (int i = 0; i < STAGE_NUM; ++i) {
@@ -227,58 +279,49 @@ public:
             std::cout << "  [Barrett] idx=" << i << ": mod=" << p << ", S=" << S << ", m=" << m << std::endl;
         }
 
-        std::vector<uint64_t> all_ntt_twiddles(total_limbs * N);
-        std::vector<uint64_t> all_intt_twiddles(total_limbs * N);
+        // ---- CG-NTT 旋转因子预计算 ----
+        // 每 limb 生成 [STAGE_NUM][CG_HALF_N] = 24576 个 TF，与 FPGA cg_twiddle[s][t] 顺序完全对齐。
+        // 按 MAX_LIMBS 尺寸分配（FPGA OP_INIT 按 MAX_LIMBS × CG_TF_SIZE 搬运，不足槽位以 0 填充）。
+        std::vector<uint64_t> all_ntt_twiddles(MAX_LIMBS * CG_TF_SIZE, 0);
+        std::vector<uint64_t> all_intt_twiddles(MAX_LIMBS * CG_TF_SIZE, 0);
 
-        for(size_t limb = 0; limb < total_limbs; limb++) {
+        for(size_t limb = 0; limb < total_limbs && limb < (size_t)MAX_LIMBS; limb++) {
             uint64_t mod = m_stored_moduli[limb];
-            
-            // 🔥 直接使用 CPU 提取好的单位根，绝对不再自己瞎算！
-            uint64_t psi = combined_roots[limb]; 
+            uint64_t psi = combined_roots[limb];
             uint64_t psi_inv = MathUtils::ModInverse(psi, mod);
 
-            uint64_t w = 1;
-            uint64_t w_inv = 1;
-
-            for(int i = 0; i < N; i++) {
-                all_ntt_twiddles[limb * N + i] = w;
-                all_intt_twiddles[limb * N + i] = w_inv;
-                w = ((unsigned __int128)w * psi) % mod;
-                w_inv = ((unsigned __int128)w_inv * psi_inv) % mod;
-            }
+            MathUtils::BuildCgTwiddle(
+                all_ntt_twiddles.data()  + limb * CG_TF_SIZE, N, mod, psi);
+            MathUtils::BuildCgTwiddle(
+                all_intt_twiddles.data() + limb * CG_TF_SIZE, N, mod, psi_inv);
         }
+        // CG-NTT perfect-shuffle 几何已内建于 BuildCgTwiddle，不再需要 GenerateTwiddleIndices 置换。
 
-        std::vector<int> perm_index = MathUtils::GenerateTwiddleIndices(N);
-        std::vector<uint64_t> permuted_ntt(total_limbs * N);
-        std::vector<uint64_t> permuted_intt(total_limbs * N);
-
-        for (size_t limb = 0; limb < total_limbs; limb++) {
-            size_t base_offset = limb * N;
-            for (size_t i = 0; i < perm_index.size(); ++i) {
-                permuted_ntt[base_offset + i]  = all_ntt_twiddles[base_offset + perm_index[i]];
-                permuted_intt[base_offset + i] = all_intt_twiddles[base_offset + perm_index[i]];
-            }
+        const int PARAMS_PER_LIMB = 3;
+        // 重要：header 偏移必须与 FPGA 端 top.cpp 中 NTT_TF_BASE = LIMB_Q*3 / INTT_TF_BASE = LIMB_P*3
+        // 完全一致，并按 MAX_LIMBS × CG_TF_SIZE 分配尾部 TF 区域（FPGA OP_INIT 按该尺寸搬运）。
+        size_t buf1_size = FPGA_LIMB_Q * PARAMS_PER_LIMB + MAX_LIMBS * CG_TF_SIZE;
+        std::vector<uint64_t> buf1_Q(buf1_size, 0);
+        for(size_t i=0; i<n_q && i<(size_t)FPGA_LIMB_Q; i++) {
+            buf1_Q[i]                      = m_stored_moduli[i];
+            buf1_Q[FPGA_LIMB_Q + i]        = K_vals[i];
+            buf1_Q[FPGA_LIMB_Q * 2 + i]    = M_vals[i];
         }
+        memcpy(buf1_Q.data() + FPGA_LIMB_Q * PARAMS_PER_LIMB,
+               all_ntt_twiddles.data(),
+               MAX_LIMBS * CG_TF_SIZE * sizeof(uint64_t));
 
-        const int PARAMS_PER_LIMB = 3; 
-        size_t buf1_size = n_q * PARAMS_PER_LIMB + total_limbs * N;
-        std::vector<uint64_t> buf1_Q(buf1_size);
-        for(size_t i=0; i<n_q; i++) {
-            buf1_Q[i] = m_stored_moduli[i];           
-            buf1_Q[n_q + i] = K_vals[i];              
-            buf1_Q[n_q*2 + i] = M_vals[i];            
+        size_t buf2_size = FPGA_LIMB_P * PARAMS_PER_LIMB + MAX_LIMBS * CG_TF_SIZE;
+        std::vector<uint64_t> buf2_P(buf2_size, 0);
+        for(size_t i=0; i<n_p && i<(size_t)FPGA_LIMB_P; i++) {
+            size_t global_idx = n_q + i;
+            buf2_P[i]                      = m_stored_moduli[global_idx];
+            buf2_P[FPGA_LIMB_P + i]        = K_vals[global_idx];
+            buf2_P[FPGA_LIMB_P * 2 + i]    = M_vals[global_idx];
         }
-        memcpy(buf1_Q.data() + n_q * PARAMS_PER_LIMB, permuted_ntt.data(), total_limbs * N * sizeof(uint64_t));
-
-        size_t buf2_size = n_p * PARAMS_PER_LIMB + total_limbs * N;
-        std::vector<uint64_t> buf2_P(buf2_size);
-        for(size_t i=0; i<n_p; i++) {
-            size_t global_idx = n_q + i; 
-            buf2_P[i] = m_stored_moduli[global_idx];        
-            buf2_P[n_p + i] = K_vals[global_idx];           
-            buf2_P[n_p*2 + i] = M_vals[global_idx];         
-        }
-        memcpy(buf2_P.data() + n_p * PARAMS_PER_LIMB, permuted_intt.data(), total_limbs * N * sizeof(uint64_t));
+        memcpy(buf2_P.data() + FPGA_LIMB_P * PARAMS_PER_LIMB,
+               all_intt_twiddles.data(),
+               MAX_LIMBS * CG_TF_SIZE * sizeof(uint64_t));
 
         // 探针：如果这里打印出来了，说明准备工作完毕，即将呼叫硬件
         std::cout << "[DEBUG] Ready to allocate XRT buffers..." << std::endl;

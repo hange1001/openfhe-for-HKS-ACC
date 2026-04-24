@@ -135,7 +135,7 @@ TB_Compute_CG_NTT  := ./testbench/cg_ntt_tb.cpp
 
 # 2. Top 模块 (复用 Vitis 流程的 KERNEL_SRC，并额外加上 cg_ntt / bconv_naive)
 SRC_Top := $(KERNEL_SRC) $(SRC_DIR)/cg_ntt.cpp $(SRC_DIR)/bconv_naive.cpp
-TB_Top  :=
+TB_Top  := ./testbench/top_tb.cpp
 
 # 3. NTT kernel 子模块 (顶层函数: NTT_Kernel)
 SRC_NTT_Kernel := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/ntt_kernel.cpp
