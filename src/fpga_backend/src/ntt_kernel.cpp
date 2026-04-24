@@ -227,19 +227,22 @@ void Configurable_PE(
     } else {
         AddMod(input1_temp, input2_temp, modulus, true);
         temp1 = input1_temp;
-        
-        input1_temp = input1; 
+
+        input1_temp = input1;
         AddMod(input1_temp, input2_temp, modulus, false);
         res2_temp = input1_temp;
-        
-       
+
+
         res1 = (temp1 >> 1) + ((temp1 & 1) ? ((modulus + 1) >> 1) : 0);
-        
+
+        // 在进入 MultMod 的 DSP 乘法链前打一拍，截断 AddMod→MultMod 长组合路径
+        #pragma HLS LATENCY min=1 max=2
+
         MultMod(res2_temp, twiddle_factor, modulus, M, K_HALF, temp);
-        
-       
+
+
         res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);
-    } 
+    }
 }
 
 void NTT_Kernel(

@@ -100,7 +100,8 @@ void cg_ntt_reorder(uint64_t data[RING_DIM]) {
 // ============================================================
 
 void CG_NTT_Kernel(
-    uint64_t in_data[RING_DIM],
+    const uint64_t in_data[RING_DIM],
+    uint64_t out_data[RING_DIM],
     const uint64_t modulus,
     const uint64_t K_HALF,
     const uint64_t M_barrett,
@@ -223,7 +224,7 @@ void CG_NTT_Kernel(
     }
 
     // ============================================================
-    // 回写到 in_data
+    // 回写到 out_data
     // STAGE=12（偶数）→ 最后写的 stage=11（奇）→ 写入 buf_A → 结果在 buf_A
     // 通用：偶数 STAGE 结果在 buf_A，奇数 STAGE 结果在 buf_B
     // ============================================================
@@ -234,9 +235,9 @@ void CG_NTT_Kernel(
         for (int p = 0; p < CG_PE_NUM; p++) {
             #pragma HLS UNROLL
             if ((STAGE & 1) == 0) {
-                in_data[i * CG_PE_NUM + p] = buf_A[i * CG_PE_NUM + p];
+                out_data[i * CG_PE_NUM + p] = buf_A[i * CG_PE_NUM + p];
             } else {
-                in_data[i * CG_PE_NUM + p] = buf_B[i * CG_PE_NUM + p];
+                out_data[i * CG_PE_NUM + p] = buf_B[i * CG_PE_NUM + p];
             }
         }
     }
@@ -284,10 +285,12 @@ void Compute_CG_NTT(
     // 片上缓冲（Local BRAM/URAM）
     // ============================================================
     uint64_t local_in_data[RING_DIM];
+    uint64_t local_out_data[RING_DIM];
     uint64_t local_twiddle[STAGE][CG_HALF_N];
 
-    #pragma HLS ARRAY_PARTITION variable=local_in_data cyclic factor=CG_PE_NUM dim=1
-    #pragma HLS ARRAY_PARTITION variable=local_twiddle cyclic factor=CG_PE_NUM dim=2
+    #pragma HLS ARRAY_PARTITION variable=local_in_data  cyclic factor=CG_PE_NUM dim=1
+    #pragma HLS ARRAY_PARTITION variable=local_out_data cyclic factor=CG_PE_NUM dim=1
+    #pragma HLS ARRAY_PARTITION variable=local_twiddle  cyclic factor=CG_PE_NUM dim=2
 
     LIMB_LOOP:
     for (int l = mod_idx_offset; l < mod_idx_offset + num_active_limbs; l++) {
@@ -334,6 +337,7 @@ void Compute_CG_NTT(
         // 计算（全部在片上 BRAM 完成）
         CG_NTT_Kernel(
             local_in_data,
+            local_out_data,
             modulus[l],
             K_HALF[l],
             M_barrett[l],
@@ -341,14 +345,14 @@ void Compute_CG_NTT(
             is_ntt
         );
 
-        // 512-bit burst 写回 local_in_data → in_data
+        // 512-bit burst 写回 local_out_data → in_data
         STORE_OUT:
         for (int i = 0; i < PACKED_RING_DIM; i++) {
             #pragma HLS PIPELINE II=1
             ap_uint<512> pack;
             for (int j = 0; j < PACK_RATIO; j++) {
                 #pragma HLS UNROLL
-                pack.range((j + 1) * 64 - 1, j * 64) = local_in_data[i * PACK_RATIO + j];
+                pack.range((j + 1) * 64 - 1, j * 64) = local_out_data[i * PACK_RATIO + j];
             }
             in_data[l * PACKED_RING_DIM + i] = pack;
         }

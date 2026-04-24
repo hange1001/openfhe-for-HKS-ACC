@@ -340,19 +340,20 @@ static void test_cg_ntt_roundtrip() {
     std::uniform_int_distribution<uint64_t> dis(0, MOD - 1);
 
     static uint64_t data[RING_DIM];
+    static uint64_t ntt_out[RING_DIM];
     static uint64_t backup[RING_DIM];
     for (int i = 0; i < RING_DIM; i++) data[i] = backup[i] = dis(rng);
 
-    // 正向 NTT
-    CG_NTT_Kernel(data, MOD, K_HALF, M_barrett, ntt_tf, true);
+    // 正向 NTT：data → ntt_out
+    CG_NTT_Kernel(data, ntt_out, MOD, K_HALF, M_barrett, ntt_tf, true);
 
     // 验证 NTT 后数据发生变化（极低概率误报）
     bool changed = false;
-    for (int i = 0; i < RING_DIM; i++) if (data[i] != backup[i]) { changed = true; break; }
+    for (int i = 0; i < RING_DIM; i++) if (ntt_out[i] != backup[i]) { changed = true; break; }
     check(changed, "NTT 后数据已发生变化");
 
-    // 逆向 INTT
-    CG_NTT_Kernel(data, MOD, K_HALF, M_barrett, intt_tf, false);
+    // 逆向 INTT：ntt_out → data
+    CG_NTT_Kernel(ntt_out, data, MOD, K_HALF, M_barrett, intt_tf, false);
 
     // 验证恢复
     bool recovered = true;

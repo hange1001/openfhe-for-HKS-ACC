@@ -90,6 +90,12 @@ void MultMod(
     unsigned __int128 q_times_mod = q * (unsigned __int128)mod;
     unsigned __int128 r_full = res_mult - q_times_mod;
     uint64_t r = (uint64_t)r_full;
+
+    // 5. 校正（全精度下误差极小，最多 3 次）
+    if (r >= mod) { r -= mod; }
+    if (r >= mod) { r -= mod; }
+
+    res_mod = r;
 #else
     // 1. 真实乘积（最高约 120-bit）
     ap_uint<128> res_mult = (ap_uint<128>)a * b;
@@ -104,24 +110,37 @@ void MultMod(
     #pragma HLS BIND_OP variable=p_high op=mul impl=dsp latency=4
     #pragma HLS BIND_OP variable=p_low op=mul impl=dsp latency=4
 
-    ap_uint<128> q = 0;
+    ap_uint<128> q_shifted = 0;
     if (S > 64) {
-        q = (p_high >> (S - 64)) + (p_low >> S);
+        q_shifted = (p_high >> (S - 64)) + (p_low >> S);
     } else if (S < 64) {
-        q = (p_high << (64 - S)) + (p_low >> S);
+        q_shifted = (p_high << (64 - S)) + (p_low >> S);
     } else {
-        q = p_high + (p_low >> 64);
+        q_shifted = p_high + (p_low >> 64);
     }
 
+    // 在桶形移位+加法链与下一级 DSP 乘法之间再打一拍，
+    // 截断 shift→add→DSP 长组合路径
+    ap_uint<128> q = q_shifted;
+    #pragma HLS LATENCY min=1 max=1
+
     ap_uint<128> q_times_mod = q * (ap_uint<128>)mod;
+    #pragma HLS BIND_OP variable=q_times_mod op=mul impl=dsp latency=4
+
     ap_uint<128> r_full = res_mult - q_times_mod;
     uint64_t r = (uint64_t)r_full;
-#endif
+
+    // 强制在大减法后打一拍：截断 DSP 乘法链 → 后续条件减法进入新时钟周期
+    #pragma HLS LATENCY min=1 max=2
 
     // 5. 校正（全精度下误差极小，最多 3 次）
     if (r >= mod) { r -= mod; }
-    if (r >= mod) { r -= mod; }
+
+    // 两次条件减之间再插一级寄存器：cmp→sub→cmp→sub 打成 2 段
+    #pragma HLS LATENCY min=1 max=1
+
     if (r >= mod) { r -= mod; }
 
     res_mod = r;
+#endif
 }

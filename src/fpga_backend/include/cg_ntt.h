@@ -48,7 +48,8 @@ static const int PACKED_TW_SIZE  = (STAGE * CG_HALF_N) / PACK_RATIO; // 3072
 //   is_ntt                             - true=正向 NTT，false=逆向 INTT
 extern "C" {
     void CG_NTT_Kernel(
-        uint64_t in_data[RING_DIM],
+        const uint64_t in_data[RING_DIM],
+        uint64_t out_data[RING_DIM],
         const uint64_t modulus,
         const uint64_t K_HALF,
         const uint64_t M_barrett,

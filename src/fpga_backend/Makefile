@@ -63,7 +63,7 @@ CXXFLAGS += -I$(INC_DIR) $(OPENFHE_INC) $(XRT_INC)
 # Kernel 编译选项 (Vitis Flow)
 VPP_FLAGS := -t $(TARGET) --platform $(PLATFORM) --save-temps
 VPP_FLAGS += -I$(INC_DIR) -I$(SRC_DIR)
-
+VPP_FLAGS += --config connectivity.ini  # HBM 连接配置，需根据实际平台调整
 
 # ===================================================================
 # 2. 构建规则 (Vitis Flow - 保持不变)
