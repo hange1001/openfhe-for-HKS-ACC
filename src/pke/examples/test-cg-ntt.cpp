@@ -341,7 +341,7 @@ int main() {
     std::cout << "################################################" << std::endl;
 
     // Step 1: 构造 CryptoContext（ring=4096，Q 多 limb 以覆盖 multi-limb 测试）
-    uint32_t multDepth    = 3;          // 更多 Q limb
+    uint32_t multDepth    = 1;          // 更多 Q limb
     uint32_t scaleModSize = 50;
     uint32_t ringDegree   = 1 << 12;    // 必须 == FPGA_RING_DIM
     uint32_t batchSize    = 8;

@@ -190,44 +190,50 @@ public:
         return r;
     }
 
-    static void BuildCgTwiddle(
-        uint64_t* out,              // 长度 = STAGE_NUM * CG_HALF_N
-        int n,                      // FPGA_RING_DIM = 4096
-        uint64_t mod,
-        uint64_t root_2N            // ψ 或 ψ^-1
-    ) {
-        std::vector<int> perm(n);
-        for (int i = 0; i < n; i++) perm[i] = BitReverse(i, STAGE_NUM);
+ // ---------------------------------------------------------
+    // 统一的 CG-NTT 旋转因子生成器：通过模拟硬件洗牌路径来定位 TF
+    // ---------------------------------------------------------
+    static void BuildCgTwiddle_Unified(uint64_t* out, int n, uint64_t mod, uint64_t root, bool is_ntt) {
+        std::vector<int> logical_idx(n);
+        for(int i=0; i<n; i++) logical_idx[i] = i; // 初始逻辑索引
 
-        for (int s = 0; s < STAGE_NUM; s++) {
-            int half_group = 1 << s;
-            for (int i = 0; i < CG_HALF_N; i++) {
-                int logical_a   = perm[i];
-                int pos_in_half = logical_a % half_group;
-                uint64_t exp    = (uint64_t)pos_in_half * ((uint64_t)n / (uint64_t)half_group);
-                out[s * CG_HALF_N + i] = Power(root_2N, exp % (2 * (uint64_t)n), mod);
-            }
-            std::vector<int> np(n);
-            for (int i = 0; i < CG_HALF_N; i++) {
-                np[2 * i]     = perm[i];
-                np[2 * i + 1] = perm[i + CG_HALF_N];
-            }
-            perm = np;
-        }
-    }
+        for(int s=0; s<STAGE_NUM; s++) {
+            // OpenFHE Negacyclic 参数：NTT 阶段 m 递增，INTT 阶段 m 递减
+            int m = is_ntt ? (1 << s) : (n >> (s + 1));
+            int t = is_ntt ? (n >> (s + 1)) : (1 << s);
 
-    static std::vector<int> GenerateTwiddleIndices(int n) {
-        std::vector<int> index = {0};
-        for (int i = 0; i < STAGE_NUM; ++i) {
-            std::vector<int> index_temp;
-            int offset = n / (1 << (i + 1));
-            for (int j : index) {
-                index_temp.push_back(j + offset);
+            for(int i=0; i<CG_HALF_N; i++) {
+                // 根据硬件读模式确定逻辑索引
+                // NTT (DIT) 硬件读 i 和 i + N/2
+                // INTT (DIF) 硬件读 2i 和 2i + 1
+                int idx = is_ntt ? logical_idx[i] : logical_idx[2*i];
+                int group = idx / (2 * t);
+                
+                uint64_t power = BitReverse(m + group, STAGE_NUM);
+                uint64_t tf = Power(root, power, mod);
+
+
+                int target_row = is_ntt ? s : (STAGE_NUM - 1 - s);
+                out[target_row * CG_HALF_N + i] = tf;
             }
-            index.insert(index.end(), index_temp.begin(), index_temp.end());
+
+            // --- 核心：模拟硬件在 Stage 结束后的物理洗牌行为 ---
+            std::vector<int> next(n);
+            if(is_ntt) {
+                // NTT 硬件执行 Perfect Shuffle 写回：2i <- i, 2i+1 <- i+N/2
+                for(int i=0; i<CG_HALF_N; i++) {
+                    next[2*i] = logical_idx[i];
+                    next[2*i+1] = logical_idx[i + CG_HALF_N];
+                }
+            } else {
+                // INTT 硬件执行 Perfect Unshuffle 写回：i <- 2i, i+N/2 <- 2i+1
+                for(int i=0; i<CG_HALF_N; i++) {
+                    next[i] = logical_idx[2*i];
+                    next[i + CG_HALF_N] = logical_idx[2*i+1];
+                }
+            }
+            logical_idx = next;
         }
-        index.erase(index.begin());
-        return index;
     }
 };
 
@@ -290,12 +296,15 @@ public:
             uint64_t psi = combined_roots[limb];
             uint64_t psi_inv = MathUtils::ModInverse(psi, mod);
 
-            MathUtils::BuildCgTwiddle(
-                all_ntt_twiddles.data()  + limb * CG_TF_SIZE, N, mod, psi);
-            MathUtils::BuildCgTwiddle(
-                all_intt_twiddles.data() + limb * CG_TF_SIZE, N, mod, psi_inv);
+            // 正向
+            MathUtils::BuildCgTwiddle_Unified(
+                all_ntt_twiddles.data() + limb * CG_TF_SIZE, N, mod, psi, true);
+            
+            // 逆向
+            MathUtils::BuildCgTwiddle_Unified(
+                all_intt_twiddles.data() + limb * CG_TF_SIZE, N, mod, psi_inv, false);
         }
-        // CG-NTT perfect-shuffle 几何已内建于 BuildCgTwiddle，不再需要 GenerateTwiddleIndices 置换。
+        
 
         const int PARAMS_PER_LIMB = 3;
         // 重要：header 偏移必须与 FPGA 端 top.cpp 中 NTT_TF_BASE = LIMB_Q*3 / INTT_TF_BASE = LIMB_P*3
@@ -409,6 +418,7 @@ public:
             return;
         }
         Execute(OP_NTT, in, nullptr, out, 1, mod_idx);
+
         if (std::getenv("OPENFHE_NTT_DUMP")) {
             const size_t dumpLen = std::min(n, (size_t)16);
             std::cerr << "[NTT_DUMP] NTT forward first " << dumpLen << " in/out (mod=" << modulus << "):" << std::endl;
@@ -426,6 +436,7 @@ public:
         std::cout << "=== [FPGA] Execute INTT ===" << std::endl;
         int mod_idx = GetModIndex(modulus);
         Execute(OP_INTT, in, nullptr, out, 1, mod_idx);
+
         if (std::getenv("OPENFHE_NTT_DUMP")) {
             const size_t dumpLen = std::min(n, (size_t)16);
             std::cerr << "[NTT_DUMP] INTT first " << dumpLen << " in/out (mod=" << modulus << "):" << std::endl;
