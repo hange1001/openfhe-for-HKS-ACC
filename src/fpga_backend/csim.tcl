@@ -41,7 +41,7 @@ if {[string length $tb_files] > 0} {
 
 open_solution "solution1"
 set_part xcu55c-fsvh2892-2L-e
-create_clock -period 5ns
+create_clock -period 6ns
 
 # 清理旧的编译缓存，防止遗留 obj 文件引发 multiple definition 错误
 file delete -force ${proj_name}/solution1/csim

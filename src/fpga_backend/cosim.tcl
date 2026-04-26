@@ -42,7 +42,7 @@ if {[string length $tb_files] > 0} {
 
 open_solution -reset "solution1"
 set_part xcu55c-fsvh2892-2L-e
-create_clock -period 5ns
+create_clock -period 6ns
 
 # 5. 先 C 综合生成 RTL，再协同仿真
 csynth_design

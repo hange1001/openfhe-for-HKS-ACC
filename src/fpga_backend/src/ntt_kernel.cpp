@@ -235,10 +235,11 @@ void Configurable_PE(
 
         res1 = (temp1 >> 1) + ((temp1 & 1) ? ((modulus + 1) >> 1) : 0);
 
-        // 在进入 MultMod 的 DSP 乘法链前打一拍，截断 AddMod→MultMod 长组合路径
-        #pragma HLS LATENCY min=1 max=2
-        
-        MultMod(res2_temp, twiddle_factor, modulus, M, K_HALF, temp);
+        // 用物理寄存器打拍替代 LATENCY 约束，截断 AddMod→MultMod 长组合路径
+        uint64_t mult_in = res2_temp;
+        #pragma HLS BIND_REGISTER variable=mult_in
+
+        MultMod(mult_in, twiddle_factor, modulus, M, K_HALF, temp);
 
         // INTT 结果除以 2（乘以 2 的逆元），同时处理奇数情况（模加上半模）
         res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);

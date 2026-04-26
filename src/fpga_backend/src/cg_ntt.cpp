@@ -57,6 +57,76 @@ void reshape_1d_to_2d(
 }
 
 // ============================================================
+// CG_PE：CG-NTT 专用蝶形单元
+//
+// 与 ntt_kernel.cpp 的 Configurable_PE 数学等价，但独立实现，避免跨文件调用、
+// 消除 HLS 在不同顶层模块间共享同一 PE 实例时的资源/时序耦合。
+//
+// NTT 蝶形（Cooley-Tukey）：
+//   t      = v * tf  mod q
+//   out_u  = (u + t) mod q
+//   out_v  = (u - t) mod q
+//
+// INTT 蝶形（Gentleman-Sande）+ /2：
+//   s      = (u + v) mod q
+//   d      = (u - v) mod q
+//   t      = d * tf  mod q
+//   out_u  = s / 2 mod q       （奇数则加 (q+1)/2）
+//   out_v  = t / 2 mod q
+// ============================================================
+static void CG_PE(
+    const uint64_t &input1,
+    const uint64_t &input2,
+    const uint64_t &twiddle_factor,
+    uint64_t &res1,
+    uint64_t &res2,
+    const uint64_t &modulus,
+    const uint64_t &K_HALF,
+    const uint64_t &M,
+    const bool &is_ntt
+) {
+    #pragma HLS INLINE
+    uint64_t temp, temp1;
+    uint64_t input1_temp = input1;
+    uint64_t input2_temp = input2;
+    uint64_t res1_temp, res2_temp;
+
+    if (is_ntt) {
+        MultMod(input2_temp, twiddle_factor, modulus, M, K_HALF, temp);
+
+        AddMod(input1_temp, temp, modulus, true);
+        res1_temp = input1_temp;
+
+        input1_temp = input1;
+        AddMod(input1_temp, temp, modulus, false);
+        res2_temp = input1_temp;
+
+        res1 = res1_temp;
+        res2 = res2_temp;
+    } else {
+        AddMod(input1_temp, input2_temp, modulus, true);
+        temp1 = input1_temp;
+
+        input1_temp = input1;
+        AddMod(input1_temp, input2_temp, modulus, false);
+        res2_temp = input1_temp;
+
+        res1 = (temp1 >> 1) + ((temp1 & 1) ? ((modulus + 1) >> 1) : 0);
+
+        // --- 强制打拍：虚拟加法器方案 ---
+        // 我们做一个 +0 的操作，并强制要求这个操作 latency=1
+        // 这会迫使 HLS 在 mult_in_reg 处插入真实的物理寄存器，切断 AddMod 的路径
+        uint64_t mult_in = res2_temp + 0;
+        #pragma HLS BIND_OP variable=mult_in op=add impl=fabric latency=1
+
+        MultMod(mult_in, twiddle_factor, modulus, M, K_HALF, temp);
+
+        // INTT 结果除以 2（乘以 2 的逆元），同时处理奇数情况（模加上半模）
+        res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);
+    }
+}
+
+// ============================================================
 // CG-NTT 输出重排：还原为标准 NTT 输出顺序
 //
 // CG-NTT 经过 STAGE 次 perfect shuffle 后，数据位于排列 perm[] 处。
@@ -161,10 +231,11 @@ void CG_NTT_Kernel(
             // 带宽核算：buf_A/buf_B cyclic factor=16 + ram_2p → 32 访问/周期，
             // 每迭代实际需 8 PE × (2 读 + 2 写) = 32 访问，刚好吻合，II=1 可行。
             #pragma HLS PIPELINE II=1
-            // 标准依赖声明：ping-pong 保证跨迭代对 buf_A/buf_B 无 RAW/WAW 冲突
-            #pragma HLS dependence variable=buf_A type=inter dependent=false direction=RAW
-            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=RAW
-            #pragma HLS dependence variable=buf_B type=inter dependent=false direction=WAW
+            // 解除 HLS 对 buf_A/buf_B 的假性依赖（ping-pong 保证跨迭代/迭代内均无地址冲突）
+            #pragma HLS DEPENDENCE variable=buf_A type=inter dependent=false
+            #pragma HLS DEPENDENCE variable=buf_B type=inter dependent=false
+            #pragma HLS DEPENDENCE variable=buf_A type=intra dependent=false
+            #pragma HLS DEPENDENCE variable=buf_B type=intra dependent=false
 
             PE_UNROLL:
             for (int p = 0; p < CG_PE_NUM; p++) {
@@ -199,9 +270,9 @@ void CG_NTT_Kernel(
                 // ② 顺序读取旋转因子（无运行时索引计算！）
                 uint64_t tf = cg_twiddle[actual_stage][global_i];
 
-                // ③ 蝶形运算（复用现有 Configurable_PE）
+                // ③ 蝶形运算（CG-NTT 专用 PE，与 NTT_Kernel 完全独立）
                 uint64_t out_u, out_v;
-                Configurable_PE(u, v, tf, out_u, out_v, modulus, K_HALF, M_barrett, is_ntt);
+                CG_PE(u, v, tf, out_u, out_v, modulus, K_HALF, M_barrett, is_ntt);
 
                 if (is_ntt) {
                     // NTT 写：完美洗牌 [2*global_i, 2*global_i + 1]

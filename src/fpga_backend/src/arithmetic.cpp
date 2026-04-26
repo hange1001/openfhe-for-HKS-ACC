@@ -1,27 +1,18 @@
 #include "../include/arithmetic.h"
 
-void AddMod(
-    uint64_t &a,
-    const uint64_t &b,
-    const uint64_t &mod,
-    const bool &is_add
-){
-    #pragma HLS INLINE
-    unsigned __int128 temp_res;
-    if (is_add) { 
-        temp_res = (unsigned __int128)a + b;
-        if (temp_res >= mod) {
-            temp_res -= mod;
-        }
-        a = (uint64_t)temp_res;
-    } 
-    else {
-        if (a >= b) {
-            a = a - b;
-        } else {
-            temp_res = (unsigned __int128)a + mod - b;
-            a = (uint64_t)temp_res;
-        }
+void AddMod(uint64_t &a, const uint64_t &b, const uint64_t &mod, const bool &is_add) {
+    #pragma HLS inline
+    if(is_add) {
+        uint64_t sum = a + b;
+        #pragma HLS bind_op variable=sum op=add impl=fabric latency=1
+        uint64_t sub = sum - mod;
+        a = (sum >= mod) ? sub : sum;
+    } else {
+        uint64_t diff = a - b;
+        #pragma HLS bind_op variable=diff op=sub impl=fabric latency=1
+        uint64_t add_mod = a + mod;
+        uint64_t diff_mod = add_mod - b;
+        a = (a >= b) ? diff : diff_mod;
     }
 }
 
@@ -64,6 +55,7 @@ void MultMod(
 ){
     #pragma HLS INLINE off
     #pragma HLS PIPELINE II=1
+    #pragma HLS LATENCY min=2
 
     if (mod == 0) {
         res_mod = 0;
@@ -97,19 +89,22 @@ void MultMod(
 
     res_mod = r;
 #else
-    // 1. 真实乘积（最高约 120-bit）
-    ap_uint<128> res_mult = (ap_uint<128>)a * b;
-    #pragma HLS BIND_OP variable=res_mult op=mul impl=dsp latency=4
+    // 1. 计算乘积
+    ap_uint<128> res_mult = (ap_uint<128>)a * (ap_uint<128>)b;
+    #pragma HLS bind_op variable=res_mult op=mul impl=dsp latency=4
 
-    ap_uint<64> res_mult_H = res_mult.range(127,64);
-    ap_uint<64> res_mult_L = res_mult.range(63,0);
+    // 2. 拆分高低 64 位
+    ap_uint<64> res_mult_H = (ap_uint<64>)(res_mult >> 64);
+    ap_uint<64> res_mult_L = (ap_uint<64>)(res_mult);
 
-    ap_uint<128> p_high = (ap_uint<128>)res_mult_H * m;
-    ap_uint<128> p_low  = (ap_uint<128>)res_mult_L * m;
+    // 3. 计算 p_high 和 p_low（使用 Barrett 预计算因子 m）
+    ap_uint<128> p_high = (ap_uint<128>)res_mult_H * (ap_uint<128>)m;
+    #pragma HLS bind_op variable=p_high op=mul impl=dsp latency=4
 
-    #pragma HLS BIND_OP variable=p_high op=mul impl=dsp latency=4
-    #pragma HLS BIND_OP variable=p_low op=mul impl=dsp latency=4
+    ap_uint<128> p_low = (ap_uint<128>)res_mult_L * (ap_uint<128>)m;
+    #pragma HLS bind_op variable=p_low op=mul impl=dsp latency=4
 
+    // 4. 计算 q_shifted（S 为总移位量）
     ap_uint<128> q_shifted = 0;
     if (S > 64) {
         q_shifted = (p_high >> (S - 64)) + (p_low >> S);
@@ -119,28 +114,29 @@ void MultMod(
         q_shifted = p_high + (p_low >> 64);
     }
 
-    // 在桶形移位+加法链与下一级 DSP 乘法之间再打一拍，
-    // 截断 shift→add→DSP 长组合路径
     ap_uint<128> q = q_shifted;
-    #pragma HLS LATENCY min=1 max=1
+    #pragma HLS bind_op variable=q_shifted op=add impl=fabric latency=1
 
+    // 5. 计算 q * mod
     ap_uint<128> q_times_mod = q * (ap_uint<128>)mod;
-    #pragma HLS BIND_OP variable=q_times_mod op=mul impl=dsp latency=4
+    #pragma HLS bind_op variable=q_times_mod op=mul impl=dsp latency=4
 
+    // 6. 强行给 128-bit 大减法打一拍解决时序
     ap_uint<128> r_full = res_mult - q_times_mod;
-    uint64_t r = (uint64_t)r_full;
+    #pragma HLS bind_op variable=r_full op=sub impl=fabric latency=2
 
-    // 强制在大减法后打一拍：截断 DSP 乘法链 → 后续条件减法进入新时钟周期
-    #pragma HLS LATENCY min=1 max=2
+    uint64_t r_stg1 = (uint64_t)r_full;
 
-    // 5. 校正（全精度下误差极小，最多 3 次）
-    if (r >= mod) { r -= mod; }
+    // 7. 第一次模校正，强制打拍
+    uint64_t sub1 = r_stg1 - mod;
+    #pragma HLS bind_op variable=sub1 op=sub impl=fabric latency=2
+    uint64_t r_stg2 = (r_stg1 >= mod) ? sub1 : r_stg1;
 
-    // 两次条件减之间再插一级寄存器：cmp→sub→cmp→sub 打成 2 段
-    #pragma HLS LATENCY min=1 max=1
+    // 8. 第二次模校正，强制打拍
+    uint64_t sub2 = r_stg2 - mod;
+    #pragma HLS bind_op variable=sub2 op=sub impl=fabric latency=2
+    uint64_t r_stg3 = (r_stg2 >= mod) ? sub2 : r_stg2;
 
-    if (r >= mod) { r -= mod; }
-
-    res_mod = r;
+    res_mod = r_stg3;
 #endif
 }
