@@ -104,18 +104,26 @@ void MultMod(
     ap_uint<128> p_low = (ap_uint<128>)res_mult_L * (ap_uint<128>)m;
     #pragma HLS bind_op variable=p_low op=mul impl=dsp latency=4
 
-    // 4. 计算 q_shifted（S 为总移位量）
-    ap_uint<128> q_shifted = 0;
-    if (S > 64) {
-        q_shifted = (p_high >> (S - 64)) + (p_low >> S);
-    } else if (S < 64) {
-        q_shifted = (p_high << (64 - S)) + (p_low >> S);
-    } else {
-        q_shifted = p_high + (p_low >> 64);
+    // 4. 计算 q（S = bitwidth(mod) + 62）
+    //    S 按 case 离散化：每个 case 内移位量为编译期常数，HLS 综合为硬连线，
+    //    彻底消除 128-bit 动态桶形移位器。default 分支保留通用兜底。
+    //    OpenFHE 常用模数位宽：60-bit → S=122，61-bit → S=123，59-bit → S=121
+    ap_uint<128> shift_high = 0;
+    ap_uint<128> shift_low  = 0;
+    switch (S) {
+        case 122: shift_high = p_high >> 58;  shift_low = p_low >> 122; break; // 60-bit mod
+        case 123: shift_high = p_high >> 59;  shift_low = p_low >> 123; break; // 61-bit mod
+        case 121: shift_high = p_high >> 57;  shift_low = p_low >> 121; break; // 59-bit mod
+        case 120: shift_high = p_high >> 56;  shift_low = p_low >> 120; break; // 58-bit mod
+        case 112: shift_high = p_high >> 48;  shift_low = p_low >> 112; break; // 50-bit mod
+        default:
+            if      (S > 64) { shift_high = p_high >> (S - 64); shift_low = p_low >> S; }
+            else if (S < 64) { shift_high = p_high << (64 - S); shift_low = p_low >> S; }
+            else             { shift_high = p_high;              shift_low = p_low >> 64; }
+            break;
     }
 
-    ap_uint<128> q = q_shifted;
-    #pragma HLS bind_op variable=q_shifted op=add impl=fabric latency=1
+    ap_uint<128> q = shift_high + shift_low;
 
     // 5. 计算 q * mod
     ap_uint<128> q_times_mod = q * (ap_uint<128>)mod;

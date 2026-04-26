@@ -31,6 +31,7 @@ foreach file $src_files {
 open_solution "solution1"
 set_part xcu55c-fsvh2892-2L-e
 create_clock -period 6ns
+set_clock_uncertainty 0.75ns
 
 # 开启全局 AXI 位宽自动拓宽，上限 512 bit（Alveo U55C 原生宽度）
 config_interface -m_axi_max_widen_bitwidth 512

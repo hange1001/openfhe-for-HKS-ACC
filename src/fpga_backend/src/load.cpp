@@ -30,11 +30,11 @@ void Store(
     #pragma HLS INLINE off
 
     for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
-        // #pragma HLS UNROLL
-        STORE_ROW: 
+        STORE_ROW:
         for (int i = 0; i < SQRT; i++) {
-            STORE_COL: 
+            STORE_COL:
             for (int j = 0; j < SQRT; j++) {
+                #pragma HLS PIPELINE II=1
                 mem_out[ (l - mod_index) * RING_DIM + i * SQRT + j] = buffer[l][i][j];
             }
         }

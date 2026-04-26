@@ -38,25 +38,18 @@ static const int PACKED_TW_SIZE  = (STAGE * CG_HALF_N) / PACK_RATIO; // 3072
 // =========================================================
 // 核心：单 limb CG-NTT / INTT
 // =========================================================
-// 参数：
-//   in_data        [RING_DIM]          - 输入多项式系数（1D 平铺），原位修改
-//   modulus                            - 模数 p
-//   K_HALF                             - Barrett 参数 k（比特宽度）
-//   M_barrett                          - Barrett 参数 M
-//   cg_twiddle     [STAGE][CG_HALF_N]  - 预计算的 CG 旋转因子表
-//                                        cg_twiddle[s][i] = stage s、蝶形位置 i 处实际使用的 TF
-//   is_ntt                             - true=正向 NTT，false=逆向 INTT
-extern "C" {
-    void CG_NTT_Kernel(
-        const uint64_t in_data[RING_DIM],
-        uint64_t out_data[RING_DIM],
-        const uint64_t modulus,
-        const uint64_t K_HALF,
-        const uint64_t M_barrett,
-        const uint64_t cg_twiddle[STAGE][CG_HALF_N],
-        bool is_ntt
-    );
-}
+// IS_NTT = true  → 正向 NTT（Cooley-Tukey）
+// IS_NTT = false → 逆向 INTT（Gentleman-Sande）
+// 编译期常量消除 BUTTERFLY_LOOP 内的 is_ntt 分支，II: 4路→2路
+template <bool IS_NTT>
+void CG_NTT_Kernel(
+    const uint64_t in_data[RING_DIM],
+    uint64_t out_data[RING_DIM],
+    const uint64_t modulus,
+    const uint64_t K_HALF,
+    const uint64_t M_barrett,
+    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+);
 
 // =========================================================
 // 多 limb 包装器

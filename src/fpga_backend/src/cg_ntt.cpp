@@ -167,16 +167,18 @@ void cg_ntt_reorder(uint64_t data[RING_DIM]) {
 
 // ============================================================
 // CG_NTT_Kernel：单 limb CG-NTT / INTT 核心
+// IS_NTT 为编译期常量，HLS 在每个实例中消除死分支，
+// BUTTERFLY_LOOP 内 4-way select 降为 2-way（stage & 1）。
 // ============================================================
 
+template <bool IS_NTT>
 void CG_NTT_Kernel(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],
     const uint64_t modulus,
     const uint64_t K_HALF,
     const uint64_t M_barrett,
-    const uint64_t cg_twiddle[STAGE][CG_HALF_N],
-    bool is_ntt
+    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
 ) {
     // ============================================================
     // 乒乓缓冲：消除 RAW 依赖
@@ -186,8 +188,8 @@ void CG_NTT_Kernel(
     uint64_t buf_A[RING_DIM];
     uint64_t buf_B[RING_DIM];
 
-    #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=16 dim=1
-    #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=16 dim=1
+    #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=8 dim=1
+    #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=8 dim=1
     #pragma HLS BIND_STORAGE variable=buf_A type=ram_2p impl=bram
     #pragma HLS BIND_STORAGE variable=buf_B type=ram_2p impl=bram
 
@@ -224,7 +226,7 @@ void CG_NTT_Kernel(
         #pragma HLS LOOP_FLATTEN off
 
         // NTT 正序（0,1,...,11），INTT 逆序（11,10,...,0）
-        int actual_stage = is_ntt ? stage : (STAGE - 1 - stage);
+        int actual_stage = IS_NTT ? stage : (STAGE - 1 - stage);
 
         BUTTERFLY_LOOP:
         for (int i = 0; i < CG_HALF_N / CG_PE_NUM; i++) {
@@ -244,7 +246,7 @@ void CG_NTT_Kernel(
                 int global_i = i * CG_PE_NUM + p;  // 0 ~ CG_HALF_N-1
 
                 uint64_t u, v;
-                if (is_ntt) {
+                if (IS_NTT) {
                     // NTT 读：固定跨度 [global_i, global_i + N/2]
                     if ((stage & 1) == 0) {
                         u = buf_A[global_i];
@@ -272,9 +274,9 @@ void CG_NTT_Kernel(
 
                 // ③ 蝶形运算（CG-NTT 专用 PE，与 NTT_Kernel 完全独立）
                 uint64_t out_u, out_v;
-                CG_PE(u, v, tf, out_u, out_v, modulus, K_HALF, M_barrett, is_ntt);
+                CG_PE(u, v, tf, out_u, out_v, modulus, K_HALF, M_barrett, IS_NTT);
 
-                if (is_ntt) {
+                if (IS_NTT) {
                     // NTT 写：完美洗牌 [2*global_i, 2*global_i + 1]
                     if ((stage & 1) == 0) {
                         buf_B[2 * global_i]     = out_u;
@@ -409,15 +411,25 @@ void Compute_CG_NTT(
         }
 
         // 计算（全部在片上 BRAM 完成）
-        CG_NTT_Kernel(
-            local_in_data,
-            local_out_data,
-            modulus[l],
-            K_HALF[l],
-            M_barrett[l],
-            local_twiddle,
-            is_ntt
-        );
+        if (is_ntt) {
+            CG_NTT_Kernel<true>(
+                local_in_data,
+                local_out_data,
+                modulus[l],
+                K_HALF[l],
+                M_barrett[l],
+                local_twiddle
+            );
+        } else {
+            CG_NTT_Kernel<false>(
+                local_in_data,
+                local_out_data,
+                modulus[l],
+                K_HALF[l],
+                M_barrett[l],
+                local_twiddle
+            );
+        }
 
         // 512-bit burst 写回 local_out_data → in_data
         STORE_OUT:
@@ -432,3 +444,25 @@ void Compute_CG_NTT(
         }
     }
 }
+
+// ============================================================
+// 显式实例化：强制编译器生成两个独立 RTL 模块
+// 必须在 .cpp 末尾声明，否则 top.cpp 链接时报 undefined reference
+// ============================================================
+template void CG_NTT_Kernel<true>(
+    const uint64_t in_data[RING_DIM],
+    uint64_t out_data[RING_DIM],
+    const uint64_t modulus,
+    const uint64_t K_HALF,
+    const uint64_t M_barrett,
+    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+);
+
+template void CG_NTT_Kernel<false>(
+    const uint64_t in_data[RING_DIM],
+    uint64_t out_data[RING_DIM],
+    const uint64_t modulus,
+    const uint64_t K_HALF,
+    const uint64_t M_barrett,
+    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+);

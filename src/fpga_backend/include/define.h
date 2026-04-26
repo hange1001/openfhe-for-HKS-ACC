@@ -30,7 +30,7 @@ static const int BU_NUM = 32;
 
 // PE 并行度：UNROLL factor / cyclic partition factor / Twiddle 副本数
 // 所有 ARRAY_PARTITION cyclic factor 和 UNROLL factor 统一引用此常量
-static const int PE_PARALLEL = 8;
+static const int PE_PARALLEL = 4;
 
 
 // 维度定义
