@@ -31,6 +31,32 @@
 #include "../include/cg_ntt.h"
 
 // ------------------------------------------------------------
+// Co-Sim buffer depths — must match 'depth=' in top.cpp m_axi pragmas.
+// wrapc copies exactly this many elements from the pointer on each call,
+// so every Top() invocation must pass buffers of at least this size.
+// ------------------------------------------------------------
+static const int COSIM_D_IN1 = LIMB_Q * 3 + MAX_LIMBS * STAGE * CG_HALF_N; // 196617
+static const int COSIM_D_IN2 = LIMB_P * 3 + MAX_LIMBS * STAGE * CG_HALF_N; // 196614
+static const int COSIM_D_OUT = MAX_LIMBS * RING_DIM;                         // 32768
+
+static uint64_t g_buf_in1[COSIM_D_IN1];
+static uint64_t g_buf_in2[COSIM_D_IN2];
+static uint64_t g_buf_out[COSIM_D_OUT];
+
+static void TopSim(
+    const uint64_t *in1, int n_in1,
+    const uint64_t *in2, int n_in2,
+    uint64_t *out, int n_out,
+    uint8_t opcode, int num_active_limbs, int mod_index
+) {
+    memcpy(g_buf_in1, in1, n_in1 * sizeof(uint64_t));
+    memcpy(g_buf_in2, in2, n_in2 * sizeof(uint64_t));
+    memset(g_buf_out, 0, sizeof(g_buf_out));
+    Top(g_buf_in1, g_buf_in2, g_buf_out, opcode, num_active_limbs, mod_index);
+    memcpy(out, g_buf_out, n_out * sizeof(uint64_t));
+}
+
+// ------------------------------------------------------------
 // 测试计数
 // ------------------------------------------------------------
 static int g_total  = 0;
@@ -157,8 +183,9 @@ static void do_init(uint64_t MOD, uint64_t K_HALF, uint64_t M_barrett,
         }
     }
 
-    Top(in1.data(), in2.data(), out_dummy.data(),
-        OP_INIT, /*num_active_limbs=*/0, /*mod_index=*/0);
+    TopSim(in1.data(), (int)in1.size(), in2.data(), (int)in2.size(),
+           out_dummy.data(), (int)out_dummy.size(),
+           OP_INIT, 0, 0);
 }
 
 // ------------------------------------------------------------
@@ -192,7 +219,7 @@ static void test_add(uint64_t MOD, int num_limbs, int mod_index) {
     random_fill(a.data(), N, MOD, 0xA11);
     random_fill(b.data(), N, MOD, 0xB22);
 
-    Top(a.data(), b.data(), out.data(), OP_ADD, num_limbs, mod_index);
+    TopSim(a.data(), N, b.data(), N, out.data(), N, OP_ADD, num_limbs, mod_index);
 
     bool ok = true;
     int bad = 0;
@@ -218,7 +245,7 @@ static void test_sub(uint64_t MOD, int num_limbs, int mod_index) {
     random_fill(a.data(), N, MOD, 0xC33);
     random_fill(b.data(), N, MOD, 0xD44);
 
-    Top(a.data(), b.data(), out.data(), OP_SUB, num_limbs, mod_index);
+    TopSim(a.data(), N, b.data(), N, out.data(), N, OP_SUB, num_limbs, mod_index);
 
     bool ok = true;
     int bad = 0;
@@ -244,7 +271,7 @@ static void test_mult(uint64_t MOD, int num_limbs, int mod_index) {
     random_fill(a.data(), N, MOD, 0xE55);
     random_fill(b.data(), N, MOD, 0xF66);
 
-    Top(a.data(), b.data(), out.data(), OP_MULT, num_limbs, mod_index);
+    TopSim(a.data(), N, b.data(), N, out.data(), N, OP_MULT, num_limbs, mod_index);
 
     bool ok = true;
     int bad = 0;
@@ -270,13 +297,13 @@ static void test_ntt_intt_roundtrip(uint64_t MOD, int num_limbs, int mod_index) 
     random_fill(in.data(), N, MOD, 0x1234);
 
     // Forward
-    Top(in.data(), dummy.data(), ntt_out.data(), OP_NTT, num_limbs, mod_index);
+    TopSim(in.data(), N, dummy.data(), N, ntt_out.data(), N, OP_NTT, num_limbs, mod_index);
     bool changed = false;
     for (int i = 0; i < N; i++) if (ntt_out[i] != in[i]) { changed = true; break; }
     check(changed, "OP_NTT 产生变换（输出 ≠ 输入）");
 
     // Inverse
-    Top(ntt_out.data(), dummy.data(), back.data(), OP_INTT, num_limbs, mod_index);
+    TopSim(ntt_out.data(), N, dummy.data(), N, back.data(), N, OP_INTT, num_limbs, mod_index);
 
     bool ok = true;
     int bad = 0;
@@ -322,8 +349,8 @@ static void test_auto_roundtrip(uint64_t MOD, int num_limbs, int mod_index) {
     std::vector<uint64_t> params_fwd = { k, kinv };
     std::vector<uint64_t> params_inv = { kinv, k };
 
-    Top(in.data(),  params_fwd.data(), mid.data(),  OP_AUTO, num_limbs, mod_index);
-    Top(mid.data(), params_inv.data(), back.data(), OP_AUTO, num_limbs, mod_index);
+    TopSim(in.data(),  N, params_fwd.data(), (int)params_fwd.size(), mid.data(),  N, OP_AUTO, num_limbs, mod_index);
+    TopSim(mid.data(), N, params_inv.data(), (int)params_inv.size(), back.data(), N, OP_AUTO, num_limbs, mod_index);
 
     bool ok = true;
     int bad = 0;
@@ -389,7 +416,8 @@ static void test_bconv(uint64_t q_mod, int sizeP, unsigned seed) {
 
     // 调用 Top (num_active_limbs = sizeP)
     std::vector<uint64_t> mem_out(sizeP * RING_DIM, 0);
-    Top(mem_in1.data(), mem_in2.data(), mem_out.data(), OP_BCONV, sizeP, 0);
+    TopSim(mem_in1.data(), (int)mem_in1.size(), mem_in2.data(), (int)mem_in2.size(),
+           mem_out.data(), (int)mem_out.size(), OP_BCONV, sizeP, 0);
 
     // 软件黄金参考
     bool ok = true;

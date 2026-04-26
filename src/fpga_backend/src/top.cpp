@@ -46,9 +46,12 @@ void Top(
     const int mod_index
 ){
 
-    #pragma HLS INTERFACE m_axi port=mem_in1  offset=slave bundle=gmem0
-    #pragma HLS INTERFACE m_axi port=mem_in2  offset=slave bundle=gmem1
-    #pragma HLS INTERFACE m_axi port=mem_out  offset=slave bundle=gmem2
+    // depth = max elements accessed per call:
+    //   mem_in1/2: OP_INIT loads NTT/INTT twiddles = 3 + MAX_LIMBS*STAGE*CG_HALF_N = 196617
+    //   mem_out:   MAX_LIMBS * RING_DIM = 32768
+    #pragma HLS INTERFACE m_axi port=mem_in1  offset=slave bundle=gmem0 depth=196617
+    #pragma HLS INTERFACE m_axi port=mem_in2  offset=slave bundle=gmem1 depth=196614
+    #pragma HLS INTERFACE m_axi port=mem_out  offset=slave bundle=gmem2 depth=32768
 
     #pragma HLS INTERFACE s_axilite port=mem_in1  bundle=control
     #pragma HLS INTERFACE s_axilite port=mem_in2  bundle=control
