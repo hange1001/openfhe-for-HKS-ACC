@@ -7,8 +7,10 @@
 # ===================================================================
 
 # # --- 1. 基础配置 ---
-# PLATFORM ?= xilinx_u55c_gen3x16_xdma_3_202210_1
+# PLATFORM ?= xilinx_u55c_gen3x16_xdma_4_1_202310_1
 # HLS_PART := xcu55c-fsvh2892-2L-e 
+
+# PLATFORM ?= xilinx_u55c_gen3x16_xdma_3_202210_1
 
 PLATFORM ?= xilinx_u250_gen3x16_xdma_4_1_202210_1
 # U250 旧平台配置，已改为 U55C
@@ -18,6 +20,7 @@ TARGET   ?= hw
 # 目录设置
 SRC_DIR    := ./src
 INC_DIR    := ./include
+BUILD_DIR  := ./build/$(TARGET)
 
 # 源文件定义 (主要用于 Vitis Flow 打包，HLS Flow 依赖你的 TCL 脚本配置)
 KERNEL_SRC := $(SRC_DIR)/top.cpp 
@@ -53,8 +56,9 @@ VPP       := v++
 VITIS_HLS := vitis_hls
 
 # --- 输出产物 ---
-XCLBIN   := fhe_kernels_$(TARGET).xclbin
-HOST_LIB := libfpga_backend.a
+XCLBIN   := $(BUILD_DIR)/fhe_kernels_$(TARGET).xclbin
+XO_FILE  := $(BUILD_DIR)/temp.xo
+HOST_LIB := $(BUILD_DIR)/libfpga_backend.a
 
 # 编译选项
 CXXFLAGS := -std=c++17 -O3 -g -Wall -DOPENFHE_FPGA_ENABLE -fPIC
@@ -63,7 +67,7 @@ CXXFLAGS += -I$(INC_DIR) $(OPENFHE_INC) $(XRT_INC)
 # Kernel 编译选项 (Vitis Flow)
 VPP_FLAGS := -t $(TARGET) --platform $(PLATFORM) --save-temps
 VPP_FLAGS += -I$(INC_DIR) -I$(SRC_DIR)
-VPP_FLAGS += --config connectivity.ini  # HBM 连接配置，需根据实际平台调整
+# VPP_FLAGS += --config connectivity.ini  # HBM 连接配置，需根据实际平台调整
 
 # ===================================================================
 # 2. 构建规则 (Vitis Flow - 保持不变)
@@ -71,23 +75,26 @@ VPP_FLAGS += --config connectivity.ini  # HBM 连接配置，需根据实际平�
 
 REPORTS_OUT := ../../docs/reports/bconv
 
-.PHONY: all clean emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto report report_all
+.PHONY: all clean clean_all emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto report report_all
 
-all: $(HOST_LIB) $(XCLBIN) emconfig
+all: $(BUILD_DIR) $(HOST_LIB) $(XCLBIN) emconfig
 
 # --- 2.1 Host Library ---
-$(HOST_LIB):
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(HOST_LIB): $(BUILD_DIR)
 	@echo "-> Building Host Library placeholder..."
 	touch $@
 
 # --- 2.2 FPGA Kernel (.xclbin) ---
 xclbin: $(XCLBIN)
 
-temp.xo: $(KERNEL_SRC)
+$(XO_FILE): $(KERNEL_SRC) | $(BUILD_DIR)
 	@echo "-> Synthesizing Kernel (Vitis HLS)..."
 	$(VPP) -c $(VPP_FLAGS) -k $(KERNEL_NAME) -o $@ $^
 
-$(XCLBIN): temp.xo
+$(XCLBIN): $(XO_FILE)
 	@echo "-> Linking Kernel (Vitis Link)..."
 	$(VPP) -l $(VPP_FLAGS) -o $@ $^
 
@@ -246,11 +253,16 @@ report_all:
 # 5. 清理
 # ===================================================================
 clean:
-	@echo "-> Cleaning local build artifacts..."
-	rm -rf $(XCLBIN) $(HOST_LIB) temp.xo emconfig.json .Xil .run *.log *.jou
+	@echo "-> Cleaning build artifacts for TARGET=$(TARGET)..."
+	rm -rf $(BUILD_DIR) emconfig.json .Xil .run *.log *.jou
 
 	@echo "-> Cleaning Vitis/VPP cache..."
 	rm -rf _x v++_*_backup.log
 
 	@echo "-> Cleaning HLS projects..."
+	rm -rf hls_prj_* Solution Solution_* vitis_hls.log
+
+clean_all:
+	@echo "-> Cleaning all build targets..."
+	rm -rf ./build emconfig.json .Xil .run *.log *.jou _x v++_*_backup.log
 	rm -rf hls_prj_* Solution Solution_* vitis_hls.log

@@ -1,4 +1,5 @@
 #include "../include/bconv_systolic.h"
+#include "../include/arithmetic.h"
 #include <hls_stream.h>
 
 static const int TOTAL_CYCLES = LIMB_Q + RING_DIM + MAX_OUT_COLS - 1;
@@ -19,15 +20,19 @@ static void bconv_systolic_core(
     uint64_t out_x[MAX_OUT_COLS][RING_DIM],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
+    const uint64_t out_S[MAX_OUT_COLS],
+    const uint64_t out_m_barrett[MAX_OUT_COLS],
     int sizeP
 ) {
     #pragma HLS INLINE
 
-    #pragma HLS ARRAY_PARTITION variable=in_w    complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=out_mod complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=in_w          complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out_mod       complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out_S         complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out_m_barrett complete dim=0
 
-    ap_uint<64>  x_reg  [LIMB_Q]      [MAX_OUT_COLS + 1];
-    ap_uint<128> sum_reg[MAX_OUT_COLS] [LIMB_Q + 1];
+    ap_uint<64> x_reg  [LIMB_Q]      [MAX_OUT_COLS + 1];
+    uint64_t    sum_reg[MAX_OUT_COLS] [LIMB_Q + 1];
     #pragma HLS ARRAY_PARTITION variable=x_reg   complete dim=0
     #pragma HLS ARRAY_PARTITION variable=sum_reg complete dim=0
 
@@ -50,8 +55,8 @@ static void bconv_systolic_core(
     Systolic_Loop: for (int t = 0; t < TOTAL_CYCLES; ++t) {
     #pragma HLS PIPELINE II=1
 
-        ap_uint<64>  x_curr  [LIMB_Q]      [MAX_OUT_COLS + 1];
-        ap_uint<128> sum_curr[MAX_OUT_COLS] [LIMB_Q + 1];
+        ap_uint<64> x_curr  [LIMB_Q]      [MAX_OUT_COLS + 1];
+        uint64_t    sum_curr[MAX_OUT_COLS] [LIMB_Q + 1];
         #pragma HLS ARRAY_PARTITION variable=x_curr   complete dim=0
         #pragma HLS ARRAY_PARTITION variable=sum_curr complete dim=0
 
@@ -88,20 +93,19 @@ static void bconv_systolic_core(
         #pragma HLS UNROLL
             PE_Col: for (int p = 0; p < MAX_OUT_COLS; ++p) {
             #pragma HLS UNROLL
-                ap_uint<64>  x_in   = x_curr[q][p];
-                ap_uint<128> sum_in = sum_curr[p][q];
-                ap_uint<64>  mod_p  = out_mod[p];
+                uint64_t x_in    = (uint64_t)x_curr[q][p];
+                uint64_t sum_in  = sum_curr[p][q];
+                uint64_t mod_p   = out_mod[p];
 
-                // 守卫零模数（非活跃列 out_mod 可能为 0）
-                ap_uint<128> prod    = (mod_p > 0)
-                    ? (ap_uint<128>)(((ap_uint<128>)x_in * (ap_uint<128>)in_w[q][p]) % mod_p)
-                    : (ap_uint<128>)0;
-                ap_uint<128> sum_out = (mod_p > 0)
-                    ? (ap_uint<128>)((sum_in + prod) % mod_p)
-                    : (ap_uint<128>)0;
+                uint64_t prod = 0;
+                MultMod(x_in, in_w[q][p], mod_p, out_m_barrett[p], out_S[p], prod);
 
-                x_reg[q][p + 1]    = x_in;
-                sum_reg[p][q + 1]  = sum_out;
+                // prod < mod_p，sum_in < mod_p → 和至多 2*mod_p，一次条件减即可
+                uint64_t sum_out = sum_in + prod;
+                if (sum_out >= mod_p) sum_out -= mod_p;
+
+                x_reg[q][p + 1]   = x_in;
+                sum_reg[p][q + 1] = sum_out;
             }
         }
 
@@ -110,7 +114,7 @@ static void bconv_systolic_core(
         #pragma HLS UNROLL
             int out_idx = t - (LIMB_Q + p);
             if (p < sizeP && out_idx >= 0 && out_idx < RING_DIM) {
-                out_x[p][out_idx] = (uint64_t)sum_reg[p][LIMB_Q];
+                out_x[p][out_idx] = sum_reg[p][LIMB_Q];
             }
         }
     }
@@ -123,6 +127,8 @@ void Compute_BConv_Systolic(
     uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
+    const uint64_t out_S[MAX_OUT_COLS],
+    const uint64_t out_m_barrett[MAX_OUT_COLS],
     int sizeP
 ) {
     // in_x 其实是 top.cpp 里的片上 poly_buffer（BRAM），不是 DDR。
@@ -147,8 +153,12 @@ void Compute_BConv_Systolic(
 
     uint64_t local_w  [LIMB_Q][MAX_OUT_COLS];
     uint64_t local_mod[MAX_OUT_COLS];
-    #pragma HLS ARRAY_PARTITION variable=local_w   complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=local_mod complete dim=0
+    uint64_t local_S  [MAX_OUT_COLS];
+    uint64_t local_m_barrett[MAX_OUT_COLS];
+    #pragma HLS ARRAY_PARTITION variable=local_w          complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_mod        complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_S          complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_m_barrett  complete dim=0
 
     Load_W: for (int q = 0; q < LIMB_Q; ++q) {
         for (int p = 0; p < MAX_OUT_COLS; ++p) {
@@ -159,7 +169,9 @@ void Compute_BConv_Systolic(
 
     Load_Mod: for (int p = 0; p < MAX_OUT_COLS; ++p) {
         #pragma HLS PIPELINE II=1
-        local_mod[p] = out_mod[p];
+        local_mod[p]        = out_mod[p];
+        local_S[p]          = out_S[p];
+        local_m_barrett[p]  = out_m_barrett[p];
     }
 
     // Load_X: in_x 的 dim=3 已 8 路划分，idx & SQRT_MASK 正好落在 8 个独立 bank
@@ -174,7 +186,7 @@ void Compute_BConv_Systolic(
         }
     }
 
-    bconv_systolic_core(local_in_x, local_out_x, local_w, local_mod, sizeP);
+    bconv_systolic_core(local_in_x, local_out_x, local_w, local_mod, local_S, local_m_barrett, sizeP);
 
     // Store_X: 同样走 8 端口并行写回
     Store_X: for (int p = 0; p < sizeP; ++p) {

@@ -80,13 +80,26 @@ static int compare_results(
 }
 
 // ---------------------------------------------------------------------------
+// Barrett 常数计算（匹配 MultMod 约定: S = bitwidth(mod) + 62）
+// ---------------------------------------------------------------------------
+static uint64_t barrett_compute(uint64_t mod, uint64_t &S_out) {
+    int bw = 0;
+    for (uint64_t v = mod; v > 0; v >>= 1) ++bw;
+    S_out = (uint64_t)(bw + 62);
+    unsigned __int128 two_S = (unsigned __int128)1 << S_out;
+    return (uint64_t)(two_S / (unsigned __int128)mod);
+}
+
+// ---------------------------------------------------------------------------
 // 测试辅助结构
 // ---------------------------------------------------------------------------
 struct TestArrays {
     uint64_t (*in_x)[SQRT][SQRT];
     uint64_t (*golden)[SQRT][SQRT];
-    uint64_t in_w    [LIMB_Q]      [MAX_OUT_COLS];
-    uint64_t out_mod [MAX_OUT_COLS];
+    uint64_t in_w        [LIMB_Q]      [MAX_OUT_COLS];
+    uint64_t out_mod     [MAX_OUT_COLS];
+    uint64_t out_S       [MAX_OUT_COLS];
+    uint64_t out_m_barrett[MAX_OUT_COLS];
 
     TestArrays() {
         in_x   = new uint64_t[MAX_LIMBS]    [SQRT][SQRT];
@@ -97,16 +110,21 @@ struct TestArrays {
         delete[] golden;
     }
     void clear() {
-        memset(in_x,   0, sizeof(uint64_t) * MAX_LIMBS    * SQRT * SQRT);
-        memset(golden, 0, sizeof(uint64_t) * MAX_OUT_COLS * SQRT * SQRT);
-        memset(in_w,   0, sizeof(in_w));
-        memset(out_mod, 0, sizeof(out_mod));
+        memset(in_x,        0, sizeof(uint64_t) * MAX_LIMBS    * SQRT * SQRT);
+        memset(golden,      0, sizeof(uint64_t) * MAX_OUT_COLS * SQRT * SQRT);
+        memset(in_w,        0, sizeof(in_w));
+        memset(out_mod,     0, sizeof(out_mod));
+        memset(out_S,       0, sizeof(out_S));
+        memset(out_m_barrett, 0, sizeof(out_m_barrett));
     }
-    void set_mod(int p, uint64_t mod) { out_mod[p] = mod; }
+    void set_mod(int p, uint64_t mod) {
+        out_mod[p]      = mod;
+        out_m_barrett[p] = barrett_compute(mod, out_S[p]);
+    }
 
     int run_and_compare(int sizeP, const string &name) {
         golden_bconv(in_x, in_w, out_mod, sizeP, golden);
-        Compute_BConv_Systolic(in_x, in_w, out_mod, sizeP);
+        Compute_BConv_Systolic(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
         return compare_results(in_x, golden, sizeP, name);
     }
 };

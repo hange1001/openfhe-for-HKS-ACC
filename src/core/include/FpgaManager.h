@@ -59,15 +59,15 @@
 #define CG_TF_SIZE (STAGE_NUM * CG_HALF_N)      // 12 * 2048 = 24576
 
 inline std::string GetXclbinPath() {
+    const char* env_path = std::getenv("XCLBIN_PATH");
+    if (env_path) return std::string(env_path);
+
     const char* mode = std::getenv("XCL_EMULATION_MODE");
-    std::string base = "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/";
-    if (mode && std::string(mode) == "sw_emu") 
-        return base + "fhe_kernels_sw_emu.xclbin";
-    else if (mode && std::string(mode) == "hw_emu") 
-        return base + "fhe_kernels_hw_emu.xclbin";
-    else if (mode && std::string(mode) == "hw") 
-        return base + "fhe_kernels_hw.xclbin";
-    else return base + "fhe_kernels_sw_emu.xclbin";
+    std::string base = "/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/build/";
+    std::string target = (mode && std::string(mode) == "hw_emu") ? "hw_emu"
+                       : (mode && std::string(mode) == "hw")     ? "hw"
+                       :                                           "sw_emu";
+    return base + target + "/fhe_kernels_" + target + ".xclbin";
 }
 
 // =============================================================
@@ -373,15 +373,15 @@ public:
             bo_in1.write(in1);
             bo_in1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
-            xrt::bo bo_in2;
-            if (in2 && in2 != in1) {
-                size_t in2_size_bytes = size_bytes;
-                bo_in2 = xrt::bo(m_device, in2_size_bytes, m_kernel_top.group_id(1));
+            // Always allocate bo_in2 in group_id(1) (HBM[1]) to match connectivity.ini.
+            // Reusing bo_in1 (HBM[0]) causes a bank mismatch and XRT execution failure.
+            auto bo_in2 = xrt::bo(m_device, size_bytes, m_kernel_top.group_id(1));
+            if (in2) {
                 bo_in2.write(in2);
-                bo_in2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-            } else { 
-                bo_in2 = bo_in1; 
+            } else {
+                bo_in2.write(in1);  // NTT/INTT: kernel ignores in2, but buffer must be valid
             }
+            bo_in2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
             auto run = m_kernel_top(bo_in1, bo_in2, bo_out, opcode, num_limbs, mod_idx);
             run.wait();

@@ -193,6 +193,9 @@ void CG_NTT_Kernel(
                     }
                 }
 
+                // 这将彻底斩断 16x16 交叉开关 到 DSP 乘法器 之间的致命走线约束。
+                #pragma HLS LATENCY min=1 max=1
+
                 // ② 顺序读取旋转因子（无运行时索引计算！）
                 uint64_t tf = cg_twiddle[actual_stage][global_i];
 

@@ -9,6 +9,7 @@
 //   Test 4 - OP_MULT：多 limb 逐元素 Barrett 模乘
 //   Test 5 - OP_NTT → OP_INTT 往返恢复（单 limb + 多 limb）
 //   Test 6 - OP_AUTO：k 与 kinv 两次 automorphism 还原
+//   Test 7 - OP_BCONV：BConv Q→P（sizeP=LIMB_P 与 sizeP=MAX_OUT_COLS）
 //
 // 说明：
 //   - Top 函数内部维护 static MODULUS/K_HALF/M/NTTTwiddleFactor 等全局表，
@@ -337,6 +338,81 @@ static void test_auto_roundtrip(uint64_t MOD, int num_limbs, int mod_index) {
 }
 
 // ------------------------------------------------------------
+// Test 7 — OP_BCONV：Q→P 基转换
+//
+// mem_in1 布局: [LIMB_Q × RING_DIM]  (Q limbs, 平铺)
+// mem_in2 布局: [LIMB_Q × MAX_OUT_COLS  weights]
+//              [MAX_OUT_COLS  out_mod]
+//              [MAX_OUT_COLS  out_S]
+//              [MAX_OUT_COLS  out_m_barrett]
+// mem_out 布局: [sizeP × RING_DIM]   (P limbs, 平铺)
+// ------------------------------------------------------------
+static void test_bconv(uint64_t q_mod, int sizeP, unsigned seed) {
+    std::cout << "\n[Test 7] OP_BCONV Q→P (sizeP=" << sizeP
+              << ", seed=0x" << std::hex << seed << std::dec << ")\n";
+
+    // P 输出列的素数模数（取 MAX_OUT_COLS 个，只使用前 sizeP 个）
+    static const uint64_t P_MODS[MAX_OUT_COLS] = {
+        998244353ULL, 786433ULL, 469762049ULL, 167772161ULL, 1004535809ULL,
+    };
+
+    // 随机生成输入与权重
+    std::mt19937_64 rng(seed);
+    std::vector<uint64_t> mem_in1(LIMB_Q * RING_DIM);
+    for (auto &v : mem_in1) v = rng() % q_mod;
+
+    uint64_t in_w[LIMB_Q][MAX_OUT_COLS];
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int p = 0; p < MAX_OUT_COLS; ++p)
+            in_w[q][p] = rng() % P_MODS[p];
+
+    // 打包 mem_in2: [weights=15] [out_mod=5] [out_S=5] [out_m_barrett=5]
+    const int W_COUNT   = LIMB_Q * MAX_OUT_COLS;          // 15
+    const int META_LEN  = W_COUNT + 3 * MAX_OUT_COLS;     // 30
+    std::vector<uint64_t> mem_in2(META_LEN, 0);
+
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int p = 0; p < MAX_OUT_COLS; ++p)
+            mem_in2[q * MAX_OUT_COLS + p] = in_w[q][p];
+
+    const int MOD_OFF = W_COUNT;
+    const int S_OFF   = MOD_OFF + MAX_OUT_COLS;
+    const int M_OFF   = S_OFF   + MAX_OUT_COLS;
+    for (int p = 0; p < MAX_OUT_COLS; ++p) {
+        uint64_t pm = P_MODS[p];
+        uint64_t S, m;
+        compute_barrett_params(pm, S, m);
+        mem_in2[MOD_OFF + p] = pm;
+        mem_in2[S_OFF   + p] = S;
+        mem_in2[M_OFF   + p] = m;
+    }
+
+    // 调用 Top (num_active_limbs = sizeP)
+    std::vector<uint64_t> mem_out(sizeP * RING_DIM, 0);
+    Top(mem_in1.data(), mem_in2.data(), mem_out.data(), OP_BCONV, sizeP, 0);
+
+    // 软件黄金参考
+    bool ok = true;
+    int  bad = 0;
+    for (int p = 0; p < sizeP && bad < 3; ++p) {
+        uint64_t pm = P_MODS[p];
+        for (int n = 0; n < RING_DIM && bad < 3; ++n) {
+            unsigned __int128 sum = 0;
+            for (int q = 0; q < LIMB_Q; ++q)
+                sum = (sum + (unsigned __int128)mem_in1[q * RING_DIM + n]
+                           * in_w[q][p]) % pm;
+            uint64_t got = mem_out[p * RING_DIM + n];
+            if (got != (uint64_t)sum) {
+                ok = false; ++bad;
+                std::cout << "  mismatch p=" << p << " n=" << n
+                          << " got=" << got << " want=" << (uint64_t)sum << "\n";
+            }
+        }
+    }
+    check(ok, "OP_BCONV Q→P 结果正确 (sizeP=" + std::to_string(sizeP) + ")");
+}
+
+// ------------------------------------------------------------
 // main
 // ------------------------------------------------------------
 int main() {
@@ -370,6 +446,10 @@ int main() {
     // 偏移测试：num=2, mod_index=1 → 写入 buffer[1..2]
     test_add(MOD, /*num_limbs=*/2, /*mod_index=*/1);
 
+    // Test 7 — OP_BCONV：典型 Q→P (sizeP=LIMB_P) 与全列 (sizeP=MAX_OUT_COLS)
+    test_bconv(MOD, /*sizeP=*/LIMB_P,       /*seed=*/0xBC01U);
+    test_bconv(MOD, /*sizeP=*/MAX_OUT_COLS, /*seed=*/0xBC02U);
+
     std::cout << "\n============================================================\n";
     std::cout << "  Top 结果：" << g_passed << " / " << g_total << " 通过\n";
     if (g_passed == g_total) {
@@ -377,6 +457,7 @@ int main() {
     } else {
         std::cout << "  *** Top " << (g_total - g_passed) << " TEST(S) FAILED ***\n";
     }
+    std::cout << "  (含 OP_BCONV sizeP=LIMB_P 与 sizeP=MAX_OUT_COLS 两项)\n";
     std::cout << "============================================================\n";
     return (g_passed == g_total) ? 0 : 1;
 }
