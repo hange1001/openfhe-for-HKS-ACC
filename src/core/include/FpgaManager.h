@@ -383,9 +383,18 @@ public:
             }
             bo_in2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
+            // ==========================================================
+            // 👇 在这里加上计时器，只测内核运行时间（不含 PCIe 搬运）
+            // ==========================================================
+            auto k_start = std::chrono::high_resolution_clock::now();
+
             auto run = m_kernel_top(bo_in1, bo_in2, bo_out, opcode, num_limbs, mod_idx);
             run.wait();
             
+            auto k_end = std::chrono::high_resolution_clock::now();
+            double kernel_ms = std::chrono::duration<double, std::milli>(k_end - k_start).count();
+            std::cout << "    [Trace] Pure Kernel Exec (Opcode " << (int)opcode << "): " << kernel_ms << " ms" << std::endl;
+            // ==========================================================
 
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
             bo_out.read(out);
@@ -620,9 +629,20 @@ public:
             bo_meta.write(meta_buffer.data());
             bo_meta.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
+            // ==========================================================
+            // 👇 在这里加上计时器，只测内核运行时间（不含 PCIe 搬运）
+            // ==========================================================
+            auto k_start_BConv = std::chrono::high_resolution_clock::now();
+            
+
             // num_active_limbs = sizeP (输出列数)
             auto run = m_kernel_top(bo_in, bo_meta, bo_out, OP_BCONV, sizeP, 0);
             run.wait();
+
+            auto k_end_BConv = std::chrono::high_resolution_clock::now();
+            double kernel_ms_BConv = std::chrono::duration<double, std::milli>(k_end_BConv - k_start_BConv).count();
+            std::cout << "    [Trace] Pure Kernel Exec (Opcode 6): " << kernel_ms_BConv << " ms" << std::endl;
+            // ==========================================================
 
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
             bo_out.read(result);
