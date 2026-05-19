@@ -10,6 +10,7 @@
 #include <cmath>     // std::log2, std::ceil
 #include <algorithm> // std::max, std::find
 #include <numeric>   // std::gcd (C++17)
+#include <chrono>    // high_resolution_clock
 
 // =============================================================
 // 1. XRT Configuration (不变)
@@ -57,6 +58,35 @@
 #define STAGE_NUM 12
 #define CG_HALF_N  (FPGA_RING_DIM / 2)          // 2048
 #define CG_TF_SIZE (STAGE_NUM * CG_HALF_N)      // 12 * 2048 = 24576
+
+// =============================================================
+// 2.5 PCIe Transfer Statistics (补4-3: T_transfer)
+// Accumulated by Execute() and BConvOffload() when FPGA is active.
+// =============================================================
+struct FpgaOpStats {
+    int64_t h2d_us    = 0;
+    int64_t kernel_us = 0;
+    int64_t d2h_us    = 0;
+    int     calls     = 0;
+};
+
+struct FpgaTransferStats {
+    FpgaOpStats by_opcode[8];  // indexed by OP_INIT..OP_AUTO
+    // Aggregate totals (sum of all opcodes)
+    int64_t h2d_us    = 0;
+    int64_t kernel_us = 0;
+    int64_t d2h_us    = 0;
+    int     calls     = 0;
+};
+
+inline FpgaTransferStats& GetFpgaTransferStats() {
+    static FpgaTransferStats s;
+    return s;
+}
+
+inline void ResetFpgaTransferStats() {
+    GetFpgaTransferStats() = FpgaTransferStats{};
+}
 
 inline std::string GetXclbinPath() {
     const char* env_path = std::getenv("XCLBIN_PATH");
@@ -353,51 +383,73 @@ public:
     #endif
     }
     
-    // --- 其他函数 (Execute, Wrappers) 保持不变 ---
     void Execute(
-        uint8_t opcode, 
-        const uint64_t* in1, 
-        const uint64_t* in2, 
-        uint64_t* out, 
+        uint8_t opcode,
+        const uint64_t* in1,
+        const uint64_t* in2,
+        uint64_t* out,
         int num_limbs,
-        int mod_idx 
+        int mod_idx
     ) {
     #ifdef OPENFHE_FPGA_ENABLE
         if (!m_is_ready) return;
         try {
-            size_t size_bytes = (size_t)num_limbs * FPGA_RING_DIM * sizeof(uint64_t);
+            using Clock = std::chrono::high_resolution_clock;
+            using us    = std::chrono::microseconds;
+
+            size_t size_bytes     = (size_t)num_limbs * FPGA_RING_DIM * sizeof(uint64_t);
             size_t out_size_bytes = size_bytes;
-            auto bo_in1 = xrt::bo(m_device, size_bytes, m_kernel_top.group_id(0));
+            auto bo_in1 = xrt::bo(m_device, size_bytes,     m_kernel_top.group_id(0));
             auto bo_out = xrt::bo(m_device, out_size_bytes, m_kernel_top.group_id(2));
 
             bo_in1.write(in1);
-            bo_in1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
-            // Always allocate bo_in2 in group_id(1) (HBM[1]) to match connectivity.ini.
-            // Reusing bo_in1 (HBM[0]) causes a bank mismatch and XRT execution failure.
             auto bo_in2 = xrt::bo(m_device, size_bytes, m_kernel_top.group_id(1));
             if (in2) {
                 bo_in2.write(in2);
             } else {
                 bo_in2.write(in1);  // NTT/INTT: kernel ignores in2, but buffer must be valid
             }
+
+            // --- Host → Device ---
+            auto t_h2d_start = Clock::now();
+            bo_in1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
             bo_in2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            auto t_h2d_end = Clock::now();
 
-            // ==========================================================
-            // 👇 在这里加上计时器，只测内核运行时间（不含 PCIe 搬运）
-            // ==========================================================
-            auto k_start = std::chrono::high_resolution_clock::now();
-
+            // --- Kernel Exec ---
+            auto t_kern_start = Clock::now();
             auto run = m_kernel_top(bo_in1, bo_in2, bo_out, opcode, num_limbs, mod_idx);
             run.wait();
-            
-            auto k_end = std::chrono::high_resolution_clock::now();
-            double kernel_ms = std::chrono::duration<double, std::milli>(k_end - k_start).count();
-            std::cout << "    [Trace] Pure Kernel Exec (Opcode " << (int)opcode << "): " << kernel_ms << " ms" << std::endl;
-            // ==========================================================
+            auto t_kern_end = Clock::now();
 
+            // --- Device → Host ---
+            auto t_d2h_start = Clock::now();
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+            auto t_d2h_end = Clock::now();
+
             bo_out.read(out);
+
+            // Accumulate into global transfer stats (total + per-opcode)
+            auto& ts = GetFpgaTransferStats();
+            int64_t h2d  = std::chrono::duration_cast<us>(t_h2d_end  - t_h2d_start).count();
+            int64_t kern = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count();
+            int64_t d2h  = std::chrono::duration_cast<us>(t_d2h_end  - t_d2h_start).count();
+            ts.h2d_us    += h2d;
+            ts.kernel_us += kern;
+            ts.d2h_us    += d2h;
+            ts.calls++;
+            if (opcode < 8) {
+                ts.by_opcode[opcode].h2d_us    += h2d;
+                ts.by_opcode[opcode].kernel_us += kern;
+                ts.by_opcode[opcode].d2h_us    += d2h;
+                ts.by_opcode[opcode].calls++;
+            }
+
+            std::cout << "    [Trace] Opcode=" << (int)opcode
+                      << "  H2D=" << h2d << "μs"
+                      << "  Kernel=" << kern / 1000.0 << "ms"
+                      << "  D2H=" << d2h << "μs\n";
         } catch (const std::exception& e) {
             std::cerr << "[FPGA Exec Error] " << e.what() << std::endl;
         }
@@ -619,33 +671,46 @@ public:
                 }
             }
 
-            auto bo_in = xrt::bo(m_device, in_size, m_kernel_top.group_id(0));
+            auto bo_in   = xrt::bo(m_device, in_size,   m_kernel_top.group_id(0));
             auto bo_meta = xrt::bo(m_device, meta_size, m_kernel_top.group_id(1));
-            auto bo_out = xrt::bo(m_device, out_size, m_kernel_top.group_id(2));
+            auto bo_out  = xrt::bo(m_device, out_size,  m_kernel_top.group_id(2));
 
             bo_in.write(x);
-            bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-
             bo_meta.write(meta_buffer.data());
+
+            // --- Host → Device ---
+            using Clock = std::chrono::high_resolution_clock;
+            using us    = std::chrono::microseconds;
+            auto t_h2d_start = Clock::now();
+            bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
             bo_meta.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            auto t_h2d_end = Clock::now();
 
-            // ==========================================================
-            // 👇 在这里加上计时器，只测内核运行时间（不含 PCIe 搬运）
-            // ==========================================================
-            auto k_start_BConv = std::chrono::high_resolution_clock::now();
-            
-
-            // num_active_limbs = sizeP (输出列数)
+            // --- Kernel Exec ---
+            auto t_kern_start = Clock::now();
             auto run = m_kernel_top(bo_in, bo_meta, bo_out, OP_BCONV, sizeP, 0);
             run.wait();
+            auto t_kern_end = Clock::now();
 
-            auto k_end_BConv = std::chrono::high_resolution_clock::now();
-            double kernel_ms_BConv = std::chrono::duration<double, std::milli>(k_end_BConv - k_start_BConv).count();
-            std::cout << "    [Trace] Pure Kernel Exec (Opcode 6): " << kernel_ms_BConv << " ms" << std::endl;
-            // ==========================================================
-
+            // --- Device → Host ---
+            auto t_d2h_start = Clock::now();
             bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+            auto t_d2h_end = Clock::now();
+
             bo_out.read(result);
+
+            // Accumulate into global transfer stats
+            auto& ts = GetFpgaTransferStats();
+            ts.h2d_us    += std::chrono::duration_cast<us>(t_h2d_end   - t_h2d_start).count();
+            ts.kernel_us += std::chrono::duration_cast<us>(t_kern_end  - t_kern_start).count();
+            ts.d2h_us    += std::chrono::duration_cast<us>(t_d2h_end   - t_d2h_start).count();
+            ts.calls++;
+
+            double kernel_ms = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count() / 1000.0;
+            std::cout << "    [Trace] BConv(sizeP=" << sizeP << ")"
+                      << "  H2D=" << std::chrono::duration_cast<us>(t_h2d_end - t_h2d_start).count() << "μs"
+                      << "  Kernel=" << kernel_ms << "ms"
+                      << "  D2H=" << std::chrono::duration_cast<us>(t_d2h_end - t_d2h_start).count() << "μs\n";
         } catch (const std::exception& e) {
             std::cerr << "[FPGA BConv Error] " << e.what() << std::endl;
         }
@@ -658,7 +723,7 @@ private:
     xrt::device m_device;
     xrt::kernel m_kernel_top;
 #endif
-    bool m_is_ready = true;                    // FIX control the fpga ?
+    bool m_is_ready = false;                   // set to true only when FPGA is successfully initialized
     std::vector<uint64_t> m_stored_moduli;
     std::vector<uint64_t> m_stored_roots; // <--- 新增
 

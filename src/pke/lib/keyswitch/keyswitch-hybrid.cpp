@@ -38,6 +38,8 @@
 #include "keyswitch/keyswitch-hybrid.h"
 #include "keyswitch/hks_strategy.h"
 
+#include <chrono>
+
 #include "key/privatekey.h"
 #include "key/publickey.h"
 #include "key/evalkeyrelin.h"
@@ -393,12 +395,21 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
     auto& mtrk = GetMemoryTracker();
     const int64_t tower_bytes = (int64_t)stats.ring_dim * sizeof(uint64_t);
 
+    // Timing helper: returns elapsed microseconds since t0.
+    using _Clock = std::chrono::high_resolution_clock;
+    auto _us = [](const _Clock::time_point& t0) -> int64_t {
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+            _Clock::now() - t0).count();
+    };
+
     // -----------------------------------------------------------------------
     // MP: Phase 1 - INTT all digits first (global barrier before BConv)
     // -----------------------------------------------------------------------
     if (strategy == HKSStrategy::MP) {
         for (uint32_t part = 0; part < numPartQl; part++) {
+            auto _t = _Clock::now();
             partsCt[part].SetFormat(Format::COEFFICIENT);
+            stats.time_intt_us += _us(_t);
             stats.intt_poly++;
         }
     }
@@ -417,23 +428,31 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
         for (uint32_t part = 0; part < numPartQl; part++) {
             // DC: INTT happens per-digit before BConv
             if (strategy == HKSStrategy::DC) {
+                auto _t = _Clock::now();
                 partsCt[part].SetFormat(Format::COEFFICIENT);
+                stats.time_intt_us += _us(_t);
                 stats.intt_poly++;
             }
 
             uint32_t sizePartQl = partsCt[part].GetNumOfElements();
-            partsCtCompl[part]  = partsCt[part].ApproxSwitchCRTBasis(
-                cryptoParams->GetParamsPartQ(part), cryptoParams->GetParamsComplPartQ(sizeQl - 1, part),
-                cryptoParams->GetPartQlHatInvModq(part, sizePartQl - 1),
-                cryptoParams->GetPartQlHatInvModqPrecon(part, sizePartQl - 1),
-                cryptoParams->GetPartQlHatModp(sizeQl - 1, part),
-                cryptoParams->GetmodComplPartqBarrettMu(sizeQl - 1, part));
+            {
+                auto _t = _Clock::now();
+                partsCtCompl[part]  = partsCt[part].ApproxSwitchCRTBasis(
+                    cryptoParams->GetParamsPartQ(part), cryptoParams->GetParamsComplPartQ(sizeQl - 1, part),
+                    cryptoParams->GetPartQlHatInvModq(part, sizePartQl - 1),
+                    cryptoParams->GetPartQlHatInvModqPrecon(part, sizePartQl - 1),
+                    cryptoParams->GetPartQlHatModp(sizeQl - 1, part),
+                    cryptoParams->GetmodComplPartqBarrettMu(sizeQl - 1, part));
+                stats.time_bconv_us += _us(_t);
+            }
             stats.bconv++;
             mtrk.alloc((int64_t)sizeP * tower_bytes, "BConv", (int)part);
 
             // DC: NTT happens per-digit after BConv; MP: NTT in Phase 3 below
             if (strategy == HKSStrategy::DC) {
+                auto _t = _Clock::now();
                 partsCtCompl[part].SetFormat(Format::EVALUATION);
+                stats.time_ntt_us += _us(_t);
                 stats.ntt_poly++;
                 mtrk.free((int64_t)sizeP * tower_bytes, "NTT+Assemble", (int)part);
             }
@@ -442,7 +461,9 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
         // MP: Phase 3 - NTT all complement towers (global barrier)
         if (strategy == HKSStrategy::MP) {
             for (uint32_t part = 0; part < numPartQl; part++) {
+                auto _t = _Clock::now();
                 partsCtCompl[part].SetFormat(Format::EVALUATION);
+                stats.time_ntt_us += _us(_t);
                 stats.ntt_poly++;
             }
         }
@@ -450,7 +471,11 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
         // Assemble partsCtExt from Q-side digit + P-side complement towers
         for (uint32_t part = 0; part < numPartQl; part++) {
             // Both DC and MP: Q-side needs NTT before assembly
-            partsCt[part].SetFormat(Format::EVALUATION);
+            {
+                auto _t = _Clock::now();
+                partsCt[part].SetFormat(Format::EVALUATION);
+                stats.time_ntt_us += _us(_t);
+            }
             stats.ntt_poly++;
 
             uint32_t sizePartQl = partsCt[part].GetNumOfElements();
@@ -492,7 +517,11 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
             // P-side towers will be filled tower-by-tower below (default zero)
 
             // INTT once for BConv (no redundant round-trip)
-            partsCt[part].SetFormat(Format::COEFFICIENT);
+            {
+                auto _t = _Clock::now();
+                partsCt[part].SetFormat(Format::COEFFICIENT);
+                stats.time_intt_us += _us(_t);
+            }
             stats.intt_poly++;
         }
         stats.peak_p_towers = 1;  // OC: one P-tower held at a time
@@ -503,14 +532,17 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
                 uint32_t sizePartQl = partsCt[part].GetNumOfElements();
 
                 // BConv: compute full complement, then pick only tower p
-                // (True OC would call BConvOffload with sizeP=1 directly on FPGA;
-                //  here we use the existing ApproxSwitchCRTBasis and discard other towers)
-                DCRTPoly fullCompl = partsCt[part].ApproxSwitchCRTBasis(
-                    cryptoParams->GetParamsPartQ(part), cryptoParams->GetParamsComplPartQ(sizeQl - 1, part),
-                    cryptoParams->GetPartQlHatInvModq(part, sizePartQl - 1),
-                    cryptoParams->GetPartQlHatInvModqPrecon(part, sizePartQl - 1),
-                    cryptoParams->GetPartQlHatModp(sizeQl - 1, part),
-                    cryptoParams->GetmodComplPartqBarrettMu(sizeQl - 1, part));
+                DCRTPoly fullCompl;
+                {
+                    auto _t = _Clock::now();
+                    fullCompl = partsCt[part].ApproxSwitchCRTBasis(
+                        cryptoParams->GetParamsPartQ(part), cryptoParams->GetParamsComplPartQ(sizeQl - 1, part),
+                        cryptoParams->GetPartQlHatInvModq(part, sizePartQl - 1),
+                        cryptoParams->GetPartQlHatInvModqPrecon(part, sizePartQl - 1),
+                        cryptoParams->GetPartQlHatModp(sizeQl - 1, part),
+                        cryptoParams->GetmodComplPartqBarrettMu(sizeQl - 1, part));
+                    stats.time_bconv_us += _us(_t);
+                }
                 stats.bconv++;
                 mtrk.alloc(tower_bytes, "BConv", (int)part, (int)p);
                 // The assembly mapping (same as DC): compl[i - sizePartQl] → ext[i] for i>=endPartIdx
@@ -524,20 +556,28 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
                 if (p == 0) {
                     for (usint i = 0; i < startPartIdx; i++) {
                         auto t = fullCompl.GetElementAtIndex(i);
+                        auto _t = _Clock::now();
                         t.SetFormat(Format::EVALUATION);
+                        stats.time_ntt_us += _us(_t);
                         stats.ntt_limb++;
                         partsCtExt[part].SetElementAtIndex(i, t);
                     }
                     for (usint i = endPartIdx; i < sizeQl; i++) {
                         auto t = fullCompl.GetElementAtIndex(i - sizePartQl);
+                        auto _t = _Clock::now();
                         t.SetFormat(Format::EVALUATION);
+                        stats.time_ntt_us += _us(_t);
                         stats.ntt_limb++;
                         partsCtExt[part].SetElementAtIndex(i, t);
                     }
                 }
 
                 auto tower = fullCompl.GetElementAtIndex(complIdx);
-                tower.SetFormat(Format::EVALUATION);
+                {
+                    auto _t = _Clock::now();
+                    tower.SetFormat(Format::EVALUATION);
+                    stats.time_ntt_us += _us(_t);
+                }
                 stats.ntt_limb++;
                 partsCtExt[part].SetElementAtIndex(extPIdx, tower);
                 mtrk.free(tower_bytes, "Assemble", (int)part, (int)p);
@@ -590,6 +630,7 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalFastKeySwitchCoreExt
     DCRTPoly cTilda0(paramsQlP, Format::EVALUATION, true);
     DCRTPoly cTilda1(paramsQlP, Format::EVALUATION, true);
 
+    auto _t_modmul = std::chrono::high_resolution_clock::now();
     for (uint32_t j = 0; j < digits->size(); j++) {
         const DCRTPoly& cj = (*digits)[j];
         const DCRTPoly& bj = bv[j];
@@ -614,6 +655,9 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalFastKeySwitchCoreExt
         // 2 multiply-accumulate ops per limb (for cTilda0 and cTilda1)
         GetHKSStats().modmul_limb += 2 * (int)sizeQlP;
     }
+    GetHKSStats().time_modmul_us +=
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::high_resolution_clock::now() - _t_modmul).count();
 
     return std::make_shared<std::vector<DCRTPoly>>(
         std::initializer_list<DCRTPoly>{std::move(cTilda0), std::move(cTilda1)});

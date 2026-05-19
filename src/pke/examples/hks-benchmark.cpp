@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 
 using namespace lbcrypto;
@@ -114,6 +115,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------------------------
     ResetHKSStats();
     ResetMemoryTracker();
+    ResetFpgaTransferStats();
     cc->EvalRotate(ctxt, 1);
     HKSStats s = GetHKSStats();
 
@@ -155,6 +157,97 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "----------------------------------------------------\n";
+
+    // -------------------------------------------------------------------------
+    // 补4-2: T_software — CPU sub-operation timing breakdown
+    // -------------------------------------------------------------------------
+    {
+        const bool fpga_active = FpgaManager::GetInstance().IsReady();
+        const char* mode = fpga_active ? "FPGA offload" : "CPU software";
+        std::cout << "\n====================================================\n";
+        std::cout << "  补4-2: Sub-Operation Timing (" << mode << ")\n";
+        std::cout << "====================================================\n";
+        std::cout << std::left
+                  << std::setw(22) << "  Sub-operation"
+                  << std::setw(14) << "CPU time (μs)"
+                  << std::setw(10) << "Calls"
+                  << "Avg/call (μs)\n";
+        std::cout << "  --------------------------------------------------\n";
+
+        auto print_row = [](const char* name, int64_t total_us, int calls) {
+            double avg = calls > 0 ? (double)total_us / calls : 0.0;
+            std::cout << std::left
+                      << "  " << std::setw(20) << name
+                      << std::setw(14) << total_us
+                      << std::setw(10) << calls
+                      << std::fixed << std::setprecision(1) << avg << "\n";
+        };
+
+        print_row("INTT",   s.time_intt_us,   s.intt_poly);
+        print_row("BConv",  s.time_bconv_us,  s.bconv);
+        // NTT call count: ntt_poly (DC/MP poly-level) + ntt_limb (OC limb-level)
+        int ntt_calls = s.ntt_poly + s.ntt_limb;
+        print_row("NTT",    s.time_ntt_us,    ntt_calls);
+        print_row("ModMul", s.time_modmul_us, 1);
+
+        int64_t total_us = s.time_intt_us + s.time_bconv_us + s.time_ntt_us + s.time_modmul_us;
+        std::cout << "  --------------------------------------------------\n";
+        std::cout << "  " << std::setw(20) << "Total (precompute)"
+                  << total_us << " μs  ("
+                  << std::fixed << std::setprecision(3) << total_us / 1000.0 << " ms)\n";
+        std::cout << "====================================================\n";
+    }
+
+    // -------------------------------------------------------------------------
+    // 补4-3: T_transfer — PCIe transfer timing (FPGA mode only)
+    // -------------------------------------------------------------------------
+    {
+        const FpgaTransferStats& ts = GetFpgaTransferStats();
+        std::cout << "\n====================================================\n";
+        std::cout << "  补4-3: PCIe Transfer Timing\n";
+        std::cout << "====================================================\n";
+        if (ts.calls == 0) {
+            std::cout << "  (FPGA not active — no transfer data)\n";
+            std::cout << "  Theoretical estimate (PCIe Gen3 x16, 12 GB/s):\n";
+            // 5 limbs × 4096 × 8B = 163840 B per poly
+            const double bw_GBs = 12.0;
+            const double poly_bytes = 5.0 * 4096 * 8;
+            double h2d_us = poly_bytes / (bw_GBs * 1e3);  // μs
+            double d2h_us = poly_bytes / (bw_GBs * 1e3);
+            std::cout << "    Load 5-limb poly  : " << std::fixed << std::setprecision(1)
+                      << h2d_us << " μs  (" << poly_bytes/1024 << " KB)\n";
+            std::cout << "    Store 5-limb poly : " << d2h_us << " μs\n";
+            std::cout << "    Fixed DMA overhead: ~1–5 μs per call\n";
+        } else {
+            std::cout << std::left
+                      << std::setw(22) << "  Phase"
+                      << std::setw(16) << "Total (μs)"
+                      << std::setw(10) << "Calls"
+                      << "Avg/call (μs)\n";
+            std::cout << "  --------------------------------------------------\n";
+            auto print_ts = [](const char* name, int64_t total_us, int calls) {
+                double avg = calls > 0 ? (double)total_us / calls : 0.0;
+                std::cout << std::left
+                          << "  " << std::setw(20) << name
+                          << std::setw(16) << total_us
+                          << std::setw(10) << calls
+                          << std::fixed << std::setprecision(1) << avg << "\n";
+            };
+            print_ts("H2D (Host→Device)", ts.h2d_us,    ts.calls);
+            print_ts("Kernel Exec",       ts.kernel_us, ts.calls);
+            print_ts("D2H (Device→Host)", ts.d2h_us,    ts.calls);
+            int64_t total_us = ts.h2d_us + ts.kernel_us + ts.d2h_us;
+            std::cout << "  --------------------------------------------------\n";
+            std::cout << "  " << std::setw(20) << "Total"
+                      << total_us << " μs  ("
+                      << std::fixed << std::setprecision(3) << total_us / 1000.0 << " ms)\n";
+            double transfer_ratio = total_us > 0
+                ? 100.0 * (ts.h2d_us + ts.d2h_us) / total_us : 0.0;
+            std::cout << "  Transfer overhead : "
+                      << std::fixed << std::setprecision(1) << transfer_ratio << "%\n";
+        }
+        std::cout << "====================================================\n";
+    }
 
     // -------------------------------------------------------------------------
     // Timed benchmark

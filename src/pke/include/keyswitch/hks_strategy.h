@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <ostream>
 #include <vector>
+#include <chrono>
 
 namespace lbcrypto {
 
@@ -49,6 +50,13 @@ struct HKSStats {
     // MP:  numPartQl*sizeP  (all complements held simultaneously)
     // OC:  1                (one P-tower at a time)
     int peak_p_towers = 0;
+
+    // --- Sub-operation timing (microseconds, accumulated over all digits/calls) ---
+    // Measured on the CPU software path; FPGA path timing is in TransferStats.
+    int64_t time_intt_us   = 0;
+    int64_t time_bconv_us  = 0;
+    int64_t time_ntt_us    = 0;
+    int64_t time_modmul_us = 0;
 };
 
 inline HKSStats& GetHKSStats() {
@@ -118,6 +126,26 @@ inline MemoryTracker& GetMemoryTracker() {
 
 inline void ResetMemoryTracker() {
     GetMemoryTracker().reset();
+}
+
+// ---------------------------------------------------------------------------
+// PCIe transfer / kernel timing (补4-3: T_transfer)
+// Populated by FpgaManager::Execute() and BConvOffload() when FPGA is active.
+// ---------------------------------------------------------------------------
+struct TransferStats {
+    int64_t h2d_us    = 0;  // Host→Device sync time (accumulated)
+    int64_t kernel_us = 0;  // Pure kernel execution time (accumulated)
+    int64_t d2h_us    = 0;  // Device→Host sync time (accumulated)
+    int     calls     = 0;  // Number of Execute/BConvOffload calls
+};
+
+inline TransferStats& GetTransferStats() {
+    static TransferStats s;
+    return s;
+}
+
+inline void ResetTransferStats() {
+    GetTransferStats() = TransferStats{};
 }
 
 }  // namespace lbcrypto
