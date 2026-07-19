@@ -1,0 +1,156 @@
+# ============================================================
+# task.yaml - 机器可读的任务描述文件
+# 用法：将本文件作为 AI Agent 的任务输入
+# 每完成一步，更新对应 step 的 status
+# ============================================================
+
+task:
+  id: oc-align-with-ciflow
+  title: 把 OC 策略对齐 CiFlow 论文，让实测 OC 延迟 ≤ DC
+  status: not_started
+  context: |
+    当前 keyswitch-hybrid.cpp:501-587 的 OC 分支不是 CiFlow OC，是 "DC + sizeP 倍冗余 BConv"。
+    实测 OC 5.99ms > DC 4.47ms。详细 gap 分析见 docs/notes/OC_strategy_gap_analysis.md。
+    任务目标：按 #3 → #4 → #2 → #5 顺序修复，让实测 OC 落到 ≤ DC 水平。
+  reference_docs:
+    - docs/notes/OC_strategy_gap_analysis.md
+    - docs/notes/PROJECT_STATUS.md
+    - docs/papers/实验规划.md   # 表 5-4 实测对比 baseline
+
+repository:
+  working_branch: main
+  # 建议每个 step 一个独立 commit，便于二分追溯
+
+# ============================================================
+# 步骤
+# ============================================================
+steps:
+
+  - id: 1
+    name: "Gap #3+#4：Section1 bypass + 循环范围改为 [0, sizeQl+sizeP)"
+    status: pending
+    rationale: |
+      纯 Host 改动，不动 OpenFHE 库也不动 FPGA HLS。
+      预期把 OC 从 5.99ms 拉到 ~4ms 级（与 DC 持平），是最低成本验证。
+    files_to_modify:
+      - src/pke/lib/keyswitch/keyswitch-hybrid.cpp  # OC 分支 :501-587
+    changes:
+      - 把外层循环 `for (usint p = 0; p < sizeP; p++)` 改为 `for (usint p = 0; p < sizeQl + sizeP; p++)`
+      - 在内层加 Section1/Section2 判断：
+          if p < sizeQl:    # Section1: mod Q output
+              bypass_digit = p / alpha
+              p_local = p - alpha * bypass_digit
+              partsCtExt[bypass_digit][p] = partsCt[bypass_digit].GetElementAtIndex(p_local)
+              for d in [0..numPartQl) except bypass_digit:
+                  BConv → 取第 p 个 tower → NTT → 累加到 partsCtExt[d][p]
+          else:             # Section2: mod P output
+              for d in all digits: BConv → 取第 (p-sizeQl) 个 tower → NTT
+      - 注意 partsCtExt 的 P-side index 映射：原 `extPIdx = sizeQl + p` 改为对 Section2 用 `extPIdx = p`
+      - 删除原来 p==0 时填 Q-side complement towers 的代码（556-573 行），那部分被 Section1 的 bypass 取代
+    keywords:
+      - HKSStrategy::OC
+      - ApproxSwitchCRTBasis
+      - bypass_digit
+      - sizeQl
+      - alpha
+    validation:
+      - 编译通过：cd build && make -j hks-benchmark
+      - 数值正确性：./hks-benchmark --strategy OC vs --strategy DC，密文解密后应一致
+      - 性能：OC 延迟从 5.99ms 降到 ≤ 5ms（理论 ~4ms）
+
+  - id: 2
+    name: "Gap #2：OpenFHE 加 ApproxSwitchCRTBasisSingleTower(target_idx) 重载"
+    status: pending
+    rationale: |
+      最大收益项：BConv 计算量 sizeP× 节省，FPGA D2H 5× 缩减。
+      FPGA path 已支持 sizeP=1（FpgaManager.h:614 的 hook 判断接受），HLS 不用改。
+    files_to_modify:
+      - src/core/include/lattice/hal/default/dcrtpoly.h           # 函数声明 :235 附近
+      - src/core/include/lattice/hal/default/dcrtpoly-impl.h     # 实现 :1150-1281 后面追加
+      - src/core/include/lattice/hal/dcrtpoly-interface.h        # 接口声明
+      - src/pke/lib/keyswitch/keyswitch-hybrid.cpp               # OC 分支改用新 API
+    changes:
+      - 新函数签名（不破坏老接口，纯新增）：
+          PolyType ApproxSwitchCRTBasisSingleTower(
+              const std::shared_ptr<Params>& paramsQ,
+              const std::shared_ptr<typename PolyType::Params>& target_pj_params,
+              uint32_t target_idx,
+              const std::vector<NativeInteger>& QHatInvModq,
+              const std::vector<NativeInteger>& QHatInvModqPrecon,
+              const std::vector<std::vector<NativeInteger>>& QHatModp,
+              const DoubleNativeInt& modpBarrettMu_target
+          ) const;
+      - 实现逻辑：复用 dcrtpoly-impl.h:1233-1254 三层循环，但内层 `for j` 退化为单值 target_idx
+      - FPGA hook：复用 BConvOffload，传 sizeP=1，从输出截取第 0 列
+      - OC 分支调用：把 fullCompl = ApproxSwitchCRTBasis(...) 改为 tower = ApproxSwitchCRTBasisSingleTower(..., target_idx=complIdx)，去掉后续 GetElementAtIndex(complIdx)
+    keywords:
+      - ApproxSwitchCRTBasisSingleTower
+      - target_idx
+      - complIdx
+      - BConvOffload
+    validation:
+      - 编译通过
+      - 数值正确性：与原 ApproxSwitchCRTBasis 的第 target_idx 列输出逐元素相等
+      - 性能：CPU 路径 BConv 时间从 ~469μs/call → ~94μs/call
+      - FPGA 路径：D2H 流量从 32KB/call → 6.4KB/call（OC 模式下）
+
+  - id: 3
+    name: "Gap #5：ModUp P5 partial sum 在 Host 内存累加（次要）"
+    status: pending
+    rationale: |
+      把 BConv 单 tower 输出先在 Host 内存累加，最后一次性写回 partsCtExt[part][extPIdx]，
+      减少多次 SetElementAtIndex 的 PCIe 拷贝。次要优化，先做不影响功能。
+    files_to_modify:
+      - src/pke/lib/keyswitch/keyswitch-hybrid.cpp
+    changes:
+      - 在外层 `for p` 循环外声明 tower_accumulator
+      - 内层 digit 循环里 BConv → tower += partial（而非直接写 SetElementAtIndex）
+      - 循环结束 flush tower_accumulator → partsCtExt[?][?]
+    validation:
+      - 数值正确性
+      - 性能：PCIe 流量进一步下降（程度依赖具体实现，~5-10%）
+
+  - id: 4
+    name: "回归测试 + 论文同步"
+    status: pending
+    files_to_modify:
+      - docs/papers/实验规划.md          # 表 5-4 更新实测数据
+      - docs/papers/content.md          # §5.3 调度策略论述同步
+      - docs/notes/OC_strategy_gap_analysis.md   # 标记 gap 修复状态
+      - docs/notes/PROJECT_STATUS.md    # 进度表 OC 行
+    changes:
+      - 重跑 ./hks-benchmark --strategy {DC,MP,OC} --repeat 100 各 3 轮取均值
+      - 更新表 5-4 的延迟、BConv 调用次数、传输开销占比、峰值缓冲
+      - 同步论文论述：把原"OC 延迟略优"改为实测验证后的真实结论
+      - 检查答辩 PPT Slide 19 的论述是否一致
+
+# ============================================================
+# 整体验收
+# ============================================================
+validation:
+  - OC 实测延迟 ≤ DC（理想 -10%~-20%，至少持平）
+  - OC 峰值缓冲仍最小（≤ 32KB）
+  - 三策略密文解密结果一致（数值正确性）
+  - 论文 §5.3 + 表 5-4 与实测同步
+
+# ============================================================
+# 待回答问题
+# ============================================================
+open_questions:
+  - Section1 bypass 在 `numPartQl=1` 单 digit 场景下如何退化？应该相当于无 bypass，直接全 BConv
+  - 当 `numPartQl > sizeQl/alpha`（数位数 > 实际有效 limb）时，最后一个 digit 的 sizePartQl 可能 < alpha，bypass 逻辑要按 partsCt[bypass_digit].GetNumOfElements() 而非 alpha 算
+  - FPGA path 跑 sizeP=1 时 systolic PE 利用率掉到 20%，DMA 固定开销不变——单次更快但调用次数 ×sizeP，要不要顺手做 Batch HKS？
+  - 修完后 OC 是否能保住 CiFlow 论文宣称的 "峰值缓冲最小 + 延迟最优" 双优？小参数 N=4096 下可能仅延迟持平、峰值优势保留
+
+# ============================================================
+# 任务记录
+# ============================================================
+# 在此记录已完成的任务，作为后续 AI 对话的上下文参考
+
+completed_tasks:
+  - id: oc-align-with-ciflow-research
+    date: 2026-06-29
+    summary: |
+      完成 OC vs CiFlow gap 分析。识别 5 个 gap（#1 INTT 复用已做、#2-#5 未做）。
+      论证 single-tower BConv 在 CPU/FPGA 两路均可行：CPU 加 ~80 行；FPGA hook 已支持 sizeP=1 不用改 HLS。
+      产出：docs/notes/OC_strategy_gap_analysis.md。
