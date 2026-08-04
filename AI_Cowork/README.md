@@ -63,6 +63,7 @@ openfhe-for-HKS-ACC/
 | 512-bit AXI L1 优化 | ✅ |
 | HKS 三策略 Host 端 | ✅ 实测：DC 4.47ms / MP 5.17ms / OC 5.99ms |
 | OC 策略对齐 CiFlow 论文 | ⚠️ 当前实现是"DC+sizeP 冗余"，详见 [../docs/notes/OC_strategy_gap_analysis.md](../docs/notes/OC_strategy_gap_analysis.md) |
+| L1 算子划分 + L2 三性能模型 | ✅ 推导 v1 完成：[../docs/notes/L1L2_推导v1.md](../docs/notes/L1L2_推导v1.md)（算子账 / 三模型实例化 / F2 口径对账），方法论见[指南](../docs/notes/L1L2_算子划分与性能模型指南.md) |
 | L2 DATAFLOW / L3 URAM 预加载 | ⏳ |
 | 论文撰写 | ⏳ 大纲完整，部分实验数据待补 |
 
