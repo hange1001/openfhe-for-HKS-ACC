@@ -78,7 +78,23 @@ phases:
 
       - id: 1.1
         name: "L0：闭卷手推 HKS"
-        status: pending
+        status: in_progress   # 2026-08-04 开始
+        deliverable_path: docs/notes/L0_HKS算法手推.md
+        exercise_order: |
+          题 1 ✅ 完成（2026-08-04）：从 CRT 推出 BConv 与它的「近似」误差界
+                 → validation 第 1 条 ✅（BConv 公式 + 依赖表，与代码逐项对上）
+                 → validation 第 3 条 ✅（九步因果链：evk 噪声 → P 存在 → dnum → 误差界 → P 大小）
+          题 2（下一步）：数据形状链 (N×l) → ... → 2×(N×l)，推出 digit j 的目标基
+                 → validation 第 2 条（为什么扩到 (Q_l \ Q_j) ∪ P 而不是只扩到 P）
+          题 3：ModDown，并回答「为什么它不需要 digit 分解」
+        derived_results: |
+          题 1 的可复用产出（已被后续 step 引用）：
+            - 依赖表：X[i][n] 不依赖 j / W[i][j] 不依赖 n / mu_j 只依赖 j
+            - 由依赖表推出：BConv 是 GEMM (K_gemm=alpha, M=K, batch=N)；
+              W 复用 N=4096 次 vs X 复用 K=5 次 → weight-stationary 是算出来的不是选出来的；
+              阵列 alpha×K 对应 define.h 的 LIMB_Q×MAX_OUT_COLS
+            - single-tower BConv 省输出不省输入（因 X 不依赖 j）→ 直接支撑 step 1.3 的真 OC 输入重取结论
+            - K = alpha (+1) 从「观测 5 个点」升级为「两条噪声约束推出」→ 支撑 step 1.6 的参数外推
         deliverable: 手写推导笔记（ModUp P1-P5 + ModDown），标注每步数据形状变化
         changes:
           - 自己画数据形状链：(N×l) → dnum×(N×a) → dnum×(N×(l+K)) → 2×(N×(l+K)) → 2×(N×l)
