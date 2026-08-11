@@ -6,14 +6,16 @@
 #   2. HLS Flow:   csim, csynth       (Unit Test & Analysis)
 # ===================================================================
 
-# # --- 1. 基础配置 ---
-# PLATFORM ?= xilinx_u55c_gen3x16_xdma_4_1_202310_1
-# HLS_PART := xcu55c-fsvh2892-2L-e 
+# --- 1. 基础配置 ---
+# 目标板卡：Alveo U55C。必须与 csynth.tcl / cosim.tcl / csim.tcl 里的
+# `set_part xcu55c-fsvh2892-2L-e` 保持一致，否则 HLS 综合报告的资源/时序
+# 与 Vitis 实际链接出的 xclbin 不是同一颗器件（论文数据会对不上）。
+PLATFORM ?= xilinx_u55c_gen3x16_xdma_4_1_202310_1
+HLS_PART ?= xcu55c-fsvh2892-2L-e
 
-# PLATFORM ?= xilinx_u55c_gen3x16_xdma_3_202210_1
-
-PLATFORM ?= xilinx_u250_gen3x16_xdma_4_1_202210_1
-# U250 旧平台配置，已改为 U55C
+# 备用平台（U250，早期 hw_emu 用过）。切换时必须同步改三个 tcl 的 set_part：
+#   PLATFORM ?= xilinx_u250_gen3x16_xdma_4_1_202210_1
+#   HLS_PART ?= xcu250-figd2104-2L-e
 
 TARGET   ?= hw
 
@@ -140,8 +142,8 @@ MODULE ?= Compute_CG_NTT
 SRC_Compute_CG_NTT := $(SRC_DIR)/arithmetic.cpp $(SRC_DIR)/ntt_kernel.cpp $(SRC_DIR)/cg_ntt.cpp
 TB_Compute_CG_NTT  := ./testbench/cg_ntt_tb.cpp
 
-# 2. Top 模块 (复用 Vitis 流程的 KERNEL_SRC，并额外加上 cg_ntt / bconv_naive)
-SRC_Top := $(KERNEL_SRC) $(SRC_DIR)/cg_ntt.cpp $(SRC_DIR)/bconv_naive.cpp
+# 2. Top 模块 (直接复用 Vitis 流程的 KERNEL_SRC，其中已含 cg_ntt / bconv_naive)
+SRC_Top := $(KERNEL_SRC)
 TB_Top  := ./testbench/top_tb.cpp
 
 # 3. NTT kernel 子模块 (顶层函数: NTT_Kernel)
@@ -175,10 +177,13 @@ CF_Compute_BConv_Systolic  :=
 # TB_mod_add_kernel  := ./testbench/mod_add_tb.cpp
 
 # --- 导出给 TCL 使用的环境变量 ---
+# HLS_PART 一并导出，让三个 tcl 的 set_part 由 Makefile 单点驱动，
+# 避免 tcl 与 PLATFORM 各自写死器件型号而漂移。
 export HLS_TOP_FUNC     := $(MODULE)
 export HLS_SRC_FILES    := $(SRC_$(MODULE))
 export HLS_TB_FILES     := $(TB_$(MODULE))
 export HLS_EXTRA_CFLAGS := $(CF_$(MODULE))
+export HLS_PART
 
 # 安全检查：防止 MODULE 拼写错误
 check_module:
@@ -224,17 +229,26 @@ cosim: check_module
 #   make report                      # 提拔当前 MODULE 的报告 (默认 MODULE=Compute_CG_NTT)
 #   make report MODULE=Compute_BConv_Systolic
 #   make report_all                  # 提拔全部已知 BConv 模块的报告
+# 注意两条流程的工程目录不同（见各 tcl 的 open_project）：
+#   make csynth -> Solution/$(MODULE)/solution1
+#   make cosim  -> Solution/cosim_$(MODULE)/solution1
+# csynth.rpt 两处都可能有，优先取 csynth 流程的；cosim.rpt 只可能在 cosim 工程下。
 report: check_module
-	@SOLN_DIR=Solution/cosim_$(MODULE)/solution1; \
+	@SYN_DIR=Solution/$(MODULE)/solution1; \
+	COSIM_DIR=Solution/cosim_$(MODULE)/solution1; \
 	mkdir -p $(REPORTS_OUT); \
-	if [ -f "$$SOLN_DIR/syn/report/csynth.rpt" ]; then \
-		cp "$$SOLN_DIR/syn/report/csynth.rpt" "$(REPORTS_OUT)/$(MODULE)_csynth.rpt"; \
-		echo "  [+] $(MODULE)_csynth.rpt"; \
+	SRC_RPT=""; \
+	if   [ -f "$$SYN_DIR/syn/report/csynth.rpt" ];   then SRC_RPT="$$SYN_DIR/syn/report/csynth.rpt"; \
+	elif [ -f "$$COSIM_DIR/syn/report/csynth.rpt" ]; then SRC_RPT="$$COSIM_DIR/syn/report/csynth.rpt"; \
+	fi; \
+	if [ -n "$$SRC_RPT" ]; then \
+		cp "$$SRC_RPT" "$(REPORTS_OUT)/$(MODULE)_csynth.rpt"; \
+		echo "  [+] $(MODULE)_csynth.rpt  (from $$SRC_RPT)"; \
 	else \
 		echo "  [-] csynth.rpt not found (run 'make csynth MODULE=$(MODULE)' first)"; \
 	fi; \
-	if [ -f "$$SOLN_DIR/sim/report/$(MODULE)_cosim.rpt" ]; then \
-		cp "$$SOLN_DIR/sim/report/$(MODULE)_cosim.rpt" "$(REPORTS_OUT)/$(MODULE)_cosim.rpt"; \
+	if [ -f "$$COSIM_DIR/sim/report/$(MODULE)_cosim.rpt" ]; then \
+		cp "$$COSIM_DIR/sim/report/$(MODULE)_cosim.rpt" "$(REPORTS_OUT)/$(MODULE)_cosim.rpt"; \
 		echo "  [+] $(MODULE)_cosim.rpt"; \
 	else \
 		echo "  [-] $(MODULE)_cosim.rpt not found (run 'make cosim MODULE=$(MODULE)' first)"; \

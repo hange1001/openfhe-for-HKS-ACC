@@ -41,7 +41,9 @@ if {[string length $tb_files] > 0} {
 }
 
 open_solution -reset "solution1"
-set_part xcu55c-fsvh2892-2L-e
+# 器件由 Makefile 的 HLS_PART 单点驱动，与 PLATFORM 保持同一块板
+set hls_part [expr {[info exists ::env(HLS_PART)] ? $::env(HLS_PART) : "xcu55c-fsvh2892-2L-e"}]
+set_part $hls_part
 create_clock -period 6ns
 
 # 5. 先 C 综合生成 RTL，再协同仿真

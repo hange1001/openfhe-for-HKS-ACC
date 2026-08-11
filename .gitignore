@@ -74,6 +74,20 @@ test_detail.xml
 .vscode
 
 
+# CMake in-source build artifacts
+# (生成于源码树内，不随 build*/ 被忽略；src/fpga_backend/Makefile 与
+#  docs/Makefile 是手写文件，故此处按目录精确排除)
+CMakeFiles/
+benchmark/Makefile
+benchmark/cmake_install.cmake
+src/binfhe/Makefile
+src/binfhe/cmake_install.cmake
+src/core/Makefile
+src/core/cmake_install.cmake
+src/pke/Makefile
+src/pke/cmake_install.cmake
+CTestTestfile.cmake
+
 # Vitis/Vivado generated artifacts
 src/fpga_backend/.ipcache/
 src/fpga_backend/_x/
@@ -87,6 +101,10 @@ src/fpga_backend/*.log
 src/fpga_backend/*.jou
 src/fpga_backend/*.str
 src/fpga_backend/*.a
+src/fpga_backend/*.xclbin.info
+src/fpga_backend/*.link_summary
+src/fpga_backend/*.compile_summary
+src/fpga_backend/emconfig.json
 vitis_hls.log
 # Hand-promoted reports in docs/reports/ are intentionally tracked
 !docs/reports/

@@ -28,7 +28,16 @@
 // 辅助常量（不修改 define.h，在本文件局部定义）
 // =========================================================
 static const int CG_HALF_N  = RING_DIM / 2;   // 2048：蝶形跨度
-static const int CG_PE_NUM  = PE_PARALLEL;     // 8：并行 PE 数（复用 define.h 的 PE_PARALLEL）
+static const int CG_PE_NUM  = PE_PARALLEL;    // 并行 PE 数（复用 define.h 的 PE_PARALLEL）
+
+// 乒乓缓冲 buf_A / buf_B 的 bank 数 = 2 × PE 数。
+// 定这个倍数的是**写端口**，不是读端口：
+//   写：NTT 每个 PE 写 [2i, 2i+1] 两个连续地址，CG_PE_NUM 个 PE 一拍共写
+//       2*CG_PE_NUM 个连续地址；切成同样多的 bank 才能做到 1 写/bank。
+//   读：u 与 v 相距 CG_HALF_N，而 CG_HALF_N % CG_BUF_PARTITION == 0，
+//       两组读必然落在同一批 bank 上（2 访问/bank），靠 ram_2p 的双端口吸收，
+//       所以读侧对 bank 数没有额外要求。
+static const int CG_BUF_PARTITION = 2 * PE_PARALLEL;
 
 // 512-bit 总线打包参数
 static const int PACK_RATIO     = 512 / 64;                        // 8

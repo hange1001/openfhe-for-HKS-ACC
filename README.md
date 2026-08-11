@@ -1,3 +1,29 @@
+> ## ⚠️ 本仓库是 OpenFHE 的研究 fork，不是上游发行版
+>
+> 在 OpenFHE 的 RNS-CKKS 之上做 **Hybrid Key-Switching (HKS) 软硬协同加速**：把 KeySwitch 链路中
+> 最重的算子（NTT / INTT / BConv / Automorphism）卸载到 Xilinx Alveo U55C，并在 Host 侧比较
+> 三种数据调度策略（DC / MP / OC）。
+>
+> | 想看什么 | 去哪 |
+> |---|---|
+> | **项目进度、实测数据、下一步待办** | [docs/notes/PROJECT_STATUS.md](docs/notes/PROJECT_STATUS.md) ← **建议从这里开始** |
+> | FPGA kernel（HLS C++）与构建流程 | [src/fpga_backend/](src/fpga_backend/) — 见 [该目录 README](src/fpga_backend/README.md) |
+> | Host↔FPGA 桥接层（XRT 封装） | [src/core/include/FpgaManager.h](src/core/include/FpgaManager.h) |
+> | 卸载 hook 插入点 | [dcrtpoly-impl.h](src/core/include/lattice/hal/default/dcrtpoly-impl.h)、[poly-impl.h](src/core/include/lattice/hal/default/poly-impl.h)（均由 `OPENFHE_FPGA_ENABLE` 开关） |
+> | HKS 三策略调度 | [keyswitch-hybrid.cpp](src/pke/lib/keyswitch/keyswitch-hybrid.cpp)、[hks_strategy.h](src/pke/include/keyswitch/hks_strategy.h) |
+> | 架构决策记录 (ADR) | [AI_Cowork/decisions.md](AI_Cowork/decisions.md) |
+> | 论文大纲与配图 | [docs/papers/](docs/papers/) |
+>
+> **构建（纯 Host，无 FPGA）**
+> ```bash
+> mkdir -p build && cd build && cmake .. -DOPENFHE_FPGA_ENABLE=OFF && make -j hks-benchmark
+> ```
+> `OPENFHE_FPGA_ENABLE` 默认 **ON**，但找不到 XRT 时会自动回落为 OFF（见 [CMakeLists.txt:694](CMakeLists.txt#L694)）。
+>
+> 以下为上游 OpenFHE 的原始 README，内容未改动。
+
+---
+
 OpenFHE - Open-Source Fully Homomorphic Encryption Library
 =====================================
 

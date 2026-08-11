@@ -8,145 +8,171 @@
 
 ## 0. 我在哪里绊倒过 ← 半年后回看先读这一节
 
-公式随时能查，绊倒的地方查不到。四处：
+公式随时能查，绊倒的地方查不到。六处（①–④ 来自题 1，⑤⑥ 来自题 3）：
 
-### ① 把 `a` 和求和式 `X` 当成同一个数
+### ① 把 $a$ 和求和式 $X$ 当成同一个数
 
-```
-a = X − e·Q          X = Σ_i a_i·E_i（求和式）
-```
+$$
+a = X - e \cdot Q \qquad X = \sum_i a_i \cdot E_i
+$$
 
-条件给的是 `0 ≤ a < Q`，所以 `⌊a/Q⌋ = 0`。
-但 `e = ⌊X/Q⌋`，**`X` 是另一个数，它可以远大于 `Q`**。
-当时由此错误推出 `e = 0`，整条链就断了。
+条件给的是 $0 \leq a < Q$，所以 $\lfloor a/Q \rfloor = 0$。
+但 $e = \lfloor X/Q \rfloor$，**$X$ 是另一个数，它可以远大于 $Q$**。
+当时由此错误推出 $e = 0$，整条链就断了。
 
-> **教训**：`mod` 的展开式 `A = B − e·Q` 里，`e` 属于 `B` 不属于 `A`。
+> **教训**：$\bmod$ 的展开式 $A = B - e \cdot Q$ 里，$e$ 属于 $B$ 不属于 $A$。
 
 ### ② 以为 CRT 重建就是残数直接相加
 
-写成了 `a = (a_0 + a_1) − e·Q`，等价于取基向量 `E_i = 1`。
-但 `1` 的 RNS 坐标是 `(1,1,…,1)` 而不是 `(1,0,…,0)`——每一项都污染了别人的位置。
+写成了 $a = (a_0 + a_1) - e \cdot Q$，等价于取基向量 $E_i = 1$。
+但 $1$ 的 RNS 坐标是 $(1,1,\dots,1)$ 而不是 $(1,0,\dots,0)$——每一项都污染了别人的位置。
 
-**3 秒自检法**：`a_0+a_1 = 3`，而 `3 mod 3 = 0 ≠ a_0 = 1` ✗。
+**3 秒自检法**：$a_0+a_1 = 3$，而 $3 \bmod 3 = 0 \neq a_0 = 1$ ✗。
 
 > **教训**：推完立刻代最小数字验一遍。
 
-### ③ 算出 `e = −4/15` 却没当回事
+### ③ 算出 $e = -4/15$ 却没当回事
 
-`e` 按定义是**非负整数**。算出分数就说明公式错了。
+$e$ 按定义是**非负整数**。算出分数就说明公式错了。
 
 > **教训**：每个量先问"按定义它该是什么类型（整数？非负？有界？）"，
 > 类型不对立刻回头，不要等推到最后。
 
 ### ④ 因果反了
 
-一度认为"误差界与 `P` 的取值有关"。**反了**：
+一度认为"误差界与 $P$ 的取值有关"。**反了**：
 
-```
-误差界 e ≤ α−1   →  决定  →  P ≳ α·Q_j
-（P 是被约束的一方，不是约束方）
-```
+$$
+\text{误差界 } e \leq \alpha-1 \quad\to\quad \text{决定} \quad\to\quad P \gtrsim \alpha \cdot Q_j
+$$
+（$P$ 是被约束的一方，不是约束方）
 
-而且更早的时候我自己推出过正确的观察——"误差界和 `c_i` 是不是逆元没关系"——**两天后自己忘了**。
+而且更早的时候我自己推出过正确的观察——"误差界和 $c_i$ 是不是逆元没关系"——**两天后自己忘了**。
 
 > **教训**：推导中途冒出的好观察当场记下来，否则一定丢。
+
+### ⑤ 一直在残数层面找答案（题 3）
+
+推 ModDown 时连问三次同一个错误的三种问法：
+
+| 问题 | 残数层面（看不到） | 整数层面（答案在这） |
+|---|---|---|
+| 「取模后不就没了吗」 | 只有残数 | 残数唯一确定一个整数，它一直在 |
+| 「MD 里没有除法啊」 | 只有模乘 | 模乘 = 整数除法（当整除成立时） |
+| 「噪声呢，怎么看不见」 | 看不见 | 噪声藏在需要密钥才能展开的解密组合里 |
+
+> **教训**：**写代码时在【残数】层面操作，想问题时在【整数】层面思考。**
+> 设计 RNS 算法永远先在整数层面想清楚"我要对那个看不见的整数做什么"，
+> 再落到残数层面找"哪串模运算能实现它"。倒过来一定卡住。
+
+### ⑥ 符号撞车
+
+`s` 同时用来表示密钥和 `c̃ mod P`；`m` 同时表示"想要的结果"和"输入基素数个数"。
+两处都造成了实质困惑。
+
+> **教训**：推导跨越多个子问题时，**先建符号表再推**——见 [L0_符号表.md](L0_符号表.md)。
 
 ---
 
 ## 1. BConv 解决什么问题 ⭐
 
-```
-给定：整数 a 在基 {q_0,…,q_{α−1}} 下的坐标 (a_0,…,a_{α−1})，a_i = a mod q_i
-求：  a 在另一组基 {p_0,…,p_{K−1}} 下的坐标
-```
+$$
+\begin{aligned}
+\text{给定：整数 } a &\text{ 在基 } \{q_0,\dots,q_{\alpha-1}\} \text{ 下的坐标 } (a_0,\dots,a_{\alpha-1}),\; a_i = a \bmod q_i \\
+\text{求：  } a &\text{ 在另一组基 } \{p_0,\dots,p_{K-1}\} \text{ 下的坐标}
+\end{aligned}
+$$
 
 **一句话：不同 RNS 基之间的坐标转换。**
 
-**为什么不能"先把 `a` 算出来再取模 `p`"**：`a` 是个 `α × 60` 比特的大整数（α=8 时 480 bit）。
+**为什么不能"先把 $a$ 算出来再取模 $p$"**：$a$ 是个 $\alpha \times 60$ 比特的大整数（$\alpha=8$ 时 480 bit）。
 **RNS 存在的全部意义就是不碰这个大整数**——重建它等于自废武功。
 
 ---
 
-## 2. CRT 重建原理：RNS 是坐标，重建是"坐标 × 基向量" ○
+## 2. CRT 重建原理：RNS 是坐标，重建是"坐标 $\times$ 基向量" ○
 
 ### 基向量的定义
 
-`E_i` 是 RNS 坐标为"第 `i` 位 1、其余 0"的那个整数：
+$E_i$ 是 RNS 坐标为"第 $i$ 位 $1$、其余 $0$"的那个整数：
 
-```
-E_i mod q_i = 1
-E_i mod q_j = 0     ∀ j ≠ i
-```
+$$
+E_i \bmod q_i = 1
+\qquad
+E_i \bmod q_j = 0 \quad \forall j \neq i
+$$
 
-即 `E_i ↔ (0,…,0,1,0,…,0)`。代数上它们是环分解的**正交幂等元**。
+即 $E_i \leftrightarrow (0,\dots,0,1,0,\dots,0)$。代数上它们是环分解的**正交幂等元**。
 
 ### 两个条件各定一半
 
 | 条件 | 定出什么 | 理由 |
 |---|---|---|
-| 在**其他**模数上 ≡ 0（正交性） | `E_i` 必须含因子 **`Q̂_i = Q/q_i`** | 要被所有 `q_j (j≠i)` 整除，就必须是它们乘积的倍数 |
-| 在**自己**模数上 ≡ 1（归一性） | 系数取 **`Q̂_i⁻¹ mod q_i`** | 解方程 `c·Q̂_i ≡ 1 (mod q_i)`；逆元存在因为 `gcd(Q̂_i, q_i)=1` |
+| 在**其他**模数上 $\equiv 0$（正交性） | $E_i$ 必须含因子 **$\widehat{Q}_i = Q/q_i$** | 要被所有 $q_j\;(j \neq i)$ 整除，就必须是它们乘积的倍数 |
+| 在**自己**模数上 $\equiv 1$（归一性） | 系数取 **$\widehat{Q}_i^{-1} \bmod q_i$** | 解方程 $c \cdot \widehat{Q}_i \equiv 1 \pmod{q_i}$；逆元存在因为 $\gcd(\widehat{Q}_i, q_i)=1$ |
 
-```
-E_i = ( Q̂_i⁻¹ mod q_i ) · Q̂_i
-```
+$$
+E_i = \left( \widehat{Q}_i^{-1} \bmod q_i \right) \cdot \widehat{Q}_i
+$$
 
-> **对应 OpenFHE**：`Q̂_i⁻¹ mod q_i` 就是 `QHatInvModq`。
+> **对应 OpenFHE**：$\widehat{Q}_i^{-1} \bmod q_i$ 就是 `QHatInvModq`。
 
 ### 重建公式与它的验证动作
 
-```
-a = ( Σ_i  a_i · E_i )  mod Q
-      ↑        ↑         ↑
-    坐标     基向量    不能漏（e 的来源）
-```
+$$
+a = \left( \sum_i a_i \cdot E_i \right) \bmod Q
+$$
 
-**验证动作（必须自己做一遍，做完 CRT 就不再是魔法）**：把整个式子对 `q_j` 取模。
+**验证动作（必须自己做一遍，做完 CRT 就不再是魔法）**：把整个式子对 $q_j$ 取模。
 
-```
-(Σ_i a_i·E_i) mod q_j  =  Σ_i a_i·(E_i mod q_j)
-                       =  a_j·1  +  Σ_{i≠j} a_i·0
-                       =  a_j    ✓
-```
+$$
+\begin{aligned}
+\left(\sum_i a_i \cdot E_i\right) \bmod q_j
+&= \sum_i a_i \cdot (E_i \bmod q_j) \\
+&= a_j \cdot 1 + \sum_{i \neq j} a_i \cdot 0 \\
+&= a_j \quad \checkmark
+\end{aligned}
+$$
 
 **每一项只在自己的位置有贡献，在别人的位置消失。这就是 CRT 的全部内容。**
 
 ---
 
-## 3. 为什么必须"先 mod q_i 再乘 Q̂_i" ○
+## 3. 为什么必须"先 $\bmod q_i$ 再乘 $\widehat{Q}_i$" ○
 
 ### 两个理由，缺一不可
 
 | # | 理由 | 不这么做的后果 |
 |---|---|---|
-| 1 | **位宽** | `Q̂_i` 是 α−1 个 50-bit 素数的乘积（α=8 时 350 bit）。64-bit 硬件乘不了 |
-| 2 | **误差界** | 不约减时单项 `≤ (q_i−1)²·Q̂_i ≈ q_i·Q`，超出 `Q` 约 2⁵⁰ 倍 → `e ≈ α·2⁵⁰` → `P` 要比 `Q_j` 大 50+ 比特 → **HKS 完全不可用** |
+| 1 | **位宽** | $\widehat{Q}_i$ 是 $\alpha-1$ 个 50-bit 素数的乘积（$\alpha=8$ 时 350 bit）。64-bit 硬件乘不了 |
+| 2 | **误差界** | 不约减时单项 $\leq (q_i-1)^2 \cdot \widehat{Q}_i \approx q_i \cdot Q$，超出 $Q$ 约 $2^{50}$ 倍 $\to$ $e \approx \alpha \cdot 2^{50}$ $\to$ $P$ 要比 $Q_j$ 大 $50+$ 比特 $\to$ **HKS 完全不可用** |
 
 **一个约减同时解决两件事。**
 
-### 为什么约减不改变 `mod Q` 的结果 ⭐
+### 为什么约减不改变 $\bmod Q$ 的结果 ⭐
 
-**关键恒等式**（`Q̂_i` 的定义移项）：
+**关键恒等式**（$\widehat{Q}_i$ 的定义移项）：
 
-```
-q_i · Q̂_i = Q
-```
+$$
+q_i \cdot \widehat{Q}_i = Q
+$$
 
-设 `a_i·c_i = k·q_i + r`（`r = (a_i·c_i) mod q_i`），则
+设 $a_i \cdot c_i = k \cdot q_i + r$（$r = (a_i \cdot c_i) \bmod q_i$），则
 
-```
-a_i·c_i·Q̂_i = (k·q_i + r)·Q̂_i
-            = k·(q_i·Q̂_i) + r·Q̂_i
-            = k·Q + r·Q̂_i
-              └┬┘
-        Q 的整数倍 → mod Q 消失
-```
+$$
+\begin{aligned}
+a_i \cdot c_i \cdot \widehat{Q}_i
+&= (k \cdot q_i + r) \cdot \widehat{Q}_i \\
+&= k \cdot (q_i \cdot \widehat{Q}_i) + r \cdot \widehat{Q}_i \\
+&= k \cdot Q + r \cdot \widehat{Q}_i
+\end{aligned}
+$$
 
-**两算法只差 `k·Q`，`mod Q` 之后相同。**
+**两算法只差 $k \cdot Q$，$\bmod Q$ 之后相同。**
 
-> **`Q̂_i` 的定义不是任意的**——正是为了让"mod `q_i`"等价于"mod `Q`"而选的。
+> **$\widehat{Q}_i$ 的定义不是任意的**——正是为了让"$\bmod q_i$"等价于"$\bmod Q$"而选的。
 
-### 数值验证（`q_0=3, q_1=5, Q=15, a=11`）
+### 数值验证（$q_0=3,\; q_1=5,\; Q=15,\; a=11$）
 
 ```
 a_0=2, c_0=2, Q̂_0=5    a_0·c_0 = 4 ≥ 3，需约减
@@ -162,30 +188,28 @@ X_约减   = 11 → 11 mod 15 = 11 ✓
 
 ### 约减后的标准形式
 
-```
-X = Σ_i  [ (a_i · Q̂_i⁻¹) mod q_i ] · Q̂_i
-          └────────┬────────┘
-            < q_i，是 64-bit 数 ✓
-```
+$$
+X = \sum_i \left[ (a_i \cdot \widehat{Q}_i^{-1}) \bmod q_i \right] \cdot \widehat{Q}_i
+$$
 
-**单项上界**：`r·Q̂_i < q_i·Q̂_i = Q`，即**每项 < Q**（恒等式第三次用上）。
+**单项上界**：$r \cdot \widehat{Q}_i < q_i \cdot \widehat{Q}_i = Q$，即**每项 $< Q$**（恒等式第三次用上）。
 
 ---
 
-## 4. 为什么必须"近似"：`e` 算不出来 ○
+## 4. 为什么必须"近似"：$e$ 算不出来 ○
 
-```
-e = ⌊X / Q⌋      ← 取整除法，需要知道 X 有多【大】
-```
+$$
+e = \lfloor X / Q \rfloor
+$$
 
 **RNS 是环同构：保加法 ✓、保乘法 ✓、但【不保序】✗。**
 
 RNS 表示里根本没有"大小"这个信息。
 
-> 基 `(3,5)` 下的坐标 `(2,1)` 是 `11` 还是 `26`？必须做 CRT 重建才知道——
+> 基 $(3,5)$ 下的坐标 $(2,1)$ 是 $11$ 还是 $26$？必须做 CRT 重建才知道——
 > **而重建就是回到大整数，正是 RNS 要避免的事。**
 
-**要算 `e` 就必须放弃 RNS。这是结构性的两难，不是工程难度。**
+**要算 $e$ 就必须放弃 RNS。这是结构性的两难，不是工程难度。**
 
 于是：**干脆不减，容忍误差**。这就是 `ApproxSwitchCRTBasis` 里 `Approx` 的含义。
 
@@ -193,47 +217,49 @@ RNS 表示里根本没有"大小"这个信息。
 
 ## 5. 误差界 ⭐
 
-```
-每项 < Q                （§3）
-α 项相加  →  X < α·Q
-e = ⌊X/Q⌋  →  e ≤ α − 1
-```
+$$
+\text{每项 } < Q \qquad
+\alpha \text{ 项相加 } \to X < \alpha \cdot Q \qquad
+e = \lfloor X/Q \rfloor \to e \leq \alpha - 1
+$$
 
-自检：`α=2, a=7` 时 `X = 1×10 + 2×6 = 22`，`e = (22−7)/15 = 1 = α−1` ✓ 紧的。
+自检：$\alpha=2,\; a=7$ 时 $X = 1 \times 10 + 2 \times 6 = 22$，$e = (22-7)/15 = 1 = \alpha-1$ ✓ 紧的。
 
 ### 这个界与什么无关 ⭐
 
-推导只用了 `r < q_i`，所以：
+推导只用了 $r < q_i$，所以：
 
 | 与什么无关 | 含义 |
 |---|---|
-| **`c_i` 是不是逆元** | `c_i` 只管**正确性**，不管误差界。换成任何常数界不变 |
-| 输入 `a` 的取值 | 最坏情况分析不需要知道输入 |
+| **$c_i$ 是不是逆元** | $c_i$ 只管**正确性**，不管误差界。换成任何常数界不变 |
+| 输入 $a$ 的取值 | 最坏情况分析不需要知道输入 |
 | 素数的大小 | 所以噪声分析只谈 `dnum`，不谈选了哪些素数 |
-| `P` | `P` 在下游，是被这个界约束的一方 |
+| $P$ | $P$ 在下游，是被这个界约束的一方 |
 
 **两个约束的分离**：
 
-```
-c_i = Q̂_i⁻¹ mod q_i   →  正确性（X ≡ a mod Q）
-r < q_i               →  误差界（e ≤ α−1）
-```
+$$
+\begin{aligned}
+c_i = \widehat{Q}_i^{-1} \bmod q_i \quad &\to\quad \text{正确性（}X \equiv a \pmod{Q}\text{）} \\
+r < q_i \quad &\to\quad \text{误差界（}e \leq \alpha-1\text{）}
+\end{aligned}
+$$
 
 ---
 
 ## 6. 完整 BConv 公式与依赖表 ⭐
 
-```
-y[j][n] = [ Σ_i  ( (a_i[n]·QHatInv_i) mod q_i ) · (QHat_i mod p_j) ]  mod p_j
-```
+$$
+y[j][n] = \left[ \sum_i \left( (a_i[n] \cdot \widehat{Q}\mathrm{Inv}_i) \bmod q_i \right) \cdot (\widehat{Q}\mathrm{Hat}_i \bmod p_j) \right] \bmod p_j
+$$
 
 ### 与 OpenFHE 代码逐项对照
 
 | 公式 | `dcrtpoly-impl.h` |
 |---|---|
-| `(a_i[n]·QHatInv_i) mod q_i` | `xQHatInvModqi = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], …)` |
-| `QHat_i mod p_j` | `QHatModp[i][j]` |
-| `Σ … mod p_j` | `sum[j] += Mul128(…)` → `BarrettUint128ModUint64(sum[j], pj, modpBarrettMu[j])` |
+| $(a_i[n] \cdot \widehat{Q}\mathrm{Inv}_i) \bmod q_i$ | `xQHatInvModqi = m_vectors[i][ri].ModMulFastConst(QHatInvModq[i], …)` |
+| $\widehat{Q}\mathrm{Hat}_i \bmod p_j$ | `QHatModp[i][j]` |
+| $\sum \dots \bmod p_j$ | `sum[j] += Mul128(…)` → `BarrettUint128ModUint64(sum[j], pj, modpBarrettMu[j])` |
 
 ### 位宽从公式直接推出
 
@@ -250,9 +276,9 @@ y[j][n] = [ Σ_i  ( (a_i[n]·QHatInv_i) mod q_i ) · (QHat_i mod p_j) ]  mod p_j
 
 | 因子 | 依赖 | **不**依赖 |
 |---|---|---|
-| `(a_i[n]·QHatInv_i) mod q_i` | `i, n` | **`j`** |
-| `QHat_i mod p_j` | `i, j` | **`n`** |
-| Barrett 常数 `μ_j` | `j` | `i, n` |
+| $(a_i[n] \cdot \widehat{Q}\mathrm{Inv}_i) \bmod q_i$ | $i, n$ | **$j$** |
+| $\widehat{Q}\mathrm{Hat}_i \bmod p_j$ | $i, j$ | **$n$** |
+| Barrett 常数 $\mu_j$ | $j$ | $i, n$ |
 
 判断方法：**看符号里出现了哪些下标字母，没出现的就不依赖。**
 
@@ -262,17 +288,19 @@ y[j][n] = [ Σ_i  ( (a_i[n]·QHatInv_i) mod q_i ) · (QHat_i mod p_j) ]  mod p_j
 
 ### ① BConv 是一个 GEMM
 
-```
-X[i][n] = (a_i[n]·QHatInv_i) mod q_i     →  α × N
-W[i][j] = QHat_i mod p_j                 →  α × K
-Y[j][n] = Σ_i W[i][j]·X[i][n]            →  K × N        即  Y = Wᵀ X
-```
+$$
+\begin{aligned}
+X[i][n] &= (a_i[n] \cdot \widehat{Q}\mathrm{Inv}_i) \bmod q_i \quad \to \alpha \times N \\
+W[i][j] &= \widehat{Q}\mathrm{Hat}_i \bmod p_j \quad \to \alpha \times K \\
+Y[j][n] &= \sum_i W[i][j] \cdot X[i][n] \quad \to K \times N \qquad \text{即 } Y = W^{\mathsf{T}} X
+\end{aligned}
+$$
 
 | GEMM 维 | HKS 对应 | 当前值 |
 |---|---|---|
-| 归约维 | 输入 limb 数 `α` | 2 / 1 |
-| 输出维 | 输出 limb 数 `K` | 3 / 4 |
-| batch 维 | 系数数 `N` | 4096 |
+| 归约维 | 输入 limb 数 $\alpha$ | 2 / 1 |
+| 输出维 | 输出 limb 数 $K$ | 3 / 4 |
+| batch 维 | 系数数 $N$ | 4096 |
 
 ### ② 权重驻留是算出来的，不是选出来的
 
@@ -281,7 +309,7 @@ X 不依赖 j  →  被 K 个输出复用     →  复用 K = 5 次
 W 不依赖 n  →  被 N 个系数复用     →  复用 N = 4096 次   ← 高 800 倍
 ```
 
-**`W` 只有 `α×K = 15` 个数却要用 4096 次 → weight-stationary。**
+**$W$ 只有 $\alpha \times K = 15$ 个数却要用 $4096$ 次 → weight-stationary。**
 
 ### ③ 阵列形状 = 权重矩阵形状
 
@@ -291,7 +319,7 @@ define.h：  LIMB_Q = 3        ← i 维（最大输入 limb 数）
            → 3 × 5 脉动阵列
 ```
 
-每个 PE 驻留一个 `W[i][j]`，`X` 沿 `i` 流入，部分和沿 `j` 累加。
+每个 PE 驻留一个 $W[i][j]$，$X$ 沿 $i$ 流入，部分和沿 $j$ 累加。
 
 ### ④ single-tower BConv 省输出不省输入
 
@@ -307,9 +335,9 @@ define.h：  LIMB_Q = 3        ← i 维（最大输入 limb 数）
 
 ### ⑤ 只有一个复用机会
 
-`X[i][n]` 是**唯一**跨输出复用的量。三种 dataflow 就是"`X` 放哪"的三个答案：
+$X[i][n]$ 是**唯一**跨输出复用的量。三种 dataflow 就是"$X$ 放哪"的三个答案：
 
-| `X` 留在哪 | 策略 |
+| $X$ 留在哪 | 策略 |
 |---|---|
 | 一个 digit 的 X 全留住，跑遍它的所有 j | **DC** |
 | 全部 digit 的 X 都留住 | **MP** |
@@ -329,40 +357,38 @@ define.h：  LIMB_Q = 3        ← i 维（最大输入 limb 数）
 四层理由：
 
 ### ① 误差是结构化的
-`e·Q_j` 是 digit 模数的**整数倍**，不是随机扰动。这是后三层的前提。
+$e \cdot Q_j$ 是 digit 模数的**整数倍**，不是随机扰动。这是后三层的前提。
 
-### ② digit 自己的 tower 上误差恒为 0
-`e·Q_j mod q_i = 0`（`q_i | Q_j`）→ 原样直通的那 α 个 tower 精确无误。
+### ② digit 自己的 tower 上误差恒为 $0$
+$e \cdot Q_j \bmod q_i = 0$（$q_i \mid Q_j$）→ 原样直通的那 $\alpha$ 个 tower 精确无误。
 
-### ③ 乘上 digit 权重后落在 `Q` 的倍数上 ← 核心
+### ③ 乘上 digit 权重后落在 $Q$ 的倍数上 ← 核心
 
-```
-c1 ≡ Σ_j  u_j · Q̂_j · [Q̂_j⁻¹]_{Q_j}   (mod Q)          （粗粒度 CRT）
+$$
+\begin{aligned}
+c_1 &\equiv \sum_j u_j \cdot \widehat{Q}_j \cdot [\widehat{Q}_j^{-1}]_{Q_j} \pmod{Q} \qquad\text{（粗粒度 CRT）} \\[4pt]
+\text{带误差： } u_j &\to u_j + e_j \cdot Q_j \\[4pt]
+\sum_j (u_j + e_j \cdot Q_j) \cdot \widehat{Q}_j \cdot [\widehat{Q}_j^{-1}]
+&= c_1 + \sum_j e_j \cdot (Q_j \cdot \widehat{Q}_j) \cdot [\widehat{Q}_j^{-1}] \\
+&= c_1 + Q \cdot \text{（整数）}
+\end{aligned}
+$$
 
-带误差： u_j → u_j + e_j·Q_j
+误差项 $\equiv 0 \pmod{Q}$ ← 被结构【精确歼灭】，不是"变小"。
 
-Σ_j (u_j + e_j·Q_j)·Q̂_j·[Q̂_j⁻¹]
-  = c1 + Σ_j e_j·(Q_j·Q̂_j)·[Q̂_j⁻¹]
-                └───┬───┘
-                  = Q
-  = c1 + Q·(整数)
-        ↓
-  误差项 ≡ 0  (mod Q)      ← 被结构【精确歼灭】，不是"变小"
-```
-
-> **同一个恒等式 `模数 × 补模数 = 总模数` 用了两次**：
-> 一次在单素数层（`q_i·Q̂_i = Q`，§3 的约减合法性），
-> 一次在 digit 层（`Q_j·Q̂_j = Q`，本节的误差歼灭）。
+> **同一个恒等式「模数 $\times$ 补模数 $=$ 总模数」用了两次**：
+> 一次在单素数层（$q_i \cdot \widehat{Q}_i = Q$，§3 的约减合法性），
+> 一次在 digit 层（$Q_j \cdot \widehat{Q}_j = Q$，本节的误差歼灭）。
 > **粒度不同，机制相同。**
 
-### ④ 残余被 `P` 稀释
-`mod Q` 那部分被歼灭，`P` 侧的残余随 ModDown 除以 `P` 降到 1 以下——需要 `P ≳ α·Q_j`。
+### ④ 残余被 $P$ 稀释
+$\bmod Q$ 那部分被歼灭，$P$ 侧的残余随 ModDown 除以 $P$ 降到 $1$ 以下——需要 $P \gtrsim \alpha \cdot Q_j$。
 
 ### ⑤ 兜底：CKKS 本来就是近似算术
-带缩放因子 `Δ` 的定点实数，本就有舍入噪声地板。误差落在地板以下就是免费的，代价只是几比特精度。
+带缩放因子 $\Delta$ 的定点实数，本就有舍入噪声地板。误差落在地板以下就是免费的，代价只是几比特精度。
 
 > **但 BGV/BFV 是精确方案，也用同样的近似 ModUp。那里没有这道保险，
-> 正确性完全依赖 ③ + ④——所以 `P ≳ α·Q_j` 是硬约束不是余量。**
+> 正确性完全依赖 ③ + ④——所以 $P \gtrsim \alpha \cdot Q_j$ 是硬约束不是余量。**
 
 **一句话**：
 > 误差可接受不是因为它小，而是因为它的**形状**恰好落在一个会被歼灭的子空间里。
@@ -370,7 +396,7 @@ c1 ≡ Σ_j  u_j · Q̂_j · [Q̂_j⁻¹]_{Q_j}   (mod Q)          （粗粒度 
 
 ---
 
-## 9. `P` 与 `dnum` 的完整因果链 ○
+## 9. $P$ 与 `dnum` 的完整因果链 ○
 
 ```
 ① RLWE 加密必带误差 e（|e| ≤ B，几比特）        ← 安全性要求，不可去除
@@ -396,19 +422,23 @@ dnum 的意义      ←  ⑤   把 Q_j 变小，好让 P 变小
 dnum 的代价      ←      evk 涨到 dnum 份、BConv 涨到 dnum 次
 ```
 
-### `K = α` 的依据（从观测升级为推导）
+### $K = \alpha$ 的依据（从观测升级为推导）
 
-```
-log₂(小因子) ≈ 4~8 bit     （dnum ≤ 4，α ≤ 28，B 几比特）
-单个素数     = 50~60 bit
-        ↓
-小因子不到一个素数宽  →  K = α，最多 +1
-```
+$$
+\log_2(\text{小因子}) \approx 4 \sim 8 \text{ bit} \qquad
+\text{（} \textit{dnum} \leq 4,\; \alpha \leq 28,\; B \text{ 几比特）}
+$$
+$$
+\text{单个素数} = 50 \sim 60 \text{ bit}
+$$
+$$
+\text{小因子不到一个素数宽} \quad\to\quad K = \alpha,\; \text{最多 } +1
+$$
 
 **对照实测**：
 - OpenFHE `rns-cryptoparameters.cpp:129-136`：`sizeP = ⌈maxBits / auxBits⌉`（字面实现"P 装得下最大 digit"）
-- CiFlow 表 III 五组参数：`K = α` 命中 4/5
-- HERA 表 3：`α=8, K=9` → `K = α+1`，多出的那个 50-bit 素数正装这几比特余量
+- CiFlow 表 III 五组参数：$K = \alpha$ 命中 4/5
+- HERA 表 3：$\alpha=8,\; K=9$ → $K = \alpha+1$，多出的那个 50-bit 素数正装这几比特余量
 
 ---
 
@@ -428,23 +458,23 @@ log₂(小因子) ≈ 4~8 bit     （dnum ≤ 4，α ≤ 28，B 几比特）
 
 半年后自测，答不出就重推对应小节：
 
-1. 基向量 `E_i` 的两个条件各定出它的哪一部分？（§2）
+1. 基向量 $E_i$ 的两个条件各定出它的哪一部分？（§2）
 2. 重建公式的**验证动作**是什么？（§2）
-3. "先 mod `q_i`"的两个理由？（§3）
-4. `q_i·Q̂_i = Q` 这个恒等式在本笔记里用了几次、分别在哪？（§3 / §5 / §8）
-5. 为什么 RNS 框架里算不出 `e`？（§4，答案要说到"保运算不保序"）
+3. "先 $\bmod q_i$"的两个理由？（§3）
+4. $q_i \cdot \widehat{Q}_i = Q$ 这个恒等式在本笔记里用了几次、分别在哪？（§3 / §5 / §8）
+5. 为什么 RNS 框架里算不出 $e$？（§4，答案要说到"保运算不保序"）
 6. 误差界与哪四样东西无关？（§5）
 7. 依赖表三行，各不依赖哪个下标？（§6）
 8. 由依赖表如何推出 weight-stationary？要给数字。（§7）
 9. single-tower BConv 省什么不省什么，根本原因是哪一行？（§7）
 10. 误差被"歼灭"的机制是什么？和 §3 的恒等式什么关系？（§8）
-11. `P` 的存在理由和大小理由分别来自哪里？（§9）
-12. `dnum` 增大，`P`、evk、计算量各怎么变？（§9）
+11. $P$ 的存在理由和大小理由分别来自哪里？（§9）
+12. `dnum` 增大，$P$、evk、计算量各怎么变？（§9）
 
 ---
 
 ## 待推（题 2 / 题 3）
 
-- **题 2**：数据形状链 `(N×ℓ) → dnum×(N×α) → dnum×(N×(ℓ+K)) → 2×(N×(ℓ+K)) → 2×(N×ℓ)`
-  核心问：**为什么 digit `j` 要扩到 `(Q_l \ Q_j) ∪ P`，而不是只扩到 `P`？**
+- **题 2**：数据形状链 $(N \times \ell) \to \textit{dnum} \times (N \times \alpha) \to \textit{dnum} \times (N \times (\ell+K)) \to 2 \times (N \times (\ell+K)) \to 2 \times (N \times \ell)$
+  核心问：**为什么 digit $j$ 要扩到 $(Q_l \setminus Q_j) \cup P$，而不是只扩到 $P$？**
 - **题 3**：ModDown，并回答**为什么它不需要 digit 分解**

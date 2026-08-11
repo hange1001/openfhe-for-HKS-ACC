@@ -12,7 +12,8 @@
 //
 // 存储架构：
 //   - buf_A[RING_DIM] / buf_B[RING_DIM]：1D 乒乓缓冲
-//   - cyclic factor=16：保证 8 PE × (读u + 读v) 无 Bank Conflict
+//   - cyclic factor=CG_BUF_PARTITION (= 2*PE_PARALLEL)：让一拍内 2*PE 个连续写地址
+//     各占一个 bank，写侧无冲突（推导见 cg_ntt.h 的 CG_BUF_PARTITION 注释）
 //   - ram_2p：读端 global_i 和 global_i+N/2 落同一 bank，需双端口
 //
 // 旋转因子：
@@ -188,13 +189,15 @@ void CG_NTT_Kernel(
     uint64_t buf_A[RING_DIM];
     uint64_t buf_B[RING_DIM];
 
-    #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=8 dim=1
-    #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=8 dim=1
+    #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=CG_BUF_PARTITION dim=1
     #pragma HLS BIND_STORAGE variable=buf_A type=ram_2p impl=bram
     #pragma HLS BIND_STORAGE variable=buf_B type=ram_2p impl=bram
 
-    // 旋转因子：stage 维 complete（8 副本），位置维 cyclic 按 PE_PARALLEL
-    // 保证 8 个 PE 同时读 cg_twiddle[s][i*8+0..7] 无冲突
+    // 旋转因子：位置维按 CG_PE_NUM cyclic 切分，保证 CG_PE_NUM 个 PE 同时读
+    // cg_twiddle[s][i*CG_PE_NUM + 0 .. CG_PE_NUM-1] 时各自落在不同 bank。
+    // （stage 维的 complete 切分不在这里，而在调用侧 top.cpp 的
+    //   NTTTwiddleFactor / INTTTwiddleFactor 上，见 top.cpp 的 ARRAY_PARTITION dim=2）
     #pragma HLS ARRAY_PARTITION variable=cg_twiddle cyclic factor=CG_PE_NUM dim=2
 
     // ============================================================
@@ -230,8 +233,12 @@ void CG_NTT_Kernel(
 
         BUTTERFLY_LOOP:
         for (int i = 0; i < CG_HALF_N / CG_PE_NUM; i++) {
-            // 带宽核算：buf_A/buf_B cyclic factor=16 + ram_2p → 32 访问/周期，
-            // 每迭代实际需 8 PE × (2 读 + 2 写) = 32 访问，刚好吻合，II=1 可行。
+            // 带宽核算（ping-pong 使读、写分属两块 buffer，各自独立计端口）：
+            //   读侧 CG_PE_NUM×2 次：u/v 相距 CG_HALF_N 且同余于 bank 数，两组读挤在
+            //        同一批 CG_PE_NUM 个 bank 上 → 2 访问/bank，由 ram_2p 双端口吸收。
+            //   写侧 CG_PE_NUM×2 次：地址连续，恰好铺满 CG_BUF_PARTITION 个 bank
+            //        → 1 写/bank。
+            // 两侧都不超端口，II=1 可行。
             #pragma HLS PIPELINE II=1
             // 解除 HLS 对 buf_A/buf_B 的假性依赖（ping-pong 保证跨迭代/迭代内均无地址冲突）
             #pragma HLS DEPENDENCE variable=buf_A type=inter dependent=false

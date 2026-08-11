@@ -34,6 +34,7 @@ task:
   reference_docs:
     - docs/notes/L1L2_推导v1.md                    # 算子账 / 三模型实例化 / 口径对账
     - docs/notes/L1L2_算子划分与性能模型指南.md      # 方法论
+    - docs/notes/L1_优化术语对表.md                 # 通用优化术语 ↔ 本项目结论；含三个空白与材料清单
     - docs/notes/OC_strategy_gap_analysis.md       # 注意：§4 计算量表已被推翻，Gap#1 状态标错
     - docs/papers/实验规划.md                       # 补 4-2 / 补 4-3 / 表 5-4
     - CiFlow (ISPASS'24) / HERA (FPGA'26)          # 参照系
@@ -78,23 +79,38 @@ phases:
 
       - id: 1.1
         name: "L0：闭卷手推 HKS"
-        status: in_progress   # 2026-08-04 开始
-        deliverable_path: docs/notes/L0_HKS算法手推.md
+        status: done          # 2026-08-04 开始，2026-08-07 完成
+        deliverable_path:
+          - docs/notes/L0_HKS_闭卷推导.md    # 推导正文（用户闭卷写 + 两轮审稿修订）
+          - docs/notes/L0_HKS算法手推.md     # 过程与踩坑记录（6 条）+ 复习清单
+          - docs/notes/L0_符号表.md          # 全项目统一符号口径，step 1.3/1.4 直接引用
         exercise_order: |
-          题 1 ✅ 完成（2026-08-04）：从 CRT 推出 BConv 与它的「近似」误差界
-                 → validation 第 1 条 ✅（BConv 公式 + 依赖表，与代码逐项对上）
-                 → validation 第 3 条 ✅（九步因果链：evk 噪声 → P 存在 → dnum → 误差界 → P 大小）
-          题 2（下一步）：数据形状链 (N×l) → ... → 2×(N×l)，推出 digit j 的目标基
-                 → validation 第 2 条（为什么扩到 (Q_l \ Q_j) ∪ P 而不是只扩到 P）
-          题 3：ModDown，并回答「为什么它不需要 digit 分解」
+          题 1 ✅：从 CRT 推出 BConv 与它的「近似」误差界   → validation 第 1、3 条
+          题 2 ✅：从 P4 倒推 digit j 的目标基             → validation 第 2 条
+          题 3 ✅：ModDown 机制 + 为什么不需要 digit 分解
         derived_results: |
-          题 1 的可复用产出（已被后续 step 引用）：
+          【题 1】
             - 依赖表：X[i][n] 不依赖 j / W[i][j] 不依赖 n / mu_j 只依赖 j
             - 由依赖表推出：BConv 是 GEMM (K_gemm=alpha, M=K, batch=N)；
               W 复用 N=4096 次 vs X 复用 K=5 次 → weight-stationary 是算出来的不是选出来的；
               阵列 alpha×K 对应 define.h 的 LIMB_Q×MAX_OUT_COLS
-            - single-tower BConv 省输出不省输入（因 X 不依赖 j）→ 直接支撑 step 1.3 的真 OC 输入重取结论
-            - K = alpha (+1) 从「观测 5 个点」升级为「两条噪声约束推出」→ 支撑 step 1.6 的参数外推
+            - single-tower BConv 省输出不省输入（因 X 不依赖 j）→ 支撑 step 1.3 真 OC 输入重取
+            - 误差界 |u| <= alpha/2（中心剩余口径），且与 c_i 是否逆元、输入取值、素数大小无关
+              → 正确性与误差界是两条独立约束
+          【题 2】
+            - |C_j| = l + K - alpha_j（当前 3 / 4）；只扩到 P 则只有 K=2 → 多做 75%
+            - 目标基由 P4 的逐 tower 点积【倒推】而来，不是 ModUp 自选
+            - evk 存储基 Q·P ≠ 运算基 Q_l·P（代码痕迹：keyswitch-hybrid.cpp:647 的 idx=sizeQ 偏移）
+          【题 3】
+            - ModDown 算子账：每 poly = K 个 INTT-limb + 1 BConv + l 个 NTT-limb = 6，
+              两个 poly 共 12 次 → 直接命中 step 1.2 那「30 次未归属 kernel 调用」中的 12 次
+            - rho 的作用是让除法合法，不是消噪声；消噪声的是 ÷P
+            - 模乘 = 除法的条件：被乘数必须是 P 的整数倍
+            - 噪声唯一源头是 evk 的 epsilon；BConv【不产生】噪声，只【放大】(1+alpha) 倍
+              → alpha 因子的准确出处，闭合 K = alpha (+1)
+          【方法论】
+            - 写代码在残数层，想问题在整数层（笔记 §4.5 / 踩坑 ⑤）
+            - 跨子问题推导前先建符号表（踩坑 ⑥ → 产出 L0_符号表.md）
         deliverable: 手写推导笔记（ModUp P1-P5 + ModDown），标注每步数据形状变化
         changes:
           - 自己画数据形状链：(N×l) → dnum×(N×a) → dnum×(N×(l+K)) → 2×(N×(l+K)) → 2×(N×l)
@@ -126,34 +142,116 @@ phases:
 
       - id: 1.3
         name: "L1：边界放置设计空间表（B0-B4）"
-        status: pending
+        status: in_progress     # 2026-08-07 起
+        prereq_done_2026_08_11: |
+          【Step A 完成】docs/notes/L1_优化术语对表.md
+          起因：导师给出算子优化通用检查清单（并行性/数据依赖/延迟vs吞吐/计算vs带宽/
+          tiling/reduction·同步·负载均衡/Amdahl·Roofline + 「从系统框图加 memory access 找瓶颈」）。
+          核查结论：8 条里 5 条已答（依赖分析、复用与 stationary、peak 循环序推导、reduction、
+          访存受限判定），且推得比教科书例子深，但只以项目内部语言存在。
+          【真空白只有 3 个，均已写入对表 §3，待办清单见对表 §4】
+            ① 延迟 vs 吞吐：L2 模型 T = 计算+传输+控制 是加号，即假设三项不重叠，
+               该假设从未声明也未验证。且 8.229ms = 1829+5537+863 是【分项加总】，
+               与 §4 已查实的 CPU 路径同一个方法论问题在 FPGA 路径上重演。
+               → 先查 FpgaManager 的 offload 是否阻塞，再补 max() 版模型
+            ② 负载均衡：α₀=2/α₁=1 → |C₀|=3/|C₁|=4，总和 α_d+|C_d|=ℓ+K=5 恒等，
+               但【分算子看】不均衡（INTT 2:1，BConv/NTT 3:4）。B0 边界下不构成问题，
+               B1（每 digit 一次）下才构成 → 影响步 3.3 的 -29% 估计
+            ③ 分层 Roofline：三个 AI 数字属于三条【不同】边界——
+               BConv 0.23 MAC/B 是 on-chip AXI 屋顶，B0/B1/B4 0.32/0.89/2.1 是 PCIe 屋顶。
+               两句话都对但不是同一个瓶颈。HERA 的图上没有 PCIe 屋顶，所以它看见的瓶颈是 NTT；
+               把 PCIe 屋顶画出来才是本项目的 Fig. 1。
+        order_note: |
+          【2026-08-07 顺序更正】原排法是 1.2(测量) → 1.3 → 1.4，那是自下而上的排法，错了。
+          理由：测量要测什么，由模型结构决定；模型的自变量由 1.3 产出。
+          现在若去跑 bytes 扫描，测完还得重测（不知道该不该分离 T_fixed 与 BW_eff）。
+          正确顺序：1.3 → 1.5/1.6（供给约束）→ 1.2（标定系数）→ 1.4（实例化对账）。
         rationale: |
           对本系统，「算子划分」的自由度不在「把公式切成算子」（CKKS 定死了，
           且 CiFlow §IV.D 证明算子总数与 dataflow 无关），而在「一次 offload 调用包多少个算子」。
         deliverable: B0-B4 完整表（补 HBM 侧字节 + evk 项 + 片上需求）
+        output_requirement: |
+          【硬要求】表格里填的必须是 (N, l, K, dnum, alpha_j, 方案) 组成的【符号式】，不是数字。
+          例：DC 的 n_call 要写成 sum(alpha_j) + dnum + (sum|C_j| + sum alpha_j)，代入才等于 15。
+          填数字得到一张表；填式子得到一个能预测任意参数点的模型。这是 1.3 与「数一遍」的区别。
+        derived_mechanism: |
+          【2026-08-07 已确立，来自 1.3 第 1 步的循环序推导】
+          BConv 的三层循环 i(输入 limb) / j(输出 limb) / n(系数)：
+            - 归约只沿 i；不同 n 之间零依赖 → 六种排列【全部合法】，包括 n 放最外层
+            - 但 NTT/INTT 把一个 limb 内全部 N 个系数耦合 → 【融合链】里 n 不能最外层
+              → 这就是 B1 边界（每 digit 一次）被 NTT 钉死在「一个完整 limb」的根源
+          peak 由循环序【纯推出】的规则：
+            j 在最外层  → 一次只有 1 个输出 limb 未完成 → peak = 1        (OC)
+            j 不在最外层 → |C_j| 个输出 limb 同时未完成  → peak = |C_j|   (DC)
+            digit 也摊开 → 所有 digit 的输出同时活着     → peak = sum|C_j| (MP)
+          验算（l=3,K=2,alpha_0=2,alpha_1=1 → |C_0|=3,|C_1|=4）：
+            DC = max|C_j| = 4 limb = 128KB   MP = sum|C_j| = 7 limb = 224KB   OC = 1 limb = 32KB
+          与 L1L2_推导v1.md §3.2 从代码反推的「真实 peak」完全一致，但这次是纯推的，不看代码。
         changes:
-          - 每个方案算出 n_call / H2D limb / D2H limb / peak limb / AI
-          - 已有初版见 L1L2_推导v1.md §四（B0=0.32, B1=0.89, B4=2.1 ops/byte）
+          - 每个方案算出 n_call / n_op / V_h2d / V_d2h / peak（全部符号式）
+          - 已有初版见 L1L2_推导v1.md §四（B0=0.32, B1=0.89, B4=2.1 ops/byte，但那是数字版）
           - 补上 evk 口径（CiFlow 表 II 的 AI 是含 evk 的，当前口径不可直接对比）
+          - "补 P4 的 MAC 计数：2 × dnum × (l+K) × N（符号表 §6 缺此项）"
+        open_subquestion: |
+          未占点：n 放最外层的两种排列，peak 与 DC 同为 |C_j|，看似无优势。
+          但一次只处理一个系数时，X[i][n] 与 W[i][j] 各需几个值？与 DC(i 最外) 比差别在哪？
+          → 答出即找到 weight-stationary 之外的第二种驻留方式。
         validation:
-          - 三策略的 peak_buf 能由循环序纯推出，且与修正后的 MemoryTracker 一致
+          - 三策略的 peak_buf 能由循环序纯推出，且与修正后的 MemoryTracker 一致 ✅（见 derived_mechanism）
           - 注意 peak 单位是补基 |C_d| = sizeQlP - alpha_d，不是 sizeP（原插桩用错单位）
+          - B0-B4 五行全部填成符号式
 
       - id: 1.4
-        name: "L2：三模型 v1 + 预测 + 对账"
+        name: "L2：三模型 v1 + 资源约束 + 能耗记账 + 预测对账"
         status: pending
-        deliverable: 可执行的模型（脚本或表格），输入循环序，输出预测延迟
+        deliverable: 可执行的模型（脚本或表格），输入循环序，输出预测延迟 + 资源可行性 + 能耗
         design_constraint: |
-          【硬约束】模型的自变量必须是 (n_call, V, peak)，这三个量由循环序推出。
+          【硬约束 1】模型的自变量必须是 (n_call, V, peak)，这三个量由循环序推出。
           模型里若出现 `if (strategy == OC)`，那它就是查找表不是模型。
+          【硬约束 2】自变量里也不能出现硬编码的 4096 / 3 / 2。
+          T(N, l, K, dnum, PE, f, BW, T_fixed) —— 全部是自变量。
+          这样「要不要按工业参数考虑」就不是问题：同一个模型两组参数各求一次值。
+        model_form: |
+          目标函数（延迟）：
+            T = sum_op n_op·c_op  +  V/BW_eff  +  n_call·T_fixed
+                └ 计算模型 ┘         └ 存储模型 ┘   └ 控制模型 ┘
+
+          资源约束【是约束不是目标】：
+            peak(scheme) + twiddle(N) + 常驻项  <=  B_onchip
+          写成 minimize T s.t. R <= Budget，【不要】写成 minimize T + lambda·Area。
+          理由：FPGA 资源是离散硬上限，超了是布不进去（fail），不是变贵。
+          加权求和是 ASIC 写法，在 FPGA 上没有意义。
+          注：L2 能直接控制的资源【只有片上存储】——LUT/FF/DSP 由 L3 决定。
+          （这也是 CiFlow 全篇只谈 on-chip SRAM 而不谈 DSP/LUT 的原因。）
+
+          能耗【记账项，phase2 前不参与方案筛选】：
+            E = sum_op n_op·e_op  +  V·e_bit  +  P_static·T
+          复用同一套 n_op / V / n_call，只换一组系数，几乎零额外成本。
+        power_deferral_rationale: |
+          【为什么现在不让能耗参与决策——必须写明，这是 traceability 规则的一部分】
+          在 L2 层，性能与功耗【同向】：省数据搬运既省时间又省能量，不产生取舍。
+          量级粗估（文献口径，非实测）：DC 一次 HKS 计算能耗 ~13 uJ，PCIe 搬运能耗 ~142 uJ，
+          搬运约为计算的 10 倍——与延迟侧结论方向一致。
+          功耗真正产生取舍是在 L3 的两个旋钮上：PE_PARALLEL 上调（功耗线性增）、
+          频率上调（超线性增，还要提压）。所以能耗到 phase2/phase3 才上场。
+          系数可测：xbutil examine --device <bdf> --report electrical
+        current_bottleneck_note: |
+          【phase2 的输入】csynth 显示 Compute_CG_NTT 用 LUT 4% / FF 1% / DSP 3% / BRAM 4% / URAM ~0%，
+          资源用了个位数百分比却只能跑 166MHz（6ns，从 4ns 退了两次）。
+          → 当前瓶颈是【时序】不是【资源】，且关键路径问题不是资源竞争而是逻辑深度/布线。
+          → phase2 的方向应是「花资源换时序」（加流水级、复制逻辑降扇出、拆长组合链），
+            而不是省资源。先查关键路径，才知道那 96% 的空闲资源该往哪儿花。
         changes:
-          - "T = sum(n_op·c_op) + V/BW_eff + n_call·T_fixed"
           - c_op 来自 csynth × 上板修正系数（当前拟合值 1.35，phase2 后可换成有依据的值）
           - BW_eff 与 T_fixed 来自 step 1.2 实验 B
+          - B_onchip(N) 与 twiddle(N) 来自 step 1.6
+          - e_op / e_bit / P_static 标「待标定」，先不填值
         validation:
           - 三策略预测 vs 实测误差 <= 15%
           - "【先写后测】预测三策略落在 5% 以内——若实测印证则模型成立且得到重要结论；若实测偏差大则模型漏项"
           - 模型能对一个从未实测过的调度点做出预测（B1 或 batch=2）
+          - 资源约束能筛掉至少一个方案（若一个都筛不掉，说明约束式写松了或参数太小）
+          - 能耗式写进模型且标明「不参与筛选」及其理由
 
       - id: 1.5
         name: "确认 bit-reversal 在哪一步被抵消"
