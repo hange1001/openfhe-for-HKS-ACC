@@ -1,14 +1,16 @@
 # ============================================================
-# task.yaml - 机器可读的任务描述文件
-# 用法：将本文件作为 AI Agent 的任务输入
-# 每完成一步，更新对应 step 的 status
+# task.yaml - 机器可读的任务【数据库】，不是阅读材料
+#   · 按 phase 归档，【不按执行顺序】。执行顺序与当前位置见 AI_Cowork/MAP.md §1/§2
+#   · 查询方式：搜 "id: 1.3" 定位 step；搜 open_questions 查悬而未决问题
+#   · 每完成一步，更新对应 step 的 status，并同步 MAP.md §1/§2
 # 更新：2026-08-04 — 由单一 OC 修复任务改组为「全栈能力闭环」四阶段路线
+#       2026-08-13 — 建 doc_refs / MAP.md；status 与实际进度对齐（原 not_started 是漏改）
 # ============================================================
 
 task:
   id: fullstack-l0-to-l5-closure
   title: 从 L0 算法到 L4 物理，把 HKS 加速器的全栈推导链走通一遍
-  status: not_started
+  status: in_progress     # phase1 进行中（1.1 done, 1.3 in_progress）
   goal: |
     目标不是发论文，是把「从算法推导到实现再回到测量」这条链在自己的项目上走通，
     形成可迁移的全栈工程能力。判据从「有没有新颖性」改为
@@ -18,7 +20,7 @@ task:
     有公开答案可对账，是训练条件里最好的一种。
 
   context: |
-    L0-L5 金字塔现状（见 HKS-ACC-Portfolio.md）：
+    L0-L5 金字塔现状（见 Portfolio —— ⚠️ doc_refs.external，位置待确认）：
       L0 算法      读过没推过        → 空白
       L1 算子划分  空白              → 空白
       L2 调度建模  有实现无模型      → 缺预测能力（工业上有专岗：性能建模工程师）
@@ -26,22 +28,70 @@ task:
       L4 物理      【欠债】只有 csynth，无 P&R 时序报告；4ns→5ns→6ns 两次降频无记录
       L5 系统集成  已通，缺 DMA 行为的定量刻画
 
-    关键前置结论（见 docs/notes/L1L2_推导v1.md）：
+    关键前置结论（见 推导v1）：
       - 每算子一次 offload 的架构下，三策略 AI 恒等 → 延迟差必然在 5% 内（实测 8.04/8.23/8.46ms 印证）
       - 修 OC 的性能天花板 8%；OC + 片上驻留是 29%
       - 表 5-4 延迟列是 CPU 路径、kernel 列是 FPGA 路径，两列不同源，不能用于标定
 
-  reference_docs:
-    - docs/notes/L1L2_推导v1.md                    # 算子账 / 三模型实例化 / 口径对账
-    - docs/notes/L1L2_算子划分与性能模型指南.md      # 方法论
-    - docs/notes/L1_优化术语对表.md                 # 通用优化术语 ↔ 本项目结论；含三个空白与材料清单
-    - docs/notes/OC_strategy_gap_analysis.md       # 注意：§4 计算量表已被推翻，Gap#1 状态标错
-    - docs/papers/实验规划.md                       # 补 4-2 / 补 4-3 / 表 5-4
-    - CiFlow (ISPASS'24) / HERA (FPGA'26)          # 参照系
+  reference_docs: |
+    全部路径见顶部 doc_refs（2026-08-13 起唯一权威表，本处不再重复列举）。
+    本任务最常用：推导v1 / 对表 / 符号表 / 实验规划 / gap分析
+    参照系：CiFlow (ISPASS'24) / HERA (FPGA'26) —— ⚠️ 均在 doc_refs.external，不在仓库内
 
 repository:
   working_branch: main
   # 建议每个 phase 一个独立 commit
+
+# ============================================================
+# 引用锚点表（2026-08-13 建立）
+# 正文一律写「别名 §章节」，别名必须出自本表。规则见 global_validation.doc_ref_format
+# ============================================================
+doc_refs:
+
+  in_repo:        # 仓库内，路径可直接打开
+    推导v1:       docs/notes/L1L2_推导v1.md                    # 算子账 / 三模型实例化 / 口径对账
+    建模指南:     docs/notes/L1L2_算子划分与性能模型指南.md      # 方法论（推导见 推导v1）
+    对表:         docs/notes/L1_优化术语对表.md                 # 通用术语↔本项目结论；已冻结为参考文档
+    符号表:       docs/notes/L0_符号表.md                       # 全项目统一符号；§9.1 = AI 口径三规定
+    闭卷推导:     docs/notes/L0_HKS_闭卷推导.md                 # step 1.1 推导正文
+    手推:         docs/notes/L0_HKS算法手推.md                  # step 1.1 过程与踩坑
+    gap分析:      docs/notes/OC_strategy_gap_analysis.md        # ⚠️ §4 计算量表已被推翻，Gap#1 状态标错
+    项目状态:     docs/notes/PROJECT_STATUS.md
+    实验规划:     docs/papers/实验规划.md                        # 补 4-2 / 补 4-3 / 表 5-4
+    ADR:          AI_Cowork/decisions.md                        # ADR-001~010 全在此（已核实）
+    日志:         AI_Cowork/log.md
+    综合报告:     docs/reports/bconv/                           # 10 份 csynth/cosim；⚠️ 旧配置口径，见 q7
+
+  # 仓库外，但路径已写死可直接打开（2026-08-13 由用户提供并核实）
+  # 【不入库的理由】Portfolio 是个人职业材料；论文 PDF 有 IEEE/ACM 版权，不应提交进 git
+  external:
+
+    Portfolio:
+      path: "C:/Users/20521/Desktop/career-plan/HKS-ACC-Portfolio.md"
+      note: "L0-L5 金字塔 / R1 相图 / R2 批深度的定义源。被 task.yaml context 与 推导v1 §5 依赖。
+             ⚠️ 与本仓库无同步机制（sync-to-ob.sh 的 SYNC_FILES 里没有它）——
+             改了 Portfolio 不会反映到这里，反之亦然。引用其结论前先确认两边未漂移。"
+
+    HERA:
+      path: "C:/Users/20521/Zotero/storage/E3FEV6Y6/HERA a bandwidth-efficient accelerator for fully homomorphic encryption on HBM-enabled FPGA.pdf"
+      note: "FPGA'26。正文引用 §3.1（NTT 分解）、§3.4（off-chip strided read）。"
+
+    CiFlow:
+      path: "C:/Users/20521/Zotero/storage/SPCSXXS2/Neda 等 - 2024 - CiFlow dataflow analysis and optimization of key switching for homomorphic encryption.pdf"
+      note: "ISPASS'24。正文引用 §IV.D（算子总数与 dataflow 无关）、表 II（含 evk 的 AI）。"
+
+    zotero_caveat: |
+      Zotero storage 的 8 位 key（E3FEV6Y6 / SPCSXXS2）在附件被重新导入时会变。
+      路径失效时：Zotero 右键条目 → Show File，取新路径更新本表。
+      IEEE/ACM PDF 常带 owner password，提取文本用 pdftotext（见 log 2026-08-04）。
+
+    d7_papers_availability: |
+      【2026-08-13 核查】对表 §5 的 D7 书单在 Zotero 中的可得性：
+        ✅ 已有：BTS(W3MBF39H) / ARK(LG2625QD) / SHARP(H6ACHY53)
+        ❌ 缺失：F1 (MICRO'21) / CraterLake (ISCA'22) —— D7 的 ★ 是 F1，需先获取
+        💡 意外收获：Theodosian (2025)「a deep dive into memory-hierarchy-centric FHE acceleration」
+           (LHSVT99H) —— 主题正是「系统框图 + memory hierarchy 找瓶颈」，与 D7 目标直接对口，
+           且比 F1 新四年。是否替换/补充进 D7 由用户定。
 
 # ============================================================
 # 贯穿全程的验收项（每个 phase 都要满足）
@@ -63,6 +113,25 @@ global_validation:
     rule: |
       任何实测之前，先写下预测值和 ±15% 区间，存入 log.md。
       测完再对账。偏差 >15% 先查漏项，禁止调系数凑数。
+  - id: doc_ref_format
+    rule: |
+      【2026-08-13 新增】引用文档一律写成「别名 §章节」，别名必须出自顶部 doc_refs。
+      禁止三种写法（本次清理前各出现过）：
+        ① 裸章节号 ——「与 §4 已查实…」：哪个文件的 §4？
+        ② 别名不在表里 ——「笔记 §4.5」「gap 分析 §4」：靠上下文猜
+        ③ 正文写全路径 ——「docs/notes/L1_优化术语对表.md §3.1」：路径变了要改 N 处
+      引用 doc_refs.external 里的文档（Portfolio / HERA / CiFlow）前，
+      必须先确认本地能打开。拿不到的文献不得作为任何推导或数字的依据——
+      这是 traceability 规则的延伸：出处不可核对 = 拍脑袋常数。
+
+  - id: latency_numbers_are_lower_bounds
+    rule: |
+      【2026-08-13 新增】现有全部 FPGA 侧延迟数字（182.8 us/call、8.229 ms 等）
+      必须标注为【下界】，不是墙钟。
+      理由：FpgaManager.h 的计时窗口（Execute:415-429）只覆盖 sync/kernel/sync 三段，
+      未计入每次调用的 xrt::bo x3 分配（:402-407）、bo.write() x2、bo_out.read()、以及 bo 析构。
+      → 引用这些数字时必须带「下界」二字；重新标定前不得用于任何加速比声明。
+      详见 对表 §3.1。
 
 # ============================================================
 # PHASE 1: L0 + L1 + L2 —— 算法、算子划分、三模型
@@ -71,7 +140,7 @@ phases:
 
   - id: phase1
     name: "L0 算法推导 + L1 算子划分 + L2 三性能模型"
-    status: pending
+    status: in_progress   # 1.1 done (08-07)，1.3 in_progress；原 pending 是漏改
     estimate: 1 week
     depends_on: []
 
@@ -109,7 +178,7 @@ phases:
             - 噪声唯一源头是 evk 的 epsilon；BConv【不产生】噪声，只【放大】(1+alpha) 倍
               → alpha 因子的准确出处，闭合 K = alpha (+1)
           【方法论】
-            - 写代码在残数层，想问题在整数层（笔记 §4.5 / 踩坑 ⑤）
+            - 写代码在残数层，想问题在整数层（闭卷推导 §4.5 / 手推 踩坑 ⑤）
             - 跨子问题推导前先建符号表（踩坑 ⑥ → 产出 L0_符号表.md）
         deliverable: 手写推导笔记（ModUp P1-P5 + ModDown），标注每步数据形状变化
         changes:
@@ -135,6 +204,17 @@ phases:
           - "实验 A：三策略 FPGA 路径下 Precompute 区间的【独立】计时（不要用分项加总）"
           - "实验 B：bytes 扫描，1/2/4/8 limb 一次传，各测 H2D/D2H → 分离 T_fixed 与 BW_eff"
           - "实验 C：一次传 25MB 过 PCIe 计时 → 与 HERA 的 Mult 延迟 0.3ms 对比（预期 8-28x）"
+          - |
+            实验 D【2026-08-13 新增，来源 q8】：量出未计时开销。
+            在 FpgaManager.h 的 Execute() 函数体首尾各加一个时间戳，
+            比 sum(整个函数墙钟) vs sum(h2d + kern + d2h)，差值即未计入的
+            xrt::bo 分配/析构 + bo.write() x2 + bo_out.read()。
+            10 分钟即可。它决定：(a) 现有全部延迟数字要修正多少；
+            (b) 步 3.4「Buffer 复用」值不值得做。
+            预测（先写后测，按 predict_before_measure 规则）：
+              未计时开销 30-80 us/call，即真实单次 call 在 210-260 us 区间。
+              依据：xrt::bo 构造含驱动 ioctl + 物理内存分配 + mmap，
+              文献口径每次 10-30 us，一次调用 3 个 buffer。±15% 区间待实测对账。
         validation:
           - kernel 调用数可复现：n_call = (INTT limb + NTT limb + BConv call) + 常数，把那个常数的 30 次归属清楚
           - BW_eff 由拟合得出而非 32KB/40.6us 的单点折算
@@ -144,7 +224,7 @@ phases:
         name: "L1：边界放置设计空间表（B0-B4）"
         status: in_progress     # 2026-08-07 起
         prereq_done_2026_08_11: |
-          【Step A 完成】docs/notes/L1_优化术语对表.md
+          【Step A 完成】对表（docs/notes/L1_优化术语对表.md）
           起因：导师给出算子优化通用检查清单（并行性/数据依赖/延迟vs吞吐/计算vs带宽/
           tiling/reduction·同步·负载均衡/Amdahl·Roofline + 「从系统框图加 memory access 找瓶颈」）。
           核查结论：8 条里 5 条已答（依赖分析、复用与 stationary、peak 循环序推导、reduction、
@@ -152,7 +232,7 @@ phases:
           【真空白只有 3 个，均已写入对表 §3，待办清单见对表 §4】
             ① 延迟 vs 吞吐：L2 模型 T = 计算+传输+控制 是加号，即假设三项不重叠，
                该假设从未声明也未验证。且 8.229ms = 1829+5537+863 是【分项加总】，
-               与 §4 已查实的 CPU 路径同一个方法论问题在 FPGA 路径上重演。
+               与 推导v1 §4 已查实的 CPU 路径同一个方法论问题在 FPGA 路径上重演。
                → 先查 FpgaManager 的 offload 是否阻塞，再补 max() 版模型
             ② 负载均衡：α₀=2/α₁=1 → |C₀|=3/|C₁|=4，总和 α_d+|C_d|=ℓ+K=5 恒等，
                但【分算子看】不均衡（INTT 2:1，BConv/NTT 3:4）。B0 边界下不构成问题，
@@ -186,12 +266,19 @@ phases:
             digit 也摊开 → 所有 digit 的输出同时活着     → peak = sum|C_j| (MP)
           验算（l=3,K=2,alpha_0=2,alpha_1=1 → |C_0|=3,|C_1|=4）：
             DC = max|C_j| = 4 limb = 128KB   MP = sum|C_j| = 7 limb = 224KB   OC = 1 limb = 32KB
-          与 L1L2_推导v1.md §3.2 从代码反推的「真实 peak」完全一致，但这次是纯推的，不看代码。
+          与 推导v1 §3.2 从代码反推的「真实 peak」完全一致，但这次是纯推的，不看代码。
         changes:
           - 每个方案算出 n_call / n_op / V_h2d / V_d2h / peak（全部符号式）
-          - 已有初版见 L1L2_推导v1.md §四（B0=0.32, B1=0.89, B4=2.1 ops/byte，但那是数字版）
+          - 已有初版见 推导v1 §四（B0=0.32, B1=0.89, B4=2.1 ops/byte，但那是数字版）
           - 补上 evk 口径（CiFlow 表 II 的 AI 是含 evk 的，当前口径不可直接对比）
           - "补 P4 的 MAC 计数：2 × dnum × (l+K) × N（符号表 §6 缺此项）"
+          - |
+            【2026-08-13 增】产出分层 Roofline 图（本 step 交付物之二）：
+            三条带宽屋顶 = PCIe（~3GB/s，下界口径）/ HBM / 片上 AXI（512-bit × 166MHz ≈ 10.6 GB/s），
+            一条算力屋顶（当前 PE 配置）。把 B0-B4 五点 + BConv 单算子点全部放上去。
+            硬要求：每个点标注分母跨的是哪条边界（AI_pcie / AI_axi，见符号表 §9.1），
+            混用边界的图无效。画图前先声明系统边界（含 host↔加速器）——
+            这条边界线是本项目与 HERA/CiFlow 框图的差异所在。
         open_subquestion: |
           未占点：n 放最外层的两种排列，peak 与 DC 同为 |C_j|，看似无优势。
           但一次只处理一个系数时，X[i][n] 与 W[i][j] 各需几个值？与 DC(i 最外) 比差别在哪？
@@ -211,10 +298,82 @@ phases:
           【硬约束 2】自变量里也不能出现硬编码的 4096 / 3 / 2。
           T(N, l, K, dnum, PE, f, BW, T_fixed) —— 全部是自变量。
           这样「要不要按工业参数考虑」就不是问题：同一个模型两组参数各求一次值。
+        warmup_exercise: |
+          【2026-08-13 增】本 step 的热身推导，30 分钟，闭卷（不开 task.yaml / 对表 / 推导v1）。
+          来源：08-13 quiz 里 Q2(Amdahl) 与 Q3(超乘性机制) 得零分，本练习是其处方。
+          规格照 step 1.1 的 exercise_order：给定什么、推什么、什么算过关，全部写明。
+
+          ── 练习 A：Amdahl 三项记账 ────────────────────────────
+          【给定】DC 在 Precompute 区间的三项：计算 1785 us / 传输 393 us / 控制 570 us
+          【推】
+            A1  总时间与三项占比（百分比）
+            A2  先写 Amdahl 一般式，再代入：计算部分【无限快】时的加速比上界
+            A3  计算部分只快 10 倍（非无限）时的加速比
+            A4  【逆用】若要端到端快 2 倍，计算部分至少要快几倍？
+            A5  真 OC 的预测值是 2523 us（比 DC 快 8%）。已知它把计算从 1785 降到 1473，
+                但传输 393->404、控制 570->646。核对净减是否等于 225 us；
+                然后用一句话说明：为什么「8%」是一个【诊断结果】而不只是一个成绩
+          【过关】A2 与 A4 两个数都对，且 A5 能说出「修 OC 一边省计算一边加调用」
+
+          ── 练习 B：超乘性四行表 ──────────────────────────────
+          【给定】
+            量                  值                              来源层
+            单次 call 三段      H2D 40.6 / kernel 123.0 / D2H 19.2 us   L5 实测（下界口径）
+            phase4 片内目标     117K -> 46K cycles，即 2.55 倍          L3 csynth
+          【映射（初稿漏写，2026-08-13 补）】
+            微架构优化【只】作用于 kernel 段：kernel_new = 123.0 / 2.55 = 48.2 us
+            传输段合计 = H2D + D2H = 40.6 + 19.2 = 59.8 us
+          【重叠的定义（初稿漏写）】
+            稳态双缓冲：call i 的 H2D/D2H 与 call i-1 的 kernel 重叠，
+            于是每 call 的摊销时间由较慢的一侧决定。
+          【假设（必须先写下再算）】微架构改动纯片内，不改变 PCIe 字节数
+          【推】
+            B0  【先答这题】2.55 倍是 csynth 【周期】比，123.0 us 是上板【墙钟】。
+                什么条件下才能直接相除？至少说出两个条件。
+                （这题就是你自己提出的质问，它比后面六题都重要）
+            B1  现状单次 call
+            B2  只做微架构：单次 call 与加速比
+            B3  只做传输重叠：先写出重叠后单次 call 的【公式形式】，再代入
+            B4  两个都做：单次 call 与加速比
+            B5  B4 的加速比 vs (B2 加速比 x B3 加速比)，哪个大、大多少
+            B6  【禁止写式子，两句话以内】为什么一起做会超过各自的乘积
+            B7  B4 之后瓶颈是哪一段？（提示：你 08-13 自己说过「限制因素转移」）
+          【过关】B0 说出两个条件，B3 写出 max() 形式（不是先算再解释），
+                  B5 算出 3.06 > 2.52，B6 说清机制
+
+          ── 对账 ──────────────────────────────────────────────
+          推完再打开本 step 的 model_form 比对。
+          错了不要紧，要能指出【错在哪一步】——按 predict_before_measure 的精神，
+          偏差比结果重要。对账结果记入 log.md。
         model_form: |
           目标函数（延迟）：
             T = sum_op n_op·c_op  +  V/BW_eff  +  n_call·T_fixed
                 └ 计算模型 ┘         └ 存储模型 ┘   └ 控制模型 ┘
+
+          【2026-08-13 增补：必须并列算两个版本】
+            串行版：T = T_comp + T_mem + T_ctrl                          ← 现状，加号
+            重叠版：T ≈ max(T_comp, T_mem) + ramp_up + drain + T_ctrl_不可重叠
+          加号成立【已由源码证实】（open_questions q8：offload 完全阻塞，并发度=1），
+          但成立的原因是实现如此，不是物理限制 → 两版差值 = 「异步 offload / 双缓冲」的收益上界。
+
+          【超乘性——排期时必须捆绑】
+          用 phase4 的 117K→46K（片内 2.55x）代入单次 call（现状 40.6+123.0+19.2 = 182.8 us）：
+            只做微架构    40.6 + 48.2 + 19.2 = 108.0 us  → 1.69x
+            只做传输重叠  max(59.8, 123.0)   = 123.0 us  → 1.49x
+            两个都做      max(59.8,  48.2)   =  59.8 us  → 3.06x
+          1.69 x 1.49 = 2.52 < 3.06 —— 单独做任一项，收益都被另一项的存在低估。
+          这是 + 变 max() 的直接后果 → 步 3.0 排序时这两项【不能各自单独算】。
+          并且做完之后瓶颈换人：59.8 > 48.2，PCIe 接管瓶颈
+          （回答 推导v1 §7 拷问 #1 的兄弟问题）。
+          待验证假设：59.8 us 中约 38 us 是 T_fixed，能否被重叠藏掉未知 → step 1.2 实验 B。
+
+          【Amdahl 记账——用于事前判断改动值不值得做，不是事后算加速比】
+            DC 三项占比 65% / 14% / 21%（1785 / 393 / 570 us，共 2748）
+            计算清零的上界 = 2748 / 963 = 2.85x
+            修 OC 1.09x（只攻计算的一小块）／ OC+驻留 1.41x（三项同攻）
+            → 8% 本身是一个诊断结果：说明修 OC 没往主要矛盾上使劲
+          注意：分母 2748 是【下界】（见 global_validation），实测未计时开销 X 后须重算，
+          且 X 全部落在非计算侧 → X 越大，2.85x 这个上界越低。
 
           资源约束【是约束不是目标】：
             peak(scheme) + twiddle(N) + 常驻项  <=  B_onchip
@@ -285,7 +444,13 @@ phases:
         validation:
           - 产出「能落地的最大参数点清单」
           - "回答：ADR-003（CG-NTT）的 log N 倍 twiddle 冗余在哪个 N 上变得不可接受？"
-          - "回答：撞墙后要改的是常数还是微架构？（对照 HERA §3.1 的 NTT 分解）"
+          - "回答：撞墙后要改的是常数还是微架构？（对照 HERA §3.1 的 NTT 分解；HERA 见 doc_refs.external）"
+          - |
+            【2026-08-13 增】回答：从哪个 N 起，单 limb（8N 字节）大到 N 维必须 tiling？
+            一旦切 N，step 1.3 的全部 peak 公式（peak = 1 / |C_j| / Σ|C_j|，单位 = 整 limb）失效，
+            需给出 tile 版 peak(N_t)。注意 BConv 逐系数、切 N 自由；NTT 耦合全部 N 个系数、
+            切 N 不自由——合法切法是不是恰好就是 HERA §3.1 的 NTT 分解（√N×√N）？
+            若是，本 step 的两个问题（twiddle 冗余、N 维 tiling）是同一个答案。
 
 # ============================================================
 # PHASE 2: L4 —— 把物理层的欠债还上
@@ -339,8 +504,19 @@ phases:
       - id: 3.0
         name: "用 phase1 的模型给候选集排序"
         status: pending
+        candidate_set: |
+          【2026-08-13 更新，候选集从 3 项增至 4 项】
+            3.1 修 OC（Gap #3+#4）      —— OpenFHE 库改动，天花板 8%
+            3.2 修 OC（Gap #2）          —— 库 + 接口改动
+            3.3 B1 复合 opcode（驻留）    —— HLS + Host + 库，预测 29%
+            3.4 Buffer 复用（新）         —— 纯 Host 一个文件，收益待实验 D 标定
+          另有一项【尚未立步】的候选：异步 offload / 双缓冲（把 + 变成 max()），
+          见 对表 §3.1——它与 phase4 的微架构优化是
+          【超乘性】的（1.69x 与 1.49x 同做得 3.06x > 乘积 2.52x），
+          因此排序时这两项必须【捆绑评估】，不能各自单独算收益。
         validation:
           - 排序结果写入 log.md，作为后续步骤顺序的依据（模型选，不是预先定死）
+          - "四个候选项各给出预测收益与改动成本，成本用【要动几层】计（Host / HLS / 库）"
 
       - id: 3.1
         name: "修 OC：Gap #3+#4（Section1 bypass + 循环范围）"
@@ -355,7 +531,7 @@ phases:
           - "删除原 p==0 时填 Q-side complement towers 的代码（:556-573），被 Section1 bypass 取代"
         validation:
           - 编译通过；OC 与 DC 解密结果一致
-          - "调用数核对：真 OC 的 BConv 次数 = sizeQl×(dnum-1) + sizeP×dnum = 7（注意 gap 分析 §4 写的 9 算错了，Section2 数了两遍）"
+          - "调用数核对：真 OC 的 BConv 次数 = sizeQl×(dnum-1) + sizeP×dnum = 7（注意 gap分析 §4 写的 9 算错了，Section2 数了两遍）"
           - 实测 vs phase1 模型预测，偏差 <= 15%
 
       - id: 3.2
@@ -390,6 +566,16 @@ phases:
              （HERA §3.4 说的是 off-chip strided read），全片上时为零代价。
           结论：B1 从「设计一个新复合核」降级为「把 Execute_INTT / Compute_BConv / Execute_NTT
           三个已有子函数串起来，中途不动 poly_buffer」。
+        risk_load_imbalance: |
+          【2026-08-13 增，源：对表 §3.2】digit 负载不均衡是本步特有风险（B0 下不存在）：
+          α_d + |C_d| = l + K 恒等 → 【总量】均衡；但分段看不均衡——
+          INTT 段 ∝ α_d（2:1），BConv/NTT 段 ∝ |C_d|（3:4）。
+          【何时兑现】顺序执行 B1 复合调用时此项 = 0（总工作量不变）；
+          一旦与「异步 offload/双缓冲」叠加（digit d 算、digit d+1 传），
+          重叠窗口由较短的段决定，不均衡立即变成空转——
+          而这两项恰是 1.4 model_form 认定要【捆绑评估】的超乘性组合。
+          先决动作：写出 imbalance(l, dnum) = max_d W_d / avg_d W_d（按段分别定义）的符号式，
+          代入参数点，把上界写进 step 3.0 的排序依据。-29% 预测当前未含此项。
         files_to_modify:
           - src/fpga_backend/src/top.cpp        # 新增 OP_DIGIT_MODUP 之类的复合 case
           - src/core/include/FpgaManager.h      # Host 侧新接口
@@ -403,6 +589,36 @@ phases:
           - 实测 vs 模型预测偏差 <= 15%
           - 重新过 P&R，确认复合 case 没有破坏 phase2 的时序结论
           - "注意 twiddle 架构选择（q6）会影响本 case 的片上预算"
+
+      - id: 3.4
+        name: "Buffer 复用：xrt::bo 提出调用体外，Init 一次性分配"
+        status: pending
+        estimate: 0.5 day
+        added: 2026-08-13    # 来源：open_questions q8 的源码核查
+        priority_note: |
+          【成本最低的候选项，但顺序由步 3.0 的模型决定，不在此预先定死】
+          纯 Host 改动，一个文件；不动 HLS、不动 OpenFHE 库、不动 opcode 协议。
+          对比：步 3.1 修 OC 要动 OpenFHE 库（天花板 8%）；步 3.3 B1 要动 HLS+Host+库（29%）。
+        rationale: |
+          xrt::bo 在每次 offload 调用【内部】构造并在作用域结束时析构：
+            Execute:402-407 / ModOpBatchOffload:584-586 / BConvOffload:674-676
+          45 次调用 x 3 个 buffer = 135 次分配 + 135 次释放。
+          xrt::bo 构造不是 malloc，是驱动 ioctl + 设备物理内存分配 + mmap，量级通常数十 us。
+          且这段开销【完全不在现有计时窗口内】（见 q8），所以它既没被测到也没被建模。
+        files_to_modify:
+          - src/core/include/FpgaManager.h
+        changes:
+          - "把 bo_in1 / bo_in2 / bo_out 提为成员变量，Init 里按 MAX_LIMBS x FPGA_RING_DIM 一次性分配"
+          - "调用体内只保留 write / sync / kernel / sync / read"
+          - "注意：不同 opcode 的 size 不同，需按最大尺寸分配后用 sub-buffer 或只 sync 有效区间"
+        depends_on_measurement: |
+          先做 step 1.2 实验 D（Execute 首尾加时间戳，比 sum(墙钟) vs sum(h2d+kern+d2h)）。
+          差值即未计时开销。若接近或超过 T_fixed 的 38 us，本步性价比最高。
+          若差值很小，说明 xrt::bo 分配被 XRT 内部缓存了，本步降级。
+        validation:
+          - 数值正确性不变（本步不改变任何计算）
+          - 实测 vs 实验 D 测出的未计时开销对账，偏差 <= 15%
+          - "复测后更新 global_validation 的 latency_numbers_are_lower_bounds：口径是否已闭合"
 
 # ============================================================
 # PHASE 4: L5 深化 + L3 剩余优化（可插空隙）
@@ -442,7 +658,7 @@ open_questions:
       16 倍参数只换来 1.33 倍。且一旦算力工业化，机器平衡点从 0.22 跳到 25.6 ops/byte，
       单算子 AI 差 51 倍，整条 HKS 全融合也只到 ~4.4，仍差 5.8 倍。
       结论：参数上推解决固定开销，不解决传输开销。真正的出路是密文常驻加速器、跨多次 HKS 复用。
-      详见 phase1 step 1.3 与 L1L2_推导v1.md。
+      详见 phase1 step 1.3 与 推导v1。
   - id: q2
     q: "R2（批深度）与 Hoisting 的界限在哪？"
     a: |
@@ -504,6 +720,34 @@ open_questions:
       :233 注释写 factor=16 —— ADR-002 的「统一引用常量」已被破坏。
       在 phase2 重新综合前，docs/reports/ 下所有资源与延迟数字都应视为旧配置口径。
 
+  - id: q8
+    q: "FpgaManager 的 offload 是阻塞的吗？它决定现有全部延迟数字的口径"
+    status: answered_2026_08_13
+    a: |
+      【完全阻塞】三条路径（Execute:386 / ModOpBatchOffload:566 / BConvOffload:614）同一模式：
+        bo.sync(TO_DEVICE) x2  →  run = m_kernel_top(...)  →  run.wait()  →  bo.sync(FROM_DEVICE)
+      XRT 的 bo::sync() 是同步 DMA，返回即传完；run.wait() 阻塞等 kernel。
+      无 xrt::bo::async、无多个 run 同时在飞、无双缓冲。
+      → 并发度 = 1。L2 模型 T = 计算 + 传输 + 控制 的【加号成立】，
+        但成立的原因是【实现如此，不是物理限制】——是 ADR-008 无状态 RPC 的推论。
+
+      【意外发现，比上面更重要】182.8 us 不是墙钟，是【下界】。
+      计时窗口开在 Execute:415，未计入：
+        - xrt::bo x3 次分配（:402-407，每次调用都重新分配）
+        - bo_in1.write() / bo_in2.write()（host memcpy 进 BO）
+        - bo_out.read()（memcpy 回 host，在 t_d2h_end 之后）
+        - xrt::bo x3 次析构（释放）
+      → 8.229 ms = 45 x 182.8 既不是墙钟也不是完整记账，是【不完整的记账加总】。
+      → 已升级为 global_validation 的 latency_numbers_are_lower_bounds 规则。
+
+      【衍生候选项】xrt::bo 每次调用内部构造 = 45 次调用 x 3 buffer = 135 次分配 + 135 次释放。
+      xrt::bo 构造是驱动 ioctl + 设备物理内存分配 + mmap，量级通常数十 us。
+      → 新增 phase3 步 3.4「Buffer 复用」，纯 Host 改动，最便宜的候选项。
+
+      【对 Amdahl 的影响】未计时部分 X 全部落在【非计算】一侧，
+      真实分母 = 2748 + 15X → X 越大，微架构优化的天花板（当前算得 2.85x）越低。
+      → 进一步支持「不该现在跳到 L3 微架构 II 优化」的判断。
+
 # ============================================================
 # 任务记录
 # ============================================================
@@ -512,8 +756,8 @@ completed_tasks:
     date: 2026-06-29
     summary: |
       完成 OC vs CiFlow gap 分析。识别 5 个 gap（#1 INTT 复用已做、#2-#5 未做）。
-      产出：docs/notes/OC_strategy_gap_analysis.md。
-      【2026-08-04 修正】读原文后发现：§4 的「等价计算量 9/20/10」表概念上不该存在
+      产出：gap分析。
+      【2026-08-04 修正】读原文后发现：gap分析 §4 的「等价计算量 9/20/10」表概念上不该存在
       （CiFlow §IV.D 明说算子总数与 dataflow 无关）；Gap #1 标 ✅ 但它恰恰是唯一没做的
       （做到的是「只算一次」，CiFlow 要的是「只加载一次」）；真 OC 的 BConv 次数是 7 不是 9。
 
@@ -523,4 +767,4 @@ completed_tasks:
       完成 L1/L2 推导 v1：算子账（DC/MP/伪OC/真OC/真OC+驻留 五点）、三模型实例化、F2 口径对账。
       关键结论：per-operator offload 边界下三策略 AI 恒等 → 5% 差是理论上限；
       8.0-8.5ms 是 n_call × 单次均值的控制模型输出而非实测；峰值缓冲 64/128/32KB 是插桩虚构。
-      产出：docs/notes/L1L2_推导v1.md。
+      产出：推导v1。

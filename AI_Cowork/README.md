@@ -1,6 +1,7 @@
 # openfhe-for-HKS-ACC 项目背景（AI 上下文）
 
-> 本文件是给 AI Agent 看的项目入口。详细进度索引另见 [../docs/notes/PROJECT_STATUS.md](../docs/notes/PROJECT_STATUS.md)。
+> **当前位置 / 下一步 / 文件地图 → 先看 [MAP.md](MAP.md)**（2026-08-13 起的唯一导航页）。
+> 本文件只提供项目背景（给 AI 冷启动）。详细进度索引另见 [../docs/notes/PROJECT_STATUS.md](../docs/notes/PROJECT_STATUS.md)。
 
 ## 项目概述
 
@@ -47,7 +48,7 @@ openfhe-for-HKS-ACC/
 ## 关键约定
 
 - **FPGA 参数**（[src/fpga_backend/include/define.h](../src/fpga_backend/include/define.h)）：
-  - `RING_DIM = 1 << 12` (4096)、`SQRT = 1 << 6` (64)、`STAGE = 12`、`PE_PARALLEL = 8`
+  - `RING_DIM = 1 << 12` (4096)、`SQRT = 1 << 6` (64)、`STAGE = 12`、`PE_PARALLEL = 4`（⚠️ cg_ntt.cpp:191 的 pragma 仍硬编码 8，见 task.yaml q7）
   - `LIMB_Q = 3`、`LIMB_P = 2`、`MAX_LIMBS = 8`
 - **opcode**：`OP_INIT=0 / OP_ADD=1 / OP_SUB=2 / OP_MULT=3 / OP_NTT=4 / OP_INTT=5 / OP_BCONV=6 / OP_AUTO=7`
 - **Host 端 HKS 策略**：`HKSStrategy::{DC, MP, OC}` 枚举 + `SetHKSStrategy()`
