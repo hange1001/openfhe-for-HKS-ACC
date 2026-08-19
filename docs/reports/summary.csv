@@ -1,0 +1,2 @@
+synth_date,module,part,vitis,clk_ns,issue,slack_ns,latency_cycles,BRAM,DSP,FF,LUT,URAM
+Wed Aug 19 14:28:39 2026,Top,xcu55c-fsvh2892-2L-e,2023.2,-,Timing,-0.33,-,640,1334,61659,186305,96

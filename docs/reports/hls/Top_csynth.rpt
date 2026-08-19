@@ -1,0 +1,881 @@
+
+
+================================================================
+== Synthesis Summary Report of 'Top'
+================================================================
++ General Information: 
+    * Date:           Wed Aug 19 14:28:39 2026
+    * Version:        2023.2 (Build 4023990 on Oct 11 2023)
+    * Project:        Top
+    * Solution:       solution1 (Vivado IP Flow Target)
+    * Product family: virtexuplusHBM
+    * Target device:  xcu55c-fsvh2892-2L-e
+    
+
++ Performance & Resource Estimates: 
+    
+    PS: '+' for module; 'o' for loop; '*' for dataflow
+    +-------------------------------------------------------------------------------------+--------+-------+---------+-----------+----------+---------+--------+----------+-----------+------------+------------+--------------+----------+
+    |                                       Modules                                       |  Issue |       | Latency |  Latency  | Iteration|         |  Trip  |          |           |            |            |              |          |
+    |                                       & Loops                                       |  Type  | Slack | (cycles)|    (ns)   |  Latency | Interval|  Count | Pipelined|   BRAM    |     DSP    |     FF     |      LUT     |   URAM   |
+    +-------------------------------------------------------------------------------------+--------+-------+---------+-----------+----------+---------+--------+----------+-----------+------------+------------+--------------+----------+
+    |+ Top                                                                                |  Timing|  -0.33|        -|          -|         -|        -|       -|        no|  640 (15%)|  1334 (14%)|  61659 (2%)|  186305 (14%)|  96 (10%)|
+    | + Load_1                                                                            |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   484 (~0%)|    1003 (~0%)|         -|
+    |  + Load_1_Pipeline_VITIS_LOOP_11_1_LOAD_ROW_LOAD_COL                                |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   326 (~0%)|     537 (~0%)|         -|
+    |   o VITIS_LOOP_11_1_LOAD_ROW_LOAD_COL                                               |       -|   5.25|        -|          -|         3|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Load_Auto_Meta                                                                    |       -|   0.00|        9|     54.000|         -|        9|       -|        no|          -|           -|    10 (~0%)|      77 (~0%)|         -|
+    | + Load_BConv_Params                                                                 |       -|   0.00|       55|    330.000|         -|       55|       -|        no|          -|           -|   991 (~0%)|    1064 (~0%)|         -|
+    |  + Load_BConv_Params_Pipeline_load_bconv_w_VITIS_LOOP_122_1                         |       -|   0.00|       18|    108.000|         -|       18|       -|        no|          -|           -|    78 (~0%)|     137 (~0%)|         -|
+    |   o load_bconv_w_VITIS_LOOP_122_1                                                   |       -|   5.25|       16|     96.000|         3|        1|      15|       yes|          -|           -|           -|             -|         -|
+    |  + Load_BConv_Params_Pipeline_load_bconv_meta                                       |       -|   0.00|       26|    156.000|         -|       26|       -|        no|          -|           -|   655 (~0%)|     440 (~0%)|         -|
+    |   o load_bconv_meta                                                                 |      II|   5.25|       24|    144.000|        13|        3|       5|       yes|          -|           -|           -|             -|         -|
+    | + Load_clone_1                                                                      |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   477 (~0%)|    1019 (~0%)|         -|
+    |  + Load_clone_1_Pipeline_VITIS_LOOP_11_1_LOAD_ROW_LOAD_COL                          |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   319 (~0%)|     553 (~0%)|         -|
+    |   o VITIS_LOOP_11_1_LOAD_ROW_LOAD_COL                                               |       -|   5.25|        -|          -|         3|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Compute_Auto                                                                      |       -|   0.71|     4099|  2.459e+04|         -|     4099|       -|        no|          -|           -|    56 (~0%)|    2884 (~0%)|         -|
+    |  + Compute_Auto_Pipeline_ROW_COL                                                    |       -|   0.71|     4098|  2.459e+04|         -|     4098|       -|        no|          -|           -|    45 (~0%)|    2203 (~0%)|         -|
+    |   o ROW_COL                                                                         |       -|   5.25|     4096|  2.458e+04|         2|        1|    4096|       yes|          -|           -|           -|             -|         -|
+    | + Compute_BConv_Systolic                                                            |       -|   0.08|     8230|  4.938e+04|         -|     8230|       -|        no|   128 (3%)|    870 (9%)|  29494 (1%)|    73659 (5%)|         -|
+    |  + Compute_BConv_Systolic_Pipeline_Load_W_VITIS_LOOP_164_1                          |       -|   2.59|       17|    102.000|         -|       17|       -|        no|          -|           -|   977 (~0%)|     144 (~0%)|         -|
+    |   o Load_W_VITIS_LOOP_164_1                                                         |       -|   5.25|       15|     90.000|         2|        1|      15|       yes|          -|           -|           -|             -|         -|
+    |  + Compute_BConv_Systolic_Pipeline_Load_Mod                                         |       -|   3.90|        7|     42.000|         -|        7|       -|        no|          -|           -|   969 (~0%)|      58 (~0%)|         -|
+    |   o Load_Mod                                                                        |       -|   5.25|        5|     30.000|         2|        1|       5|       yes|          -|           -|           -|             -|         -|
+    |  + Compute_BConv_Systolic_Pipeline_Load_X_VITIS_LOOP_179_2                          |       -|   2.43|     1538|  9.228e+03|         -|     1538|       -|        no|          -|           -|    39 (~0%)|     257 (~0%)|         -|
+    |   o Load_X_VITIS_LOOP_179_2                                                         |       -|   5.25|     1536|  9.216e+03|         2|        1|    1536|       yes|          -|           -|           -|             -|         -|
+    |  + Compute_BConv_Systolic_Pipeline_Systolic_Loop                                    |       -|   0.08|     4125|  2.475e+04|         -|     4125|       -|        no|          -|    870 (9%)|  27362 (1%)|    69891 (5%)|         -|
+    |   o Systolic_Loop                                                                   |       -|   5.25|     4123|  2.474e+04|        22|        1|    4103|       yes|          -|           -|           -|             -|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |    + MultMod_1                                                                      |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1692 (~0%)|    4341 (~0%)|         -|
+    |  + Compute_BConv_Systolic_Pipeline_Store_X_VITIS_LOOP_194_3                         |       -|   2.25|     2562|  1.537e+04|         -|     2562|       -|        no|          -|           -|    99 (~0%)|     462 (~0%)|         -|
+    |   o Store_X_VITIS_LOOP_194_3                                                        |       -|   5.25|     2560|  1.536e+04|         2|        1|    2560|       yes|          -|           -|           -|             -|         -|
+    | + Execute_INTT                                                                      |       -|   0.08|    78386|  4.703e+05|         -|    78386|       -|        no|    64 (1%)|    116 (1%)|  7001 (~0%)|    27138 (2%)|         -|
+    |  o INTT_CG_LIMB_LOOP                                                                |       -|   5.25|    78385|  4.703e+05|     15677|        -|       5|        no|          -|           -|           -|             -|         -|
+    |   + Execute_INTT_Pipeline_FLATTEN_ROW                                               |       -|   2.27|      514|  3.084e+03|         -|      514|       -|        no|          -|           -|  2085 (~0%)|    5003 (~0%)|         -|
+    |    o FLATTEN_ROW                                                                    |      II|   5.25|      512|  3.072e+03|         9|        8|      64|       yes|          -|           -|           -|             -|         -|
+    |   + CG_NTT_Kernel_false_s                                                           |       -|   0.08|    14643|  8.786e+04|         -|    14643|       -|        no|   32 (~0%)|    116 (1%)|  4475 (~0%)|    14636 (1%)|         -|
+    |    + CG_NTT_Kernel_false_Pipeline_INIT_LOOP                                         |       -|   2.85|     1026|  6.156e+03|         -|     1026|       -|        no|          -|           -|    24 (~0%)|      75 (~0%)|         -|
+    |     o INIT_LOOP                                                                     |       -|   5.25|     1024|  6.144e+03|         2|        1|    1024|       yes|          -|           -|           -|             -|         -|
+    |    + CG_NTT_Kernel_false_Pipeline_WRITEBACK_LOOP                                    |       -|   2.44|     1026|  6.156e+03|         -|     1026|       -|        no|          -|           -|    25 (~0%)|     327 (~0%)|         -|
+    |     o WRITEBACK_LOOP                                                                |       -|   5.25|     1024|  6.144e+03|         2|        1|    1024|       yes|          -|           -|           -|             -|         -|
+    |    o STAGE_LOOP                                                                     |       -|   5.25|    12588|  7.553e+04|      1049|        -|      12|        no|          -|           -|           -|             -|         -|
+    |     + CG_NTT_Kernel_false_Pipeline_BUTTERFLY_LOOP                                   |       -|   0.08|     1047|  6.282e+03|         -|     1047|       -|        no|          -|    116 (1%)|  4343 (~0%)|    13415 (1%)|         -|
+    |      o BUTTERFLY_LOOP                                                               |      II|   5.25|     1045|  6.270e+03|        24|        2|     512|       yes|          -|           -|           -|             -|         -|
+    |       + MultMod                                                                     |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |       + MultMod                                                                     |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |   + Execute_INTT_Pipeline_RESHAPE_ROW                                               |       -|   2.85|      514|  3.084e+03|         -|      514|       -|        no|          -|           -|    44 (~0%)|    3875 (~0%)|         -|
+    |    o RESHAPE_ROW                                                                    |      II|   5.25|      512|  3.072e+03|         9|        8|      64|       yes|          -|           -|           -|             -|         -|
+    | + Execute_NTT                                                                       |       -|   0.08|    78386|  4.703e+05|         -|    78386|       -|        no|    64 (1%)|    116 (1%)|  7702 (~0%)|    26945 (2%)|         -|
+    |  o NTT_CG_LIMB_LOOP                                                                 |       -|   5.25|    78385|  4.703e+05|     15677|        -|       5|        no|          -|           -|           -|             -|         -|
+    |   + Execute_NTT_Pipeline_FLATTEN_ROW                                                |       -|   2.27|      514|  3.084e+03|         -|      514|       -|        no|          -|           -|  2085 (~0%)|    5003 (~0%)|         -|
+    |    o FLATTEN_ROW                                                                    |      II|   5.25|      512|  3.072e+03|         9|        8|      64|       yes|          -|           -|           -|             -|         -|
+    |   + CG_NTT_Kernel_true_s                                                            |       -|   0.08|    14643|  8.786e+04|         -|    14643|       -|        no|   32 (~0%)|    116 (1%)|  5176 (~0%)|    14443 (1%)|         -|
+    |    + CG_NTT_Kernel_true_Pipeline_INIT_LOOP                                          |       -|   2.85|     1026|  6.156e+03|         -|     1026|       -|        no|          -|           -|    24 (~0%)|      75 (~0%)|         -|
+    |     o INIT_LOOP                                                                     |       -|   5.25|     1024|  6.144e+03|         2|        1|    1024|       yes|          -|           -|           -|             -|         -|
+    |    + CG_NTT_Kernel_true_Pipeline_WRITEBACK_LOOP                                     |       -|   2.44|     1026|  6.156e+03|         -|     1026|       -|        no|          -|           -|    25 (~0%)|     327 (~0%)|         -|
+    |     o WRITEBACK_LOOP                                                                |       -|   5.25|     1024|  6.144e+03|         2|        1|    1024|       yes|          -|           -|           -|             -|         -|
+    |    o STAGE_LOOP                                                                     |       -|   5.25|    12588|  7.553e+04|      1049|        -|      12|        no|          -|           -|           -|             -|         -|
+    |     + CG_NTT_Kernel_true_Pipeline_BUTTERFLY_LOOP                                    |       -|   0.08|     1047|  6.282e+03|         -|     1047|       -|        no|          -|    116 (1%)|  5107 (~0%)|    13305 (1%)|         -|
+    |      o BUTTERFLY_LOOP                                                               |      II|   5.25|     1045|  6.270e+03|        24|        2|     512|       yes|          -|           -|           -|             -|         -|
+    |       + MultMod                                                                     |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |       + MultMod                                                                     |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |   + Execute_NTT_Pipeline_RESHAPE_ROW                                                |       -|   2.85|      514|  3.084e+03|         -|      514|       -|        no|          -|           -|    44 (~0%)|    3875 (~0%)|         -|
+    |    o RESHAPE_ROW                                                                    |      II|   5.25|      512|  3.072e+03|         9|        8|      64|       yes|          -|           -|           -|             -|         -|
+    | + Compute_Mult                                                                      |       -|   0.18|        -|          -|         -|        -|       -|        no|          -|    232 (2%)|  8010 (~0%)|    18873 (1%)|         -|
+    |  + Compute_Mult_Pipeline_Limb_Loop_Row_Loop_Col_Loop                                |       -|   0.18|        -|          -|         -|        -|       -|        no|          -|    232 (2%)|  7974 (~0%)|    18709 (1%)|         -|
+    |   o Limb_Loop_Row_Loop_Col_Loop                                                     |       -|   5.25|        -|          -|        24|        1|       -|       yes|          -|           -|           -|             -|         -|
+    |    + MultMod                                                                        |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |    + MultMod                                                                        |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |    + MultMod                                                                        |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    |    + MultMod                                                                        |       -|   0.18|       19|    114.000|         -|        1|       -|       yes|          -|    58 (~0%)|  1757 (~0%)|    4355 (~0%)|         -|
+    | + Top_Pipeline_Limb_Loop_Row_Loop_Col_Loop3                                         |       -|   0.23|        -|          -|         -|        -|       -|        no|          -|           -|   595 (~0%)|    2533 (~0%)|         -|
+    |  o Limb_Loop_Row_Loop_Col_Loop                                                      |       -|   5.25|        -|          -|         4|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Top_Pipeline_Limb_Loop_Row_Loop_Col_Loop                                          |       -|   0.23|        -|          -|         -|        -|       -|        no|          -|           -|   399 (~0%)|    2305 (~0%)|         -|
+    |  o Limb_Loop_Row_Loop_Col_Loop                                                      |       -|   5.25|        -|          -|         4|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Store_15_16_1                                                                     |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   473 (~0%)|    1205 (~0%)|         -|
+    |  + Store_15_16_1_Pipeline_VITIS_LOOP_32_1_STORE_ROW_STORE_COL                       |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   317 (~0%)|     727 (~0%)|         -|
+    |   o VITIS_LOOP_32_1_STORE_ROW_STORE_COL                                             |       -|   5.25|        -|          -|         3|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Store_17_18_1                                                                     |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   474 (~0%)|    1400 (~0%)|         -|
+    |  + Store_17_18_1_Pipeline_VITIS_LOOP_32_1_STORE_ROW_STORE_COL                       |       -|   0.00|        -|          -|         -|        -|       -|        no|          -|           -|   318 (~0%)|     922 (~0%)|         -|
+    |   o VITIS_LOOP_32_1_STORE_ROW_STORE_COL                                             |       -|   5.25|        -|          -|         3|        1|       -|       yes|          -|           -|           -|             -|         -|
+    | + Load_Init_Params                                                                  |       -|   0.00|   196681|  1.180e+06|         -|   196681|       -|        no|          -|           -|  1103 (~0%)|    2522 (~0%)|         -|
+    |  + Load_Init_Params_Pipeline_init_Q_MOD                                             |       -|   0.00|        5|     30.000|         -|        5|       -|        no|          -|           -|     7 (~0%)|      67 (~0%)|         -|
+    |   o init_Q_MOD                                                                      |       -|   5.25|        3|     18.000|         2|        1|       3|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_P_MOD                                             |       -|   0.00|        4|     24.000|         -|        4|       -|        no|          -|           -|     6 (~0%)|      68 (~0%)|         -|
+    |   o init_P_MOD                                                                      |       -|   5.25|        2|     12.000|         2|        1|       2|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_Q_KHALF                                           |       -|   0.00|        6|     36.000|         -|        6|       -|        no|          -|           -|    75 (~0%)|      67 (~0%)|         -|
+    |   o init_Q_KHALF                                                                    |       -|   5.25|        4|     24.000|         3|        1|       3|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_P_KHALF                                           |       -|   0.00|        5|     30.000|         -|        5|       -|        no|          -|           -|    75 (~0%)|      78 (~0%)|         -|
+    |   o init_P_KHALF                                                                    |       -|   5.25|        3|     18.000|         3|        1|       2|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_Q_M                                               |       -|   0.00|        6|     36.000|         -|        6|       -|        no|          -|           -|    75 (~0%)|      67 (~0%)|         -|
+    |   o init_Q_M                                                                        |       -|   5.25|        4|     24.000|         3|        1|       3|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_P_M                                               |       -|   0.00|        5|     30.000|         -|        5|       -|        no|          -|           -|    75 (~0%)|      78 (~0%)|         -|
+    |   o init_P_M                                                                        |       -|   5.25|        3|     18.000|         3|        1|       2|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_NTTTwiddle_Loop_VITIS_LOOP_88_1_VITIS_LOOP_89_2   |       -|   0.00|   196611|  1.180e+06|         -|   196611|       -|        no|          -|           -|   125 (~0%)|     292 (~0%)|         -|
+    |   o init_NTTTwiddle_Loop_VITIS_LOOP_88_1_VITIS_LOOP_89_2                            |       -|   5.25|   196609|  1.180e+06|         3|        1|  196608|       yes|          -|           -|           -|             -|         -|
+    |  + Load_Init_Params_Pipeline_init_INTTTwiddle_Loop_VITIS_LOOP_98_3_VITIS_LOOP_99_4  |       -|   0.00|   196611|  1.180e+06|         -|   196611|       -|        no|          -|           -|   125 (~0%)|     292 (~0%)|         -|
+    |   o init_INTTTwiddle_Loop_VITIS_LOOP_98_3_VITIS_LOOP_99_4                           |       -|   5.25|   196609|  1.180e+06|         3|        1|  196608|       yes|          -|           -|           -|             -|         -|
+    +-------------------------------------------------------------------------------------+--------+-------+---------+-----------+----------+---------+--------+----------+-----------+------------+------------+--------------+----------+
+
+
+================================================================
+== HW Interfaces
+================================================================
+* M_AXI
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| Interface   | Data Width | Address Width | Latency | Offset | Register | Max Widen | Max Read     | Max Write    | Num Read    | Num Write   | Resource Estimate |
+|             | (SW->HW)   |               |         |        |          | Bitwidth  | Burst Length | Burst Length | Outstanding | Outstanding |                   |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| m_axi_gmem0 | 64 -> 64   | 64            | 0       | slave  | 0        | 512       | 16           | 16           | 16          | 16          | BRAM=4            |
+| m_axi_gmem1 | 64 -> 64   | 64            | 0       | slave  | 0        | 512       | 16           | 16           | 16          | 16          | BRAM=4            |
+| m_axi_gmem2 | 64 -> 64   | 64            | 0       | slave  | 0        | 512       | 16           | 16           | 16          | 16          | BRAM=4            |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+
+* S_AXILITE Interfaces
++---------------+------------+---------------+--------+----------+
+| Interface     | Data Width | Address Width | Offset | Register |
++---------------+------------+---------------+--------+----------+
+| s_axi_control | 32         | 7             | 16     | 0        |
++---------------+------------+---------------+--------+----------+
+
+* S_AXILITE Registers
++---------------+------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| Interface     | Register         | Offset | Width | Access | Description                      | Bit Fields                                                           |
++---------------+------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| s_axi_control | CTRL             | 0x00   | 32    | RW     | Control signals                  | 0=AP_START 1=AP_DONE 2=AP_IDLE 3=AP_READY 7=AUTO_RESTART 9=INTERRUPT |
+| s_axi_control | GIER             | 0x04   | 32    | RW     | Global Interrupt Enable Register | 0=Enable                                                             |
+| s_axi_control | IP_IER           | 0x08   | 32    | RW     | IP Interrupt Enable Register     | 0=CHAN0_INT_EN 1=CHAN1_INT_EN                                        |
+| s_axi_control | IP_ISR           | 0x0c   | 32    | RW     | IP Interrupt Status Register     | 0=CHAN0_INT_ST 1=CHAN1_INT_ST                                        |
+| s_axi_control | mem_in1_1        | 0x10   | 32    | W      | Data signal of mem_in1           |                                                                      |
+| s_axi_control | mem_in1_2        | 0x14   | 32    | W      | Data signal of mem_in1           |                                                                      |
+| s_axi_control | mem_in2_1        | 0x1c   | 32    | W      | Data signal of mem_in2           |                                                                      |
+| s_axi_control | mem_in2_2        | 0x20   | 32    | W      | Data signal of mem_in2           |                                                                      |
+| s_axi_control | mem_out_1        | 0x28   | 32    | W      | Data signal of mem_out           |                                                                      |
+| s_axi_control | mem_out_2        | 0x2c   | 32    | W      | Data signal of mem_out           |                                                                      |
+| s_axi_control | opcode           | 0x34   | 32    | W      | Data signal of opcode            |                                                                      |
+| s_axi_control | num_active_limbs | 0x3c   | 32    | W      | Data signal of num_active_limbs  |                                                                      |
+| s_axi_control | mod_index        | 0x44   | 32    | W      | Data signal of mod_index         |                                                                      |
++---------------+------------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+
+* TOP LEVEL CONTROL
++-----------+------------+-----------+
+| Interface | Type       | Ports     |
++-----------+------------+-----------+
+| ap_clk    | clock      | ap_clk    |
+| ap_rst_n  | reset      | ap_rst_n  |
+| interrupt | interrupt  | interrupt |
+| ap_ctrl   | ap_ctrl_hs |           |
++-----------+------------+-----------+
+
+
+================================================================
+== SW I/O Information  [trimmed by trim_report.sh]
+================================================================
+
+================================================================
+== M_AXI Burst Information
+================================================================
+ Note: All burst requests might be further partitioned into multiple requests during RTL generation based on max_read_burst_length or max_write_burst_length settings.
+
+* Inferred Burst Summary
++--------------+-----------+----------+-------+-----------------------+------------------------------------------------------------------------+
+| HW Interface | Direction | Length   | Width | Loop                  | Loop Location                                                          |
++--------------+-----------+----------+-------+-----------------------+------------------------------------------------------------------------+
+| m_axi_gmem0  | read      | variable | 64    | LOAD_COL              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:15:13 |
+| m_axi_gmem0  | read      | 3        | 64    | init_Q_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:50:5   |
+| m_axi_gmem0  | read      | 3        | 64    | init_Q_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:55:5   |
+| m_axi_gmem0  | read      | 3        | 64    | init_Q_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:60:5   |
+| m_axi_gmem0  | read      | 196608   | 64    | init_NTTTwiddle_Loop  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:87:5   |
+| m_axi_gmem1  | read      | variable | 64    | LOAD_COL              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:15:13 |
+| m_axi_gmem1  | read      | 2        | 64    | init_P_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:65:5   |
+| m_axi_gmem1  | read      | 2        | 64    | init_P_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:70:5   |
+| m_axi_gmem1  | read      | 2        | 64    | init_P_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:75:5   |
+| m_axi_gmem1  | read      | 196608   | 64    | init_INTTTwiddle_Loop | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:97:5   |
+| m_axi_gmem1  | read      | 15       | 64    | load_bconv_w          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:121:5  |
+| m_axi_gmem1  | read      | 2        | 64    |                       |                                                                        |
+| m_axi_gmem2  | write     | variable | 64    | STORE_COL             | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:36:13 |
++--------------+-----------+----------+-------+-----------------------+------------------------------------------------------------------------+
+
+* All M_AXI Variable Accesses
++-------------------+----------+------------------------------------------------------------------------+-----------+--------------+----------+-----------------------+------------------------------------------------------------------------+------------+----------------------------------------------------------------------------------------+
+| HW Interface      | Variable | Access Location                                                        | Direction | Burst Status | Length   | Loop                  | Loop Location                                                          | Resolution | Problem                                                                                |
++-------------------+----------+------------------------------------------------------------------------+-----------+--------------+----------+-----------------------+------------------------------------------------------------------------+------------+----------------------------------------------------------------------------------------+
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:52:15  | read      | Widen Fail   |          | init_Q_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:50:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:52:15  | read      | Inferred     | 3        | init_Q_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:50:5   |            |                                                                                        |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:57:14  | read      | Widen Fail   |          | init_Q_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:55:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:57:14  | read      | Inferred     | 3        | init_Q_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:55:5   |            |                                                                                        |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:62:9   | read      | Widen Fail   |          | init_Q_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:60:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:62:9   | read      | Inferred     | 3        | init_Q_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:60:5   |            |                                                                                        |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:92:21  | read      | Widen Fail   |          | VITIS_LOOP_89_2       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:89:30  | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem0       | mem_in1  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:92:21  | read      | Inferred     | 196608   | init_NTTTwiddle_Loop  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:87:5   |            |                                                                                        |
+| m_axi_gmem0,gmem1 | mem_in   | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:18:20 | read      | Widen Fail   |          | LOAD_COL              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:15:13 | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem0,gmem1 | mem_in   | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:18:20 | read      | Inferred     | variable | VITIS_LOOP_11_1       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:11:19 |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:57:14  | read      | Widen Fail   |          | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:67:24  | read      | Widen Fail   |          | init_P_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:65:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:67:24  | read      | Inferred     | 2        | init_P_MOD            | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:65:5   |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:72:23  | read      | Widen Fail   |          | init_P_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:70:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:72:23  | read      | Inferred     | 2        | init_P_KHALF          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:70:5   |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:77:18  | read      | Widen Fail   |          | init_P_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:75:5   | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:77:18  | read      | Inferred     | 2        | init_P_M              | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:75:5   |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:102:21 | read      | Widen Fail   |          | VITIS_LOOP_99_4       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:99:30  | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:102:21 | read      | Inferred     | 196608   | init_INTTTwiddle_Loop | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:97:5   |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:124:15 | read      | Widen Fail   |          | VITIS_LOOP_122_1      | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:122:27 | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:124:15 | read      | Inferred     | 15       | load_bconv_w          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:121:5  |            |                                                                                        |
+| m_axi_gmem1       |          | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  | read      | Fail         |          |                       |                                                                        | 214-224    | Could not burst due to multiple potential reads to the same bundle in the same region. |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:135:15 | read      | Inferred     | 5        | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:136:20 | read      | Widen Fail   |          | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:136:20 | read      | Inferred     | 5        | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:137:28 | read      | Widen Fail   |          | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:137:28 | read      | Inferred     | 5        | load_bconv_meta       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:133:5  |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:146:16 | read      | Widen Fail   |          |                       |                                                                        | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:146:16 | read      | Inferred     | 2        |                       |                                                                        |            |                                                                                        |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:147:22 | read      | Widen Fail   |          |                       |                                                                        | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem1       | mem_in2  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp:147:22 | read      | Inferred     | 2        |                       |                                                                        |            |                                                                                        |
+| m_axi_gmem2       | mem_out  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:38:54 | write     | Widen Fail   |          | STORE_COL             | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:36:13 | 214-307    | Could not widen since type i64 size is greater than or equal to alignment 1(bytes)     |
+| m_axi_gmem2       | mem_out  | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:38:54 | write     | Inferred     | variable | VITIS_LOOP_32_1       | /mnt/f/project/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp:32:19 |            |                                                                                        |
++-------------------+----------+------------------------------------------------------------------------+-----------+--------------+----------+-----------------------+------------------------------------------------------------------------+------------+----------------------------------------------------------------------------------------+
+
+    * Resolution URL: docs.xilinx.com/access/sources/dita/topic?Doc_Version=2023.2%20English&url=ug1448-hls-guidance&resourceid=XXX-YYY.html (replace XXX-YYY with column value)
+
+================================================================
+== Bind Op Report  [trimmed by trim_report.sh]
+================================================================
+
+================================================================
+== Storage Report
+================================================================
++----------------------------------+----------------+-----------+------+------+--------+------------------------------+------+---------+------------------+
+| Name                             | Usage          | Type      | BRAM | URAM | Pragma | Variable                     | Impl | Latency | Bitwidth, Depth, |
+|                                  |                |           |      |      |        |                              |      |         | Banks            |
++----------------------------------+----------------+-----------+------+------+--------+------------------------------+------+---------+------------------+
+| + Top                            |                |           | 640  | 96   |        |                              |      |         |                  |
+|   control_s_axi_U                | interface      | s_axilite |      |      |        |                              |      |         |                  |
+|   gmem0_m_axi_U                  | interface      | m_axi     | 4    |      |        |                              |      |         |                  |
+|   gmem1_m_axi_U                  | interface      | m_axi     | 4    |      |        |                              |      |         |                  |
+|   gmem2_m_axi_U                  | interface      | m_axi     | 4    |      |        |                              |      |         |                  |
+|   K_HALF_U                       | ram_1p         |           |      |      |        | K_HALF                       | auto | 1       | 64, 8, 1         |
+|   M_U                            | ram_1p         |           |      |      |        | M                            | auto | 1       | 64, 8, 1         |
+|   p_ZL16NTTTwiddleFactor_0_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_0_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_0_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_0_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_0_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_0_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_0_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_0_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_1_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_1_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_1_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_1_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_1_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_1_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_1_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_1_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_2_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_2_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_2_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_2_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_2_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_2_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_2_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_2_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_3_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_3_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_3_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_3_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_3_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_3_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_3_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_3_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_4_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_4_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_4_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_4_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_4_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_4_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_4_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_4_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_5_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_5_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_5_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_5_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_5_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_5_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_5_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_5_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_6_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_6_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_6_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_6_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_6_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_6_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_6_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_6_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_7_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_7_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_7_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_7_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_7_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_7_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_7_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_7_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_8_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_8_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_8_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_8_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_8_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_8_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_8_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_8_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_9_0_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_9_0   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_9_1_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_9_1   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_9_2_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_9_2   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_9_3_U   | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_9_3   | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_10_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_10_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_10_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_10_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_10_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_10_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_10_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_10_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_11_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_11_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_11_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_11_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_11_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_11_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL16NTTTwiddleFactor_11_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL16NTTTwiddleFactor_11_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_0_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_0_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_0_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_0_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_0_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_0_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_0_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_0_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_1_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_1_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_1_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_1_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_1_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_1_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_1_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_1_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_2_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_2_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_2_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_2_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_2_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_2_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_2_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_2_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_3_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_3_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_3_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_3_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_3_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_3_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_3_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_3_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_4_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_4_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_4_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_4_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_4_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_4_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_4_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_4_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_5_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_5_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_5_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_5_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_5_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_5_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_5_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_5_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_6_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_6_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_6_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_6_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_6_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_6_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_6_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_6_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_7_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_7_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_7_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_7_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_7_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_7_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_7_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_7_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_8_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_8_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_8_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_8_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_8_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_8_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_8_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_8_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_9_0_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_9_0  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_9_1_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_9_1  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_9_2_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_9_2  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_9_3_U  | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_9_3  | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_10_0_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_10_0 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_10_1_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_10_1 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_10_2_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_10_2 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_10_3_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_10_3 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_11_0_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_11_0 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_11_1_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_11_1 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_11_2_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_11_2 | uram | 1       | 64, 4096, 1      |
+|   p_ZL17INTTTwiddleFactor_11_3_U | ram_2p         |           |      | 1    | pragma | p_ZL17INTTTwiddleFactor_11_3 | uram | 1       | 64, 4096, 1      |
+|   p_ZL13poly_buffer_1_0_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_0_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_0_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_1_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_1_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_2_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_2_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_3_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_3_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_4_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_4_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_5_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_5_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_6_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_6_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_0_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_0      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_1_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_1      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_2_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_2      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_3_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_3      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_4_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_4      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_5_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_5      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_6_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_6      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_1_7_7_U      | ram_2p         |           | 2    |      | pragma | p_ZL13poly_buffer_1_7_7      | bram | 1       | 64, 512, 1       |
+|   p_ZL13poly_buffer_2_0_U        | ram_2p         |           | 29   |      | pragma | p_ZL13poly_buffer_2_0        | bram | 1       | 64, 8192, 1      |
+|   p_ZL13poly_buffer_2_1_U        | ram_2p         |           | 29   |      | pragma | p_ZL13poly_buffer_2_1        | bram | 1       | 64, 8192, 1      |
+|   p_ZL13poly_buffer_2_2_U        | ram_2p         |           | 29   |      | pragma | p_ZL13poly_buffer_2_2        | bram | 1       | 64, 8192, 1      |
+|   p_ZL13poly_buffer_2_3_U        | ram_2p         |           | 29   |      | pragma | p_ZL13poly_buffer_2_3        | bram | 1       | 64, 8192, 1      |
+|   p_ZL13result_buffer_0_0_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_0      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_0_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_0      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_0_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_0      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_0_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_0      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_1_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_1      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_1_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_1      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_1_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_1      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_1_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_1      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_2_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_2      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_2_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_2      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_2_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_2      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_2_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_2      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_3_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_3      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_3_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_3      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_3_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_3      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_3_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_3      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_4_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_4      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_4_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_4      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_4_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_4      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_4_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_4      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_5_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_5      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_5_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_5      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_5_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_5      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_5_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_5      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_6_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_6      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_6_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_6      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_6_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_6      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_6_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_6      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_0_7_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_0_7      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_1_7_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_1_7      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_2_7_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_2_7      | bram | 1       | 64, 1024, 1      |
+|   p_ZL13result_buffer_3_7_U      | ram_2p         |           | 4    |      | pragma | p_ZL13result_buffer_3_7      | bram | 1       | 64, 1024, 1      |
+|   in_w_U                         | ram_1p         |           |      |      |        | in_w                         | auto | 1       | 64, 15, 1        |
+|   out_mod_U                      | ram_1p         |           |      |      |        | out_mod                      | auto | 1       | 64, 5, 1         |
+|   out_S_U                        | ram_1p         |           |      |      |        | out_S                        | auto | 1       | 64, 5, 1         |
+|   out_m_barrett_U                | ram_1p         |           |      |      |        | out_m_barrett                | auto | 1       | 64, 5, 1         |
+|  + Compute_BConv_Systolic        |                |           | 128  | 0    |        |                              |      |         |                  |
+|    local_in_x_U                  | ram_1wnr array |           | 2    |      | yes    | local_in_x                   | bram | 1       | 64, 512, 1       |
+|    local_in_x_24_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_24                | bram | 1       | 64, 512, 1       |
+|    local_in_x_25_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_25                | bram | 1       | 64, 512, 1       |
+|    local_in_x_26_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_26                | bram | 1       | 64, 512, 1       |
+|    local_in_x_27_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_27                | bram | 1       | 64, 512, 1       |
+|    local_in_x_28_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_28                | bram | 1       | 64, 512, 1       |
+|    local_in_x_29_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_29                | bram | 1       | 64, 512, 1       |
+|    local_in_x_30_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_30                | bram | 1       | 64, 512, 1       |
+|    local_in_x_31_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_31                | bram | 1       | 64, 512, 1       |
+|    local_in_x_32_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_32                | bram | 1       | 64, 512, 1       |
+|    local_in_x_33_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_33                | bram | 1       | 64, 512, 1       |
+|    local_in_x_34_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_34                | bram | 1       | 64, 512, 1       |
+|    local_in_x_35_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_35                | bram | 1       | 64, 512, 1       |
+|    local_in_x_36_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_36                | bram | 1       | 64, 512, 1       |
+|    local_in_x_37_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_37                | bram | 1       | 64, 512, 1       |
+|    local_in_x_38_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_38                | bram | 1       | 64, 512, 1       |
+|    local_in_x_39_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_39                | bram | 1       | 64, 512, 1       |
+|    local_in_x_40_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_40                | bram | 1       | 64, 512, 1       |
+|    local_in_x_41_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_41                | bram | 1       | 64, 512, 1       |
+|    local_in_x_42_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_42                | bram | 1       | 64, 512, 1       |
+|    local_in_x_43_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_43                | bram | 1       | 64, 512, 1       |
+|    local_in_x_44_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_44                | bram | 1       | 64, 512, 1       |
+|    local_in_x_45_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_45                | bram | 1       | 64, 512, 1       |
+|    local_in_x_46_U               | ram_1wnr array |           | 2    |      | yes    | local_in_x_46                | bram | 1       | 64, 512, 1       |
+|    local_out_x_U                 | ram_s2p array  |           | 2    |      | yes    | local_out_x                  | bram | 1       | 64, 512, 1       |
+|    local_out_x_40_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_40               | bram | 1       | 64, 512, 1       |
+|    local_out_x_41_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_41               | bram | 1       | 64, 512, 1       |
+|    local_out_x_42_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_42               | bram | 1       | 64, 512, 1       |
+|    local_out_x_43_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_43               | bram | 1       | 64, 512, 1       |
+|    local_out_x_44_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_44               | bram | 1       | 64, 512, 1       |
+|    local_out_x_45_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_45               | bram | 1       | 64, 512, 1       |
+|    local_out_x_46_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_46               | bram | 1       | 64, 512, 1       |
+|    local_out_x_47_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_47               | bram | 1       | 64, 512, 1       |
+|    local_out_x_48_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_48               | bram | 1       | 64, 512, 1       |
+|    local_out_x_49_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_49               | bram | 1       | 64, 512, 1       |
+|    local_out_x_50_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_50               | bram | 1       | 64, 512, 1       |
+|    local_out_x_51_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_51               | bram | 1       | 64, 512, 1       |
+|    local_out_x_52_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_52               | bram | 1       | 64, 512, 1       |
+|    local_out_x_53_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_53               | bram | 1       | 64, 512, 1       |
+|    local_out_x_54_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_54               | bram | 1       | 64, 512, 1       |
+|    local_out_x_55_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_55               | bram | 1       | 64, 512, 1       |
+|    local_out_x_56_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_56               | bram | 1       | 64, 512, 1       |
+|    local_out_x_57_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_57               | bram | 1       | 64, 512, 1       |
+|    local_out_x_58_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_58               | bram | 1       | 64, 512, 1       |
+|    local_out_x_59_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_59               | bram | 1       | 64, 512, 1       |
+|    local_out_x_60_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_60               | bram | 1       | 64, 512, 1       |
+|    local_out_x_61_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_61               | bram | 1       | 64, 512, 1       |
+|    local_out_x_62_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_62               | bram | 1       | 64, 512, 1       |
+|    local_out_x_63_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_63               | bram | 1       | 64, 512, 1       |
+|    local_out_x_64_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_64               | bram | 1       | 64, 512, 1       |
+|    local_out_x_65_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_65               | bram | 1       | 64, 512, 1       |
+|    local_out_x_66_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_66               | bram | 1       | 64, 512, 1       |
+|    local_out_x_67_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_67               | bram | 1       | 64, 512, 1       |
+|    local_out_x_68_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_68               | bram | 1       | 64, 512, 1       |
+|    local_out_x_69_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_69               | bram | 1       | 64, 512, 1       |
+|    local_out_x_70_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_70               | bram | 1       | 64, 512, 1       |
+|    local_out_x_71_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_71               | bram | 1       | 64, 512, 1       |
+|    local_out_x_72_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_72               | bram | 1       | 64, 512, 1       |
+|    local_out_x_73_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_73               | bram | 1       | 64, 512, 1       |
+|    local_out_x_74_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_74               | bram | 1       | 64, 512, 1       |
+|    local_out_x_75_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_75               | bram | 1       | 64, 512, 1       |
+|    local_out_x_76_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_76               | bram | 1       | 64, 512, 1       |
+|    local_out_x_77_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_77               | bram | 1       | 64, 512, 1       |
+|    local_out_x_78_U              | ram_s2p array  |           | 2    |      | yes    | local_out_x_78               | bram | 1       | 64, 512, 1       |
+|  + Execute_INTT                  |                |           | 64   | 0    |        |                              |      |         |                  |
+|    flat_U                        | ram_t2p array  |           | 4    |      |        | flat                         | auto | 1       | 64, 1024, 1      |
+|    flat_10_U                     | ram_t2p array  |           | 4    |      |        | flat_10                      | auto | 1       | 64, 1024, 1      |
+|    flat_11_U                     | ram_t2p array  |           | 4    |      |        | flat_11                      | auto | 1       | 64, 1024, 1      |
+|    flat_12_U                     | ram_t2p array  |           | 4    |      |        | flat_12                      | auto | 1       | 64, 1024, 1      |
+|    flat_out_U                    | rom_np array   |           | 4    |      |        | flat_out                     | auto | 1       | 64, 1024, 1      |
+|    flat_out_10_U                 | rom_np array   |           | 4    |      |        | flat_out_10                  | auto | 1       | 64, 1024, 1      |
+|    flat_out_11_U                 | rom_np array   |           | 4    |      |        | flat_out_11                  | auto | 1       | 64, 1024, 1      |
+|    flat_out_12_U                 | rom_np array   |           | 4    |      |        | flat_out_12                  | auto | 1       | 64, 1024, 1      |
+|   + CG_NTT_Kernel_false_s        |                |           | 32   | 0    |        |                              |      |         |                  |
+|     buf_A_U                      | ram_2p array   |           | 2    |      | yes    | buf_A                        | bram | 1       | 64, 512, 1       |
+|     buf_A_1_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_1                      | bram | 1       | 64, 512, 1       |
+|     buf_A_2_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_2                      | bram | 1       | 64, 512, 1       |
+|     buf_A_3_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_3                      | bram | 1       | 64, 512, 1       |
+|     buf_A_4_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_4                      | bram | 1       | 64, 512, 1       |
+|     buf_A_5_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_5                      | bram | 1       | 64, 512, 1       |
+|     buf_A_6_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_6                      | bram | 1       | 64, 512, 1       |
+|     buf_A_7_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_7                      | bram | 1       | 64, 512, 1       |
+|     buf_B_U                      | ram_2p array   |           | 2    |      | yes    | buf_B                        | bram | 1       | 64, 512, 1       |
+|     buf_B_1_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_1                      | bram | 1       | 64, 512, 1       |
+|     buf_B_2_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_2                      | bram | 1       | 64, 512, 1       |
+|     buf_B_3_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_3                      | bram | 1       | 64, 512, 1       |
+|     buf_B_4_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_4                      | bram | 1       | 64, 512, 1       |
+|     buf_B_5_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_5                      | bram | 1       | 64, 512, 1       |
+|     buf_B_6_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_6                      | bram | 1       | 64, 512, 1       |
+|     buf_B_7_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_7                      | bram | 1       | 64, 512, 1       |
+|  + Execute_NTT                   |                |           | 64   | 0    |        |                              |      |         |                  |
+|    flat_U                        | ram_t2p array  |           | 4    |      |        | flat                         | auto | 1       | 64, 1024, 1      |
+|    flat_4_U                      | ram_t2p array  |           | 4    |      |        | flat_4                       | auto | 1       | 64, 1024, 1      |
+|    flat_5_U                      | ram_t2p array  |           | 4    |      |        | flat_5                       | auto | 1       | 64, 1024, 1      |
+|    flat_6_U                      | ram_t2p array  |           | 4    |      |        | flat_6                       | auto | 1       | 64, 1024, 1      |
+|    flat_out_U                    | rom_np array   |           | 4    |      |        | flat_out                     | auto | 1       | 64, 1024, 1      |
+|    flat_out_4_U                  | rom_np array   |           | 4    |      |        | flat_out_4                   | auto | 1       | 64, 1024, 1      |
+|    flat_out_5_U                  | rom_np array   |           | 4    |      |        | flat_out_5                   | auto | 1       | 64, 1024, 1      |
+|    flat_out_6_U                  | rom_np array   |           | 4    |      |        | flat_out_6                   | auto | 1       | 64, 1024, 1      |
+|   + CG_NTT_Kernel_true_s         |                |           | 32   | 0    |        |                              |      |         |                  |
+|     buf_A_U                      | ram_2p array   |           | 2    |      | yes    | buf_A                        | bram | 1       | 64, 512, 1       |
+|     buf_A_1_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_1                      | bram | 1       | 64, 512, 1       |
+|     buf_A_2_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_2                      | bram | 1       | 64, 512, 1       |
+|     buf_A_3_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_3                      | bram | 1       | 64, 512, 1       |
+|     buf_A_4_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_4                      | bram | 1       | 64, 512, 1       |
+|     buf_A_5_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_5                      | bram | 1       | 64, 512, 1       |
+|     buf_A_6_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_6                      | bram | 1       | 64, 512, 1       |
+|     buf_A_7_U                    | ram_2p array   |           | 2    |      | yes    | buf_A_7                      | bram | 1       | 64, 512, 1       |
+|     buf_B_U                      | ram_2p array   |           | 2    |      | yes    | buf_B                        | bram | 1       | 64, 512, 1       |
+|     buf_B_1_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_1                      | bram | 1       | 64, 512, 1       |
+|     buf_B_2_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_2                      | bram | 1       | 64, 512, 1       |
+|     buf_B_3_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_3                      | bram | 1       | 64, 512, 1       |
+|     buf_B_4_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_4                      | bram | 1       | 64, 512, 1       |
+|     buf_B_5_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_5                      | bram | 1       | 64, 512, 1       |
+|     buf_B_6_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_6                      | bram | 1       | 64, 512, 1       |
+|     buf_B_7_U                    | ram_2p array   |           | 2    |      | yes    | buf_B_7                      | bram | 1       | 64, 512, 1       |
++----------------------------------+----------------+-----------+------+------+--------+------------------------------+------+---------+------------------+
+
+
+================================================================
+== Pragma Report
+================================================================
+* Ignored Pragmas
++---------------+----------+----------------------------------------------+----------------------------+
+| Type          | Options  | Location                                     | Messages                   |
++---------------+----------+----------------------------------------------+----------------------------+
+| bind_register | variable | ../src/ntt_kernel.cpp:240 in configurable_pe | unknown HLS pragma ignored |
++---------------+----------+----------------------------------------------+----------------------------+
+
+* Valid Pragma Syntax
++-----------------+------------------------------------------------------------------+--------------------------------------------------------------------------+
+| Type            | Options                                                          | Location                                                                 |
++-----------------+------------------------------------------------------------------+--------------------------------------------------------------------------+
+| inline          |                                                                  | ../src/arithmetic.cpp:4 in addmod                                        |
+| bind_op         | variable=sum op=add impl=fabric latency=1                        | ../src/arithmetic.cpp:7 in addmod, sum                                   |
+| bind_op         | variable=diff op=sub impl=fabric latency=1                       | ../src/arithmetic.cpp:12 in addmod, diff                                 |
+| inline          | off                                                              | ../src/arithmetic.cpp:56 in multmod                                      |
+| pipeline        | II=1                                                             | ../src/arithmetic.cpp:57 in multmod                                      |
+| latency         | min=2                                                            | ../src/arithmetic.cpp:58 in multmod                                      |
+| bind_op         | variable=res_mult op=mul impl=dsp latency=4                      | ../src/arithmetic.cpp:94 in multmod, res_mult                            |
+| bind_op         | variable=p_high op=mul impl=dsp latency=4                        | ../src/arithmetic.cpp:102 in multmod, p_high                             |
+| bind_op         | variable=p_low op=mul impl=dsp latency=4                         | ../src/arithmetic.cpp:105 in multmod, p_low                              |
+| bind_op         | variable=q_times_mod op=mul impl=dsp latency=4                   | ../src/arithmetic.cpp:130 in multmod, q_times_mod                        |
+| bind_op         | variable=r_full op=sub impl=fabric latency=2                     | ../src/arithmetic.cpp:134 in multmod, r_full                             |
+| bind_op         | variable=sub1 op=sub impl=fabric latency=2                       | ../src/arithmetic.cpp:140 in multmod, sub1                               |
+| bind_op         | variable=sub2 op=sub impl=fabric latency=2                       | ../src/arithmetic.cpp:145 in multmod, sub2                               |
+| inline          | off                                                              | ../src/auto.cpp:20 in auto                                               |
+| array_partition | variable=input cyclic factor=PE_PARALLEL dim=2                   | ../src/auto.cpp:21 in auto, input                                        |
+| array_partition | variable=output cyclic factor=PE_PARALLEL dim=2                  | ../src/auto.cpp:22 in auto, output                                       |
+| pipeline        | II=1                                                             | ../src/auto.cpp:30 in auto                                               |
+| inline          | off                                                              | ../src/auto.cpp:56 in compute_auto                                       |
+| array_partition | variable=input cyclic factor=PE_PARALLEL dim=3                   | ../src/auto.cpp:57 in compute_auto, input                                |
+| array_partition | variable=output cyclic factor=PE_PARALLEL dim=3                  | ../src/auto.cpp:58 in compute_auto, output                               |
+| array_partition | variable=MODULUS complete                                        | ../src/auto.cpp:59 in compute_auto, MODULUS                              |
+| pipeline        | II=1                                                             | ../src/auto.cpp:65 in compute_auto                                       |
+| unroll          |                                                                  | ../src/auto.cpp:78 in compute_auto                                       |
+| inline          |                                                                  | ../src/bconv.cpp:26 in bconv_core                                        |
+| array_partition | variable=in_w complete dim=0                                     | ../src/bconv.cpp:28 in bconv_core, in_w                                  |
+| array_partition | variable=out_mod complete dim=0                                  | ../src/bconv.cpp:29 in bconv_core, out_mod                               |
+| array_partition | variable=out_S complete dim=0                                    | ../src/bconv.cpp:30 in bconv_core, out_S                                 |
+| array_partition | variable=out_m_barrett complete dim=0                            | ../src/bconv.cpp:31 in bconv_core, out_m_barrett                         |
+| pipeline        | II=1                                                             | ../src/bconv.cpp:35 in bconv_core                                        |
+| unroll          |                                                                  | ../src/bconv.cpp:39 in bconv_core                                        |
+| array_partition | variable=prod complete                                           | ../src/bconv.cpp:43 in bconv_core, prod                                  |
+| unroll          |                                                                  | ../src/bconv.cpp:46 in bconv_core                                        |
+| bind_storage    | variable=local_in_x type=ram_2p impl=bram                        | ../src/bconv.cpp:83 in compute_bconv, local_in_x                         |
+| array_partition | variable=local_in_x type=complete dim=1                          | ../src/bconv.cpp:84 in compute_bconv, local_in_x                         |
+| bind_storage    | variable=local_out_x type=ram_2p impl=bram                       | ../src/bconv.cpp:88 in compute_bconv, local_out_x                        |
+| array_partition | variable=local_out_x type=complete dim=1                         | ../src/bconv.cpp:89 in compute_bconv, local_out_x                        |
+| array_partition | variable=local_w complete dim=0                                  | ../src/bconv.cpp:96 in compute_bconv, local_w                            |
+| array_partition | variable=local_mod complete dim=0                                | ../src/bconv.cpp:97 in compute_bconv, local_mod                          |
+| array_partition | variable=local_S complete dim=0                                  | ../src/bconv.cpp:98 in compute_bconv, local_S                            |
+| array_partition | variable=local_m_barrett complete dim=0                          | ../src/bconv.cpp:99 in compute_bconv, local_m_barrett                    |
+| pipeline        | II=1                                                             | ../src/bconv.cpp:106 in compute_bconv                                    |
+| pipeline        | II=1                                                             | ../src/bconv.cpp:112 in compute_bconv                                    |
+| pipeline        | II=1                                                             | ../src/bconv.cpp:122 in compute_bconv                                    |
+| pipeline        | II=1                                                             | ../src/bconv.cpp:141 in compute_bconv                                    |
+| inline          |                                                                  | ../src/bconv_naive.cpp:11 in compute_bconv_naive                         |
+| bind_storage    | variable=local_in_x type=ram_2p impl=bram                        | ../src/bconv_naive.cpp:18 in compute_bconv_naive, local_in_x             |
+| array_partition | variable=local_in_x type=complete dim=1                          | ../src/bconv_naive.cpp:19 in compute_bconv_naive, local_in_x             |
+| bind_storage    | variable=local_out_x type=ram_2p impl=bram                       | ../src/bconv_naive.cpp:23 in compute_bconv_naive, local_out_x            |
+| array_partition | variable=local_out_x type=complete dim=1                         | ../src/bconv_naive.cpp:24 in compute_bconv_naive, local_out_x            |
+| array_partition | variable=local_w complete dim=0                                  | ../src/bconv_naive.cpp:31 in compute_bconv_naive, local_w                |
+| array_partition | variable=local_mod complete dim=0                                | ../src/bconv_naive.cpp:32 in compute_bconv_naive, local_mod              |
+| array_partition | variable=local_k_half complete dim=0                             | ../src/bconv_naive.cpp:33 in compute_bconv_naive, local_k_half           |
+| array_partition | variable=local_m_barrett complete dim=0                          | ../src/bconv_naive.cpp:34 in compute_bconv_naive, local_m_barrett        |
+| pipeline        | II=1                                                             | ../src/bconv_naive.cpp:41 in compute_bconv_naive                         |
+| pipeline        | II=1                                                             | ../src/bconv_naive.cpp:47 in compute_bconv_naive                         |
+| pipeline        | II=1                                                             | ../src/bconv_naive.cpp:57 in compute_bconv_naive                         |
+| pipeline        | II=1                                                             | ../src/bconv_naive.cpp:68 in compute_bconv_naive                         |
+| pipeline        | II=1                                                             | ../src/bconv_naive.cpp:90 in compute_bconv_naive                         |
+| inline          |                                                                  | ../src/bconv_systolic.cpp:27 in bconv_systolic_core                      |
+| array_partition | variable=in_w complete dim=0                                     | ../src/bconv_systolic.cpp:29 in bconv_systolic_core, in_w                |
+| array_partition | variable=out_mod complete dim=0                                  | ../src/bconv_systolic.cpp:30 in bconv_systolic_core, out_mod             |
+| array_partition | variable=out_S complete dim=0                                    | ../src/bconv_systolic.cpp:31 in bconv_systolic_core, out_S               |
+| array_partition | variable=out_m_barrett complete dim=0                            | ../src/bconv_systolic.cpp:32 in bconv_systolic_core, out_m_barrett       |
+| array_partition | variable=x_reg complete dim=0                                    | ../src/bconv_systolic.cpp:36 in bconv_systolic_core, x_reg               |
+| array_partition | variable=sum_reg complete dim=0                                  | ../src/bconv_systolic.cpp:37 in bconv_systolic_core, sum_reg             |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:40 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:42 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:48 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:50 in bconv_systolic_core                      |
+| pipeline        | II=1                                                             | ../src/bconv_systolic.cpp:56 in bconv_systolic_core                      |
+| array_partition | variable=x_curr complete dim=0                                   | ../src/bconv_systolic.cpp:60 in bconv_systolic_core, x_curr              |
+| array_partition | variable=sum_curr complete dim=0                                 | ../src/bconv_systolic.cpp:61 in bconv_systolic_core, sum_curr            |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:64 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:66 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:72 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:74 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:80 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:88 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:93 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:95 in bconv_systolic_core                      |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:114 in bconv_systolic_core                     |
+| array_partition | variable=in_x type=cyclic factor=LOAD_PAR dim=3                  | ../src/bconv_systolic.cpp:136 in compute_bconv_systolic, in_x            |
+| interface       | s_axilite port=out_mod bundle=control                            | ../src/bconv_systolic.cpp:139 in compute_bconv_systolic, out_mod         |
+| interface       | s_axilite port=sizeP bundle=control                              | ../src/bconv_systolic.cpp:140 in compute_bconv_systolic, sizeP           |
+| interface       | s_axilite port=return bundle=control                             | ../src/bconv_systolic.cpp:141 in compute_bconv_systolic, return          |
+| bind_storage    | variable=local_in_x type=ram_1wnr impl=bram                      | ../src/bconv_systolic.cpp:145 in compute_bconv_systolic, local_in_x      |
+| array_partition | variable=local_in_x type=complete dim=1                          | ../src/bconv_systolic.cpp:146 in compute_bconv_systolic, local_in_x      |
+| array_partition | variable=local_in_x type=cyclic factor=LOAD_PAR dim=2            | ../src/bconv_systolic.cpp:147 in compute_bconv_systolic, local_in_x      |
+| bind_storage    | variable=local_out_x type=ram_s2p impl=bram                      | ../src/bconv_systolic.cpp:150 in compute_bconv_systolic, local_out_x     |
+| array_partition | variable=local_out_x type=complete dim=1                         | ../src/bconv_systolic.cpp:151 in compute_bconv_systolic, local_out_x     |
+| array_partition | variable=local_out_x type=cyclic factor=LOAD_PAR dim=2           | ../src/bconv_systolic.cpp:152 in compute_bconv_systolic, local_out_x     |
+| array_partition | variable=local_w complete dim=0                                  | ../src/bconv_systolic.cpp:158 in compute_bconv_systolic, local_w         |
+| array_partition | variable=local_mod complete dim=0                                | ../src/bconv_systolic.cpp:159 in compute_bconv_systolic, local_mod       |
+| array_partition | variable=local_S complete dim=0                                  | ../src/bconv_systolic.cpp:160 in compute_bconv_systolic, local_S         |
+| array_partition | variable=local_m_barrett complete dim=0                          | ../src/bconv_systolic.cpp:161 in compute_bconv_systolic, local_m_barrett |
+| pipeline        | II=1                                                             | ../src/bconv_systolic.cpp:165 in compute_bconv_systolic                  |
+| pipeline        | II=1                                                             | ../src/bconv_systolic.cpp:171 in compute_bconv_systolic                  |
+| pipeline        | II=1                                                             | ../src/bconv_systolic.cpp:180 in compute_bconv_systolic                  |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:182 in compute_bconv_systolic                  |
+| loop_tripcount  | min=1 max=MAX_OUT_COLS avg=3                                     | ../src/bconv_systolic.cpp:193 in compute_bconv_systolic                  |
+| pipeline        | II=1                                                             | ../src/bconv_systolic.cpp:195 in compute_bconv_systolic                  |
+| unroll          |                                                                  | ../src/bconv_systolic.cpp:197 in compute_bconv_systolic                  |
+| inline          |                                                                  | ../src/cg_ntt.cpp:32 in flatten_2d_to_1d                                 |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:35 in flatten_2d_to_1d                                 |
+| unroll          | factor=PE_PARALLEL                                               | ../src/cg_ntt.cpp:38 in flatten_2d_to_1d                                 |
+| inline          |                                                                  | ../src/cg_ntt.cpp:48 in reshape_1d_to_2d                                 |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:51 in reshape_1d_to_2d                                 |
+| unroll          | factor=PE_PARALLEL                                               | ../src/cg_ntt.cpp:54 in reshape_1d_to_2d                                 |
+| inline          |                                                                  | ../src/cg_ntt.cpp:89 in cg_pe                                            |
+| bind_op         | variable=mult_in op=add impl=fabric latency=1                    | ../src/cg_ntt.cpp:121 in cg_pe, mult_in                                  |
+| inline          | off                                                              | ../src/cg_ntt.cpp:142 in cg_ntt_reorder                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:150 in cg_ntt_reorder                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:164 in cg_ntt_reorder                                  |
+| array_partition | variable=buf_A cyclic factor=CG_BUF_PARTITION dim=1              | ../src/cg_ntt.cpp:192 in cg_ntt_kernel, buf_A                            |
+| array_partition | variable=buf_B cyclic factor=CG_BUF_PARTITION dim=1              | ../src/cg_ntt.cpp:193 in cg_ntt_kernel, buf_B                            |
+| bind_storage    | variable=buf_A type=ram_2p impl=bram                             | ../src/cg_ntt.cpp:194 in cg_ntt_kernel, buf_A                            |
+| bind_storage    | variable=buf_B type=ram_2p impl=bram                             | ../src/cg_ntt.cpp:195 in cg_ntt_kernel, buf_B                            |
+| array_partition | variable=cg_twiddle cyclic factor=CG_PE_NUM dim=2                | ../src/cg_ntt.cpp:201 in cg_ntt_kernel, cg_twiddle                       |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:208 in cg_ntt_kernel                                   |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:211 in cg_ntt_kernel                                   |
+| loop_flatten    | off                                                              | ../src/cg_ntt.cpp:229 in cg_ntt_kernel                                   |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:242 in cg_ntt_kernel                                   |
+| dependence      | variable=buf_A type=inter dependent=false                        | ../src/cg_ntt.cpp:244 in cg_ntt_kernel, buf_A                            |
+| dependence      | variable=buf_B type=inter dependent=false                        | ../src/cg_ntt.cpp:245 in cg_ntt_kernel, buf_B                            |
+| dependence      | variable=buf_A type=intra dependent=false                        | ../src/cg_ntt.cpp:246 in cg_ntt_kernel, buf_A                            |
+| dependence      | variable=buf_B type=intra dependent=false                        | ../src/cg_ntt.cpp:247 in cg_ntt_kernel, buf_B                            |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:251 in cg_ntt_kernel                                   |
+| latency         | min=1 max=1                                                      | ../src/cg_ntt.cpp:277 in cg_ntt_kernel                                   |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:316 in cg_ntt_kernel                                   |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:319 in cg_ntt_kernel                                   |
+| interface       | m_axi port=in_data bundle=gmem0 offset=slave depth=4096          | ../src/cg_ntt.cpp:349 in compute_cg_ntt, in_data                         |
+| interface       | m_axi port=cg_ntt_twiddle bundle=gmem1 offset=slave depth=24576  | ../src/cg_ntt.cpp:350 in compute_cg_ntt, cg_ntt_twiddle                  |
+| interface       | m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave depth=24576 | ../src/cg_ntt.cpp:351 in compute_cg_ntt, cg_intt_twiddle                 |
+| interface       | m_axi port=modulus bundle=gmem3 offset=slave depth=8             | ../src/cg_ntt.cpp:352 in compute_cg_ntt, modulus                         |
+| interface       | m_axi port=K_HALF bundle=gmem3 offset=slave depth=8              | ../src/cg_ntt.cpp:353 in compute_cg_ntt, K_HALF                          |
+| interface       | m_axi port=M_barrett bundle=gmem3 offset=slave depth=8           | ../src/cg_ntt.cpp:354 in compute_cg_ntt, M_barrett                       |
+| interface       | s_axilite port=in_data                                           | ../src/cg_ntt.cpp:356 in compute_cg_ntt, in_data                         |
+| interface       | s_axilite port=cg_ntt_twiddle                                    | ../src/cg_ntt.cpp:357 in compute_cg_ntt, cg_ntt_twiddle                  |
+| interface       | s_axilite port=cg_intt_twiddle                                   | ../src/cg_ntt.cpp:358 in compute_cg_ntt, cg_intt_twiddle                 |
+| interface       | s_axilite port=modulus                                           | ../src/cg_ntt.cpp:359 in compute_cg_ntt, modulus                         |
+| interface       | s_axilite port=K_HALF                                            | ../src/cg_ntt.cpp:360 in compute_cg_ntt, K_HALF                          |
+| interface       | s_axilite port=M_barrett                                         | ../src/cg_ntt.cpp:361 in compute_cg_ntt, M_barrett                       |
+| interface       | s_axilite port=is_ntt                                            | ../src/cg_ntt.cpp:362 in compute_cg_ntt, is_ntt                          |
+| interface       | s_axilite port=num_active_limbs                                  | ../src/cg_ntt.cpp:363 in compute_cg_ntt, num_active_limbs                |
+| interface       | s_axilite port=mod_idx_offset                                    | ../src/cg_ntt.cpp:364 in compute_cg_ntt, mod_idx_offset                  |
+| interface       | s_axilite port=return                                            | ../src/cg_ntt.cpp:365 in compute_cg_ntt, return                          |
+| array_partition | variable=local_in_data cyclic factor=CG_PE_NUM dim=1             | ../src/cg_ntt.cpp:374 in compute_cg_ntt, local_in_data                   |
+| array_partition | variable=local_out_data cyclic factor=CG_PE_NUM dim=1            | ../src/cg_ntt.cpp:375 in compute_cg_ntt, local_out_data                  |
+| array_partition | variable=local_twiddle cyclic factor=CG_PE_NUM dim=2             | ../src/cg_ntt.cpp:376 in compute_cg_ntt, local_twiddle                   |
+| loop_tripcount  | min=1 max=8 avg=3                                                | ../src/cg_ntt.cpp:380 in compute_cg_ntt                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:385 in compute_cg_ntt                                  |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:388 in compute_cg_ntt                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:397 in compute_cg_ntt                                  |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:401 in compute_cg_ntt                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:409 in compute_cg_ntt                                  |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:413 in compute_cg_ntt                                  |
+| pipeline        | II=1                                                             | ../src/cg_ntt.cpp:444 in compute_cg_ntt                                  |
+| unroll          |                                                                  | ../src/cg_ntt.cpp:447 in compute_cg_ntt                                  |
+| inline          | off                                                              | ../src/interleave.cpp:12 in interleave                                   |
+| bind_storage    | variable=temp_buffer type=ram_2p impl=bram                       | ../src/interleave.cpp:21 in interleave, temp_buffer                      |
+| array_partition | variable=temp_buffer cyclic factor=PE_PARALLEL dim=2             | ../src/interleave.cpp:24 in interleave, temp_buffer                      |
+| array_partition | variable=data cyclic factor=PE_PARALLEL dim=2                    | ../src/interleave.cpp:25 in interleave, data                             |
+| pipeline        | II=1                                                             | ../src/interleave.cpp:40 in interleave                                   |
+| unroll          | factor=PARALLEL_FACTOR                                           | ../src/interleave.cpp:41 in interleave                                   |
+| pipeline        | II=1                                                             | ../src/interleave.cpp:57 in interleave                                   |
+| unroll          | factor=PARALLEL_FACTOR                                           | ../src/interleave.cpp:58 in interleave                                   |
+| pipeline        | II=1                                                             | ../src/interleave.cpp:77 in interleave                                   |
+| unroll          | factor=PARALLEL_FACTOR                                           | ../src/interleave.cpp:78 in interleave                                   |
+| inline          | off                                                              | ../src/load.cpp:10 in load                                               |
+| pipeline        | II=1                                                             | ../src/load.cpp:16 in load                                               |
+| inline          | off                                                              | ../src/load.cpp:30 in store                                              |
+| pipeline        | II=1                                                             | ../src/load.cpp:37 in store                                              |
+| array_partition | variable=in1 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_add_kernel.cpp:15 in compute_add, in1                         |
+| array_partition | variable=in2 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_add_kernel.cpp:16 in compute_add, in2                         |
+| array_partition | variable=out cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_add_kernel.cpp:17 in compute_add, out                         |
+| pipeline        | II=1                                                             | ../src/mod_add_kernel.cpp:26 in compute_add                              |
+| unroll          | factor=PE_PARALLEL                                               | ../src/mod_add_kernel.cpp:27 in compute_add                              |
+| array_partition | variable=in1 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_mult_kernel.cpp:14 in compute_mult, in1                       |
+| array_partition | variable=in2 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_mult_kernel.cpp:15 in compute_mult, in2                       |
+| array_partition | variable=out cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_mult_kernel.cpp:16 in compute_mult, out                       |
+| pipeline        | II=1                                                             | ../src/mod_mult_kernel.cpp:27 in compute_mult                            |
+| unroll          | factor=PE_PARALLEL                                               | ../src/mod_mult_kernel.cpp:28 in compute_mult                            |
+| array_partition | variable=in1 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_sub_kernel.cpp:17 in compute_sub, in1                         |
+| array_partition | variable=in2 cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_sub_kernel.cpp:18 in compute_sub, in2                         |
+| array_partition | variable=out cyclic factor=PE_PARALLEL dim=3                     | ../src/mod_sub_kernel.cpp:19 in compute_sub, out                         |
+| pipeline        | II=1                                                             | ../src/mod_sub_kernel.cpp:28 in compute_sub                              |
+| unroll          | factor=PE_PARALLEL                                               | ../src/mod_sub_kernel.cpp:29 in compute_sub                              |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:4 in compute_indices                               |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:21 in generate_input_index                         |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:29 in generate_input_index                         |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:38 in generate_output_index                        |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:47 in generate_output_index                        |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:64 in read_data                                    |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:71 in read_data                                    |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:87 in permutate_data                               |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:89 in permutate_data                               |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:95 in generate_twiddle_index                       |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:97 in generate_twiddle_index                       |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:111 in permute_twiddle_factors                     |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:115 in permute_twiddle_factors                     |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:133 in compute_core                                |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:137 in compute_core                                |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:163 in repermute_data                              |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:165 in repermute_data                              |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:176 in rewrite_data                                |
+| unroll          | factor=PE_PARALLEL                                               | ../src/ntt_kernel.cpp:182 in rewrite_data                                |
+| inline          |                                                                  | ../src/ntt_kernel.cpp:206 in configurable_pe                             |
+| array_partition | variable=buf_A cyclic factor=PE_PARALLEL dim=2                   | ../src/ntt_kernel.cpp:269 in ntt_kernel, buf_A                           |
+| array_partition | variable=buf_B cyclic factor=PE_PARALLEL dim=2                   | ../src/ntt_kernel.cpp:270 in ntt_kernel, buf_B                           |
+| array_partition | variable=in_memory cyclic factor=PE_PARALLEL dim=2               | ../src/ntt_kernel.cpp:273 in ntt_kernel, in_memory                       |
+| array_partition | variable=ntt_twiddle_memory complete dim=1                       | ../src/ntt_kernel.cpp:276 in ntt_kernel, ntt_twiddle_memory              |
+| array_partition | variable=intt_twiddle_memory complete dim=1                      | ../src/ntt_kernel.cpp:277 in ntt_kernel, intt_twiddle_memory             |
+| array_partition | variable=InputIndex complete                                     | ../src/ntt_kernel.cpp:288 in ntt_kernel, InputIndex                      |
+| array_partition | variable=OutputIndex complete                                    | ../src/ntt_kernel.cpp:289 in ntt_kernel, OutputIndex                     |
+| array_partition | variable=TwiddleIndex complete                                   | ../src/ntt_kernel.cpp:290 in ntt_kernel, TwiddleIndex                    |
+| array_partition | variable=ReadData complete                                       | ../src/ntt_kernel.cpp:291 in ntt_kernel, ReadData                        |
+| array_partition | variable=PermuteData complete                                    | ../src/ntt_kernel.cpp:292 in ntt_kernel, PermuteData                     |
+| array_partition | variable=TwiddleFactor complete                                  | ../src/ntt_kernel.cpp:293 in ntt_kernel, TwiddleFactor                   |
+| array_partition | variable=NTTData complete                                        | ../src/ntt_kernel.cpp:294 in ntt_kernel, NTTData                         |
+| array_partition | variable=RepermuteData complete                                  | ../src/ntt_kernel.cpp:295 in ntt_kernel, RepermuteData                   |
+| pipeline        | II=1                                                             | ../src/ntt_kernel.cpp:305 in ntt_kernel                                  |
+| unroll          |                                                                  | ../src/ntt_kernel.cpp:310 in ntt_kernel                                  |
+| loop_flatten    | off                                                              | ../src/ntt_kernel.cpp:327 in ntt_kernel                                  |
+| dependence      | variable=buf_A type=inter dependent=false direction=RAW          | ../src/ntt_kernel.cpp:337 in ntt_kernel, buf_A                           |
+| dependence      | variable=buf_B type=inter dependent=false direction=RAW          | ../src/ntt_kernel.cpp:338 in ntt_kernel, buf_B                           |
+| dependence      | variable=buf_B type=inter dependent=false direction=WAW          | ../src/ntt_kernel.cpp:339 in ntt_kernel, buf_B                           |
+| pipeline        | II=1                                                             | ../src/ntt_kernel.cpp:391 in ntt_kernel                                  |
+| unroll          |                                                                  | ../src/ntt_kernel.cpp:395 in ntt_kernel                                  |
+| array_partition | variable=in_memory cyclic factor=PE_PARALLEL dim=3               | ../src/ntt_kernel.cpp:426 in compute_ntt, in_memory                      |
+| array_partition | variable=ntt_twiddle_memory complete dim=2                       | ../src/ntt_kernel.cpp:429 in compute_ntt, ntt_twiddle_memory             |
+| array_partition | variable=intt_twiddle_memory complete dim=2                      | ../src/ntt_kernel.cpp:430 in compute_ntt, intt_twiddle_memory            |
+| loop_tripcount  | min=1 max=5 avg=3                                                | ../src/ntt_kernel.cpp:434 in compute_ntt                                 |
+| inline          | off                                                              | ../src/top.cpp:43 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:51 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:56 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:61 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:66 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:71 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:76 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:90 in load_init_params                                    |
+| pipeline        | II=1                                                             | ../src/top.cpp:100 in load_init_params                                   |
+| inline          | off                                                              | ../src/top.cpp:118 in load_bconv_params                                  |
+| pipeline        | II=1                                                             | ../src/top.cpp:123 in load_bconv_params                                  |
+| pipeline        | II=1                                                             | ../src/top.cpp:134 in load_bconv_params                                  |
+| inline          | off                                                              | ../src/top.cpp:145 in load_auto_meta                                     |
+| inline          | off                                                              | ../src/top.cpp:159 in execute_ntt                                        |
+| loop_tripcount  | min=1 max=5 avg=3                                                | ../src/top.cpp:163 in execute_ntt                                        |
+| array_partition | variable=flat cyclic factor=PE_PARALLEL dim=1                    | ../src/top.cpp:166 in execute_ntt, flat                                  |
+| array_partition | variable=flat_out cyclic factor=PE_PARALLEL dim=1                | ../src/top.cpp:167 in execute_ntt, flat_out                              |
+| inline          | off                                                              | ../src/top.cpp:179 in execute_intt                                       |
+| loop_tripcount  | min=1 max=5 avg=3                                                | ../src/top.cpp:183 in execute_intt                                       |
+| array_partition | variable=flat cyclic factor=PE_PARALLEL dim=1                    | ../src/top.cpp:186 in execute_intt, flat                                 |
+| array_partition | variable=flat_out cyclic factor=PE_PARALLEL dim=1                | ../src/top.cpp:187 in execute_intt, flat_out                             |
+| interface       | m_axi port=mem_in1 offset=slave bundle=gmem0 depth=196617        | ../src/top.cpp:206 in top, mem_in1                                       |
+| interface       | m_axi port=mem_in2 offset=slave bundle=gmem1 depth=196614        | ../src/top.cpp:207 in top, mem_in2                                       |
+| interface       | m_axi port=mem_out offset=slave bundle=gmem2 depth=32768         | ../src/top.cpp:208 in top, mem_out                                       |
+| interface       | s_axilite port=mem_in1 bundle=control                            | ../src/top.cpp:210 in top, mem_in1                                       |
+| interface       | s_axilite port=mem_in2 bundle=control                            | ../src/top.cpp:211 in top, mem_in2                                       |
+| interface       | s_axilite port=mem_out bundle=control                            | ../src/top.cpp:212 in top, mem_out                                       |
+| interface       | s_axilite port=opcode bundle=control                             | ../src/top.cpp:213 in top, opcode                                        |
+| interface       | s_axilite port=num_active_limbs bundle=control                   | ../src/top.cpp:214 in top, num_active_limbs                              |
+| interface       | s_axilite port=mod_index bundle=control                          | ../src/top.cpp:215 in top, mod_index                                     |
+| interface       | s_axilite port=return bundle=control                             | ../src/top.cpp:216 in top, return                                        |
+| array_partition | variable=poly_buffer_1 cyclic factor=PE_PARALLEL dim=3           | ../src/top.cpp:218 in top, poly_buffer_1                                 |
+| array_partition | variable=poly_buffer_2 cyclic factor=PE_PARALLEL dim=3           | ../src/top.cpp:219 in top, poly_buffer_2                                 |
+| array_partition | variable=result_buffer cyclic factor=PE_PARALLEL dim=3           | ../src/top.cpp:220 in top, result_buffer                                 |
+| bind_storage    | variable=poly_buffer_1 type=ram_2p impl=bram                     | ../src/top.cpp:222 in top, poly_buffer_1                                 |
+| bind_storage    | variable=poly_buffer_2 type=ram_2p impl=bram                     | ../src/top.cpp:223 in top, poly_buffer_2                                 |
+| bind_storage    | variable=result_buffer type=ram_2p impl=bram                     | ../src/top.cpp:224 in top, result_buffer                                 |
+| array_partition | variable=NTTTwiddleFactor complete dim=2                         | ../src/top.cpp:226 in top, NTTTwiddleFactor                              |
+| array_partition | variable=NTTTwiddleFactor cyclic factor=PE_PARALLEL dim=3        | ../src/top.cpp:227 in top, NTTTwiddleFactor                              |
+| array_partition | variable=INTTTwiddleFactor complete dim=2                        | ../src/top.cpp:228 in top, INTTTwiddleFactor                             |
+| array_partition | variable=INTTTwiddleFactor cyclic factor=PE_PARALLEL dim=3       | ../src/top.cpp:229 in top, INTTTwiddleFactor                             |
+| bind_storage    | variable=NTTTwiddleFactor type=ram_2p impl=uram                  | ../src/top.cpp:230 in top, NTTTwiddleFactor                              |
+| bind_storage    | variable=INTTTwiddleFactor type=ram_2p impl=uram                 | ../src/top.cpp:231 in top, INTTTwiddleFactor                             |
++-----------------+------------------------------------------------------------------+--------------------------------------------------------------------------+
+
+

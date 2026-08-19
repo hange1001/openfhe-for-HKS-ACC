@@ -67,6 +67,10 @@ struct FpgaOpStats {
     int64_t h2d_us    = 0;
     int64_t kernel_us = 0;
     int64_t d2h_us    = 0;
+    // 实验 D（task.yaml step 1.2）：整个 Execute()/BConvOffload() 的墙钟。
+    // wall - (h2d + kernel + d2h) = 之前完全没被计入的那一段，即
+    // xrt::bo 构造/析构 x3 + bo.write() x2 + bo_out.read()。
+    int64_t wall_us   = 0;
     int     calls     = 0;
 };
 
@@ -76,6 +80,7 @@ struct FpgaTransferStats {
     int64_t h2d_us    = 0;
     int64_t kernel_us = 0;
     int64_t d2h_us    = 0;
+    int64_t wall_us   = 0;
     int     calls     = 0;
 };
 
@@ -86,6 +91,44 @@ inline FpgaTransferStats& GetFpgaTransferStats() {
 
 inline void ResetFpgaTransferStats() {
     GetFpgaTransferStats() = FpgaTransferStats{};
+}
+
+// 实验 D 的被测量：未计时开销。预测值 30-80 us/call（task.yaml:216）。
+// 其中 memcpy 分量已由 testbench/host_overhead_bench.cpp 离线测得
+// （NTT 路径 1.8 us、BConv 路径 14.0 us @ i7-12700H），
+// 差额即 xrt::bo 分配开销 = 「buffer 池化」能消除的收益上界。
+inline int64_t FpgaUntimedUs(const FpgaOpStats& s) {
+    int64_t accounted = s.h2d_us + s.kernel_us + s.d2h_us;
+    return (s.wall_us > accounted) ? (s.wall_us - accounted) : 0;
+}
+
+inline void PrintFpgaTransferStats(std::ostream& os = std::cout) {
+    static const char* kOpName[8] = {"INIT", "ADD", "SUB", "MULT", "NTT", "INTT", "BCONV", "AUTO"};
+    const auto& ts = GetFpgaTransferStats();
+    os << "\n===== FPGA transfer stats (实验 D 口径) =====\n"
+       << "  未计时开销 = wall - (h2d + kernel + d2h)"
+          "  <- xrt::bo 分配/析构 + bo.write/read\n"
+       << "  op      calls      h2d     kernel        d2h       wall    未计时   未计时占比\n";
+    for (int op = 0; op < 8; ++op) {
+        const auto& s = ts.by_opcode[op];
+        if (s.calls == 0)
+            continue;
+        int64_t untimed = FpgaUntimedUs(s);
+        double  pct     = (s.wall_us > 0) ? (100.0 * untimed / s.wall_us) : 0.0;
+        os << "  " << kOpName[op] << "\t" << s.calls << "\t" << s.h2d_us << "us\t" << s.kernel_us
+           << "us\t" << s.d2h_us << "us\t" << s.wall_us << "us\t" << untimed << "us\t" << pct
+           << "%\n";
+    }
+    int64_t total_untimed = (ts.wall_us > ts.h2d_us + ts.kernel_us + ts.d2h_us)
+                                ? ts.wall_us - (ts.h2d_us + ts.kernel_us + ts.d2h_us)
+                                : 0;
+    os << "  ----\n  TOTAL\t" << ts.calls << "\t" << ts.h2d_us << "us\t" << ts.kernel_us << "us\t"
+       << ts.d2h_us << "us\t" << ts.wall_us << "us\t" << total_untimed << "us\n";
+    if (ts.calls > 0) {
+        os << "  每次 call 平均: wall " << (ts.wall_us / ts.calls) << "us，其中未计时 "
+           << (total_untimed / ts.calls) << "us\n";
+    }
+    os << "=============================================\n";
 }
 
 inline std::string GetXclbinPath() {
@@ -397,6 +440,14 @@ public:
             using Clock = std::chrono::high_resolution_clock;
             using us    = std::chrono::microseconds;
 
+            // 实验 D：整段墙钟从这里起，覆盖 xrt::bo 构造 + write + sync + kernel + read。
+            // 与 h2d/kernel/d2h 三段之和的差 = 之前完全没记账的部分。
+            auto t_call_start = Clock::now();
+            int64_t h2d = 0, kern = 0, d2h = 0;
+
+            // 内层作用域：让三个 xrt::bo 在 t_call_end 之前析构，墙钟才把 bo 释放
+            // （驱动 unmap）也算进去。否则测出来又是一个下界，重蹈 182.8 us 的覆辙。
+            {
             size_t size_bytes     = (size_t)num_limbs * FPGA_RING_DIM * sizeof(uint64_t);
             size_t out_size_bytes = size_bytes;
             auto bo_in1 = xrt::bo(m_device, size_bytes,     m_kernel_top.group_id(0));
@@ -430,26 +481,36 @@ public:
 
             bo_out.read(out);
 
+            h2d  = std::chrono::duration_cast<us>(t_h2d_end  - t_h2d_start).count();
+            kern = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count();
+            d2h  = std::chrono::duration_cast<us>(t_d2h_end  - t_d2h_start).count();
+            }  // <- bo_in1 / bo_in2 / bo_out 在此析构
+
+            auto t_call_end  = Clock::now();
+            int64_t wall     = std::chrono::duration_cast<us>(t_call_end - t_call_start).count();
+            int64_t untimed  = wall - h2d - kern - d2h;
+
             // Accumulate into global transfer stats (total + per-opcode)
             auto& ts = GetFpgaTransferStats();
-            int64_t h2d  = std::chrono::duration_cast<us>(t_h2d_end  - t_h2d_start).count();
-            int64_t kern = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count();
-            int64_t d2h  = std::chrono::duration_cast<us>(t_d2h_end  - t_d2h_start).count();
             ts.h2d_us    += h2d;
             ts.kernel_us += kern;
             ts.d2h_us    += d2h;
+            ts.wall_us   += wall;
             ts.calls++;
             if (opcode < 8) {
                 ts.by_opcode[opcode].h2d_us    += h2d;
                 ts.by_opcode[opcode].kernel_us += kern;
                 ts.by_opcode[opcode].d2h_us    += d2h;
+                ts.by_opcode[opcode].wall_us   += wall;
                 ts.by_opcode[opcode].calls++;
             }
 
             std::cout << "    [Trace] Opcode=" << (int)opcode
                       << "  H2D=" << h2d << "μs"
                       << "  Kernel=" << kern / 1000.0 << "ms"
-                      << "  D2H=" << d2h << "μs\n";
+                      << "  D2H=" << d2h << "μs"
+                      << "  Wall=" << wall << "μs"
+                      << "  未计时=" << untimed << "μs\n";
         } catch (const std::exception& e) {
             std::cerr << "[FPGA Exec Error] " << e.what() << std::endl;
         }
@@ -625,6 +686,13 @@ public:
         std::cout << "=== [FPGA] Execute BConv === sizeP=" << sizeP << std::endl;
 
         try {
+            using Clock = std::chrono::high_resolution_clock;
+            using us    = std::chrono::microseconds;
+
+            // 实验 D：整段墙钟，口径与 Execute() 一致（含 bo 构造/析构 + meta 组装）
+            auto t_call_start = Clock::now();
+            int64_t h2d = 0, kern = 0, d2h = 0;
+            {
             // Buffer sizes
             size_t in_size = KERNEL_LIMB_Q * ringDim * sizeof(uint64_t);
             size_t out_size = sizeP * ringDim * sizeof(uint64_t);
@@ -679,8 +747,6 @@ public:
             bo_meta.write(meta_buffer.data());
 
             // --- Host → Device ---
-            using Clock = std::chrono::high_resolution_clock;
-            using us    = std::chrono::microseconds;
             auto t_h2d_start = Clock::now();
             bo_in.sync(XCL_BO_SYNC_BO_TO_DEVICE);
             bo_meta.sync(XCL_BO_SYNC_BO_TO_DEVICE);
@@ -699,18 +765,35 @@ public:
 
             bo_out.read(result);
 
-            // Accumulate into global transfer stats
-            auto& ts = GetFpgaTransferStats();
-            ts.h2d_us    += std::chrono::duration_cast<us>(t_h2d_end   - t_h2d_start).count();
-            ts.kernel_us += std::chrono::duration_cast<us>(t_kern_end  - t_kern_start).count();
-            ts.d2h_us    += std::chrono::duration_cast<us>(t_d2h_end   - t_d2h_start).count();
-            ts.calls++;
+            h2d  = std::chrono::duration_cast<us>(t_h2d_end  - t_h2d_start).count();
+            kern = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count();
+            d2h  = std::chrono::duration_cast<us>(t_d2h_end  - t_d2h_start).count();
+            }  // <- bo_in / bo_meta / bo_out 在此析构
 
-            double kernel_ms = std::chrono::duration_cast<us>(t_kern_end - t_kern_start).count() / 1000.0;
+            auto t_call_end = Clock::now();
+            int64_t wall    = std::chrono::duration_cast<us>(t_call_end - t_call_start).count();
+            int64_t untimed = wall - h2d - kern - d2h;
+
+            // Accumulate into global transfer stats
+            // （原来 BConvOffload 只累加了总计、漏了 by_opcode，一并补上）
+            auto& ts = GetFpgaTransferStats();
+            ts.h2d_us    += h2d;
+            ts.kernel_us += kern;
+            ts.d2h_us    += d2h;
+            ts.wall_us   += wall;
+            ts.calls++;
+            ts.by_opcode[OP_BCONV].h2d_us    += h2d;
+            ts.by_opcode[OP_BCONV].kernel_us += kern;
+            ts.by_opcode[OP_BCONV].d2h_us    += d2h;
+            ts.by_opcode[OP_BCONV].wall_us   += wall;
+            ts.by_opcode[OP_BCONV].calls++;
+
             std::cout << "    [Trace] BConv(sizeP=" << sizeP << ")"
-                      << "  H2D=" << std::chrono::duration_cast<us>(t_h2d_end - t_h2d_start).count() << "μs"
-                      << "  Kernel=" << kernel_ms << "ms"
-                      << "  D2H=" << std::chrono::duration_cast<us>(t_d2h_end - t_d2h_start).count() << "μs\n";
+                      << "  H2D=" << h2d << "μs"
+                      << "  Kernel=" << kern / 1000.0 << "ms"
+                      << "  D2H=" << d2h << "μs"
+                      << "  Wall=" << wall << "μs"
+                      << "  未计时=" << untimed << "μs\n";
         } catch (const std::exception& e) {
             std::cerr << "[FPGA BConv Error] " << e.what() << std::endl;
         }

@@ -71,6 +71,12 @@
   - **降时钟到 5ns (200MHz)**：放弃 4ns (250MHz) 目标，已采用作为兜底
   - **不拆函数靠 Vivado Implementation 自己 retiming**：风险大，HLS 估计的 -0.33ns 在后端不一定收敛
 - **参考**: [../docs/notes/archive/fix.md](../docs/notes/archive/fix.md)
+- **后续修订（2026-08-19）**: 时钟最终降到的是 **6ns (166 MHz)**，不是本条写的 5ns —— 见
+  `csynth.tcl` 的 `create_clock -period 6ns`。本条记录保留原样（ADR 是历史快照），
+  但引用时以 tcl 为准。同日重跑 `make csynth MODULE=Top` 的基线：
+  Slack **−0.33 ns** / Fmax 179.19 MHz / LUT 14% / FF 2% / BRAM 15% / DSP 14% / URAM 10%，
+  顶层 FSM 最大扇出 **5496**（本条说的"扇出爆炸"仍在）。数字见
+  [../docs/reports/summary.csv](../docs/reports/summary.csv)。
 
 ---
 

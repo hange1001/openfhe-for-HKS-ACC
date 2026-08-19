@@ -28,7 +28,8 @@
 | **L2**：DATAFLOW Limb 流水 | ⏳ 待实现 | 预期 8 Limbs 117K → 87K cycles |
 | **L3**：URAM 预加载 TW + BUTTERFLY II=1 | ⏳ 待实现 | 预期 87K → ~46K cycles，累计 7.5× |
 | Top FSM 子函数拆解 | ✅ 完成 | `Load_Init_Params` / `Execute_NTT` / `Execute_INTT` 隔离 |
-| 时序收敛 @ 200 MHz | ⚠️ HLS Slack -0.33ns（估计偏差） | 待 Vivado P&R 验证 |
+| 时序收敛 @ **166 MHz (6ns)** | ⚠️ HLS Slack −0.33ns | Fmax 179.19 MHz；顶层 FSM 扇出 5496；待 Vivado P&R 验证 |
+| `Top` 资源基线 | ✅ 2026-08-19 建立 | LUT 14% / FF 2% / BRAM 15% / DSP 14% / URAM 10% → [summary.csv](../reports/summary.csv) |
 
 ### Host 侧
 

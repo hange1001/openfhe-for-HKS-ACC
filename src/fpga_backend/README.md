@@ -5,7 +5,7 @@ kernel、C 仿真 testbench、以及驱动 HLS/Vitis 两条流程的 Makefile �
 
 - **目标板卡**：Xilinx Alveo U55C（`xcu55c-fsvh2892-2L-e`）
 - **时钟**：6 ns（166 MHz），`set_clock_uncertainty 0.75ns`
-- **工具链**：Vitis HLS 2024.1 + XRT
+- **工具链**：Vitis HLS **2023.2** + XRT 2.16（WSL `/tools/Xilinx/Vitis_HLS/2023.2`）
 - **HLS 顶层函数**：`Top`（[src/top.cpp](src/top.cpp)）
 
 > 项目整体进度、实测加速比、待办见 [docs/notes/PROJECT_STATUS.md](../../docs/notes/PROJECT_STATUS.md)；
@@ -128,11 +128,21 @@ make cosim  MODULE=Compute_BConv_Systolic  # C/RTL 协同仿真 + 波形
 - `make csynth` → `Solution/$(MODULE)/solution1/`
 - `make cosim` → `Solution/cosim_$(MODULE)/solution1/`
 
-把报告提拔进 git（`docs/reports/` 是有意跟踪的）：
+把报告提拔进 git（`docs/reports/hls/` 是有意跟踪的）：
 
 ```bash
 make report MODULE=Compute_BConv_Systolic
 ```
+
+`make report` 会经 [trim_report.sh](trim_report.sh) 处理，产出两样东西：
+
+| 产物 | 内容 |
+|---|---|
+| `docs/reports/hls/<MODULE>_csynth.rpt` | 裁剪版。丢掉 `SW I/O Information` 与 `Bind Op Report`（后者单独占 ~56%，是逐算子 DSP 绑定明细，diff 时全是噪声），保留资源/时序、AXI 接口、Storage、Pragma 四段 |
+| `docs/reports/summary.csv` | **一个模块一行**的顶层数字（slack / BRAM / DSP / FF / LUT / URAM）。跨 commit 看 delta 只 diff 这个文件 |
+
+`summary.csv` 的 `clk_ns` 由 `latency_ns / latency_cycles` 反推——用来抓时钟口径漂移
+（历史报告有 5ns 综合的，当前工程是 6ns）。要调整保留哪几段：`HLS_RPT_DROP="段名1|段名2" make report ...`
 
 ### Vitis 流程：出 xclbin
 
@@ -161,6 +171,14 @@ make hw        # 综合出比特流
 | [bconv_systolic_tb.cpp](testbench/bconv_systolic_tb.cpp) | 脉动阵列 BConv |
 | [top_tb.cpp](testbench/top_tb.cpp) | 顶层 opcode 分发全路径 |
 | [auto_test.cpp](testbench/auto_test.cpp) | 自同态 |
+
+⚠️ 例外：[host_overhead_bench.cpp](testbench/host_overhead_bench.cpp) **不是 HLS testbench**，不参与 `make csim`。
+它是实验 D（task.yaml step 1.2）的离线分量——量 `bo.write/read` 的 memcpy 与 BConv hook 的
+host 侧 gather/scatter 代价，不需要板卡也不需要 XRT：
+
+```bash
+g++ -O2 -std=c++17 -o /tmp/hob testbench/host_overhead_bench.cpp && /tmp/hob
+```
 
 ---
 

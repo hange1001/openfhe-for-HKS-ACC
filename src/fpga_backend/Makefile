@@ -75,7 +75,9 @@ VPP_FLAGS += -I$(INC_DIR) -I$(SRC_DIR)
 # 2. 构建规则 (Vitis Flow - 保持不变)
 # ===================================================================
 
-REPORTS_OUT := ../../docs/reports/bconv
+REPORTS_OUT := ../../docs/reports/hls
+# 所有模块的顶层数字汇总成一张表（一模块一行），跨 commit 看 delta 只需 diff 这个文件
+SUMMARY_CSV := ../../docs/reports/summary.csv
 
 .PHONY: all clean clean_all emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto report report_all
 
@@ -242,8 +244,8 @@ report: check_module
 	elif [ -f "$$COSIM_DIR/syn/report/csynth.rpt" ]; then SRC_RPT="$$COSIM_DIR/syn/report/csynth.rpt"; \
 	fi; \
 	if [ -n "$$SRC_RPT" ]; then \
-		cp "$$SRC_RPT" "$(REPORTS_OUT)/$(MODULE)_csynth.rpt"; \
-		echo "  [+] $(MODULE)_csynth.rpt  (from $$SRC_RPT)"; \
+		./trim_report.sh "$$SRC_RPT" "$(REPORTS_OUT)/$(MODULE)_csynth.rpt" \
+		                 "$(SUMMARY_CSV)" "$(MODULE)"; \
 	else \
 		echo "  [-] csynth.rpt not found (run 'make csynth MODULE=$(MODULE)' first)"; \
 	fi; \
