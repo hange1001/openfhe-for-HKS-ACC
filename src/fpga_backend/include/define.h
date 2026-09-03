@@ -62,6 +62,7 @@ static const int LIMB = MAX_LIMBS;
 #define OP_INTT   5
 #define OP_BCONV  6  // Fixed: was OP_AUTO, now matches opcode.h
 #define OP_AUTO   7  // Reserved for future use
+#define OP_HKS_DIGIT 8  // Fused single-digit ModUp prototype
 
 // =========================================================
 // 4. 辅助常量

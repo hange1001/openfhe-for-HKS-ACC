@@ -46,6 +46,7 @@
 #define OP_INTT   5
 #define OP_BCONV  6
 #define OP_AUTO   7
+#define OP_HKS_DIGIT 8
 
 // ---- 必须与 FPGA 端 define.h 保持一致 ----
 // MAX_LIMBS = LIMB_Q (3) + MAX_OUT_COLS (5) = 8
@@ -75,7 +76,7 @@ struct FpgaOpStats {
 };
 
 struct FpgaTransferStats {
-    FpgaOpStats by_opcode[8];  // indexed by OP_INIT..OP_AUTO
+    FpgaOpStats by_opcode[9];  // indexed by OP_INIT..OP_HKS_DIGIT
     // Aggregate totals (sum of all opcodes)
     int64_t h2d_us    = 0;
     int64_t kernel_us = 0;
@@ -103,13 +104,13 @@ inline int64_t FpgaUntimedUs(const FpgaOpStats& s) {
 }
 
 inline void PrintFpgaTransferStats(std::ostream& os = std::cout) {
-    static const char* kOpName[8] = {"INIT", "ADD", "SUB", "MULT", "NTT", "INTT", "BCONV", "AUTO"};
+    static const char* kOpName[9] = {"INIT", "ADD", "SUB", "MULT", "NTT", "INTT", "BCONV", "AUTO", "HKS_DIGIT"};
     const auto& ts = GetFpgaTransferStats();
     os << "\n===== FPGA transfer stats (实验 D 口径) =====\n"
        << "  未计时开销 = wall - (h2d + kernel + d2h)"
           "  <- xrt::bo 分配/析构 + bo.write/read\n"
        << "  op      calls      h2d     kernel        d2h       wall    未计时   未计时占比\n";
-    for (int op = 0; op < 8; ++op) {
+    for (int op = 0; op < 9; ++op) {
         const auto& s = ts.by_opcode[op];
         if (s.calls == 0)
             continue;
@@ -320,7 +321,68 @@ public:
         return instance;
     }
 
-    bool IsReady() const { return m_is_ready; }
+    bool IsReady() const { return m_is_ready && !m_hks_digit_only; }
+
+    // Fused mode owns the device context. All legacy fine-grained hooks stay on
+    // CPU, including unsupported shapes, KeyMult and ModDown. Configure while idle.
+    void SetHksDigitOnly(bool enabled) { m_hks_digit_only = enabled; }
+
+    // Sized transport for INIT / HKS_DIGIT. Unlike Execute(), input, metadata and
+    // output have different sizes. Errors propagate; never return partial output.
+    bool HksDigitTransfer(uint8_t opcode, const std::vector<uint64_t>& in1,
+                          const std::vector<uint64_t>& in2, std::vector<uint64_t>& out,
+                          int alpha, int start) {
+        const bool init = opcode == OP_INIT &&
+            in1.size() == FPGA_LIMB_Q * 3 + MAX_LIMBS * CG_TF_SIZE &&
+            in2.size() == FPGA_LIMB_P * 3 + MAX_LIMBS * CG_TF_SIZE && out.size() == 1;
+        const bool digit = opcode == OP_HKS_DIGIT && alpha >= 1 && alpha <= 3 &&
+            start >= 0 && start + alpha <= 3 &&
+            in1.size() == static_cast<size_t>(alpha * FPGA_RING_DIM) &&
+            in2.size() == 18 && out.size() == 5 * FPGA_RING_DIM;
+        if (!init && !digit)
+            throw std::invalid_argument("Invalid HKS_DIGIT transfer shape");
+#ifdef OPENFHE_FPGA_ENABLE
+        if (!m_is_ready) return false;
+        using Clock = std::chrono::steady_clock;
+        auto elapsed = [](Clock::time_point a, Clock::time_point b) {
+            return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();
+        };
+        auto t0 = Clock::now();
+        int64_t h2d, kernel, d2h;
+        {
+            auto b1 = xrt::bo(m_device, in1.size() * 8, m_kernel_top.group_id(0));
+            auto b2 = xrt::bo(m_device, in2.size() * 8, m_kernel_top.group_id(1));
+            auto bo = xrt::bo(m_device, out.size() * 8, m_kernel_top.group_id(2));
+            b1.write(in1.data());
+            b2.write(in2.data());
+            bo.write(out.data());  // sentinel detects an old xclbin without opcode 8
+            auto t1 = Clock::now();
+            b1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            b2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            bo.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+            auto t2 = Clock::now();
+            auto run = m_kernel_top(b1, b2, bo, opcode, alpha, start);
+            run.wait();
+            auto t3 = Clock::now();
+            bo.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+            auto t4 = Clock::now();
+            bo.read(out.data());
+            h2d = elapsed(t1, t2);
+            kernel = elapsed(t2, t3);
+            d2h = elapsed(t3, t4);
+        }
+        auto wall = elapsed(t0, Clock::now());
+        auto& s = GetFpgaTransferStats();
+        s.h2d_us += h2d; s.kernel_us += kernel; s.d2h_us += d2h;
+        s.wall_us += wall; ++s.calls;
+        auto& op = s.by_opcode[opcode];
+        op.h2d_us += h2d; op.kernel_us += kernel; op.d2h_us += d2h;
+        op.wall_us += wall; ++op.calls;
+        return true;
+#else
+        return false;
+#endif
+    }
 
 // ----------------------------------------------------------------------
 // InitModuli: 接收 CPU 的 Roots -> Index -> Permute -> Pack
@@ -346,14 +408,14 @@ public:
         combined_roots.insert(combined_roots.end(), q_roots.begin(), q_roots.end());
         combined_roots.insert(combined_roots.end(), p_roots.begin(), p_roots.end());
 
-        std::vector<uint64_t> K_vals(total_limbs), M_vals(total_limbs);
+        std::vector<uint64_t> S_vals(total_limbs), M_vals(total_limbs);
         for(size_t i=0; i<total_limbs; i++) {
             uint64_t p = m_stored_moduli[i];
             int pbits = 64 - __builtin_clzll(p);
             int S = pbits + 62;  // 全精度总移位量，不再除以 2
             unsigned __int128 power = (unsigned __int128)1 << S;
             uint64_t m = (uint64_t)(power / p);
-            K_vals[i] = S;
+            S_vals[i] = S;
             M_vals[i] = m;
             std::cout << "  [Barrett] idx=" << i << ": mod=" << p << ", S=" << S << ", m=" << m << std::endl;
         }
@@ -386,7 +448,7 @@ public:
         std::vector<uint64_t> buf1_Q(buf1_size, 0);
         for(size_t i=0; i<n_q && i<(size_t)FPGA_LIMB_Q; i++) {
             buf1_Q[i]                      = m_stored_moduli[i];
-            buf1_Q[FPGA_LIMB_Q + i]        = K_vals[i];
+            buf1_Q[FPGA_LIMB_Q + i]        = S_vals[i];
             buf1_Q[FPGA_LIMB_Q * 2 + i]    = M_vals[i];
         }
         memcpy(buf1_Q.data() + FPGA_LIMB_Q * PARAMS_PER_LIMB,
@@ -398,7 +460,7 @@ public:
         for(size_t i=0; i<n_p && i<(size_t)FPGA_LIMB_P; i++) {
             size_t global_idx = n_q + i;
             buf2_P[i]                      = m_stored_moduli[global_idx];
-            buf2_P[FPGA_LIMB_P + i]        = K_vals[global_idx];
+            buf2_P[FPGA_LIMB_P + i]        = S_vals[global_idx];
             buf2_P[FPGA_LIMB_P * 2 + i]    = M_vals[global_idx];
         }
         memcpy(buf2_P.data() + FPGA_LIMB_P * PARAMS_PER_LIMB,
@@ -497,7 +559,7 @@ public:
             ts.d2h_us    += d2h;
             ts.wall_us   += wall;
             ts.calls++;
-            if (opcode < 8) {
+            if (opcode < 9) {
                 ts.by_opcode[opcode].h2d_us    += h2d;
                 ts.by_opcode[opcode].kernel_us += kern;
                 ts.by_opcode[opcode].d2h_us    += d2h;
@@ -701,7 +763,7 @@ public:
             // FPGA Kernel (top.cpp OP_BCONV) 从 mem_in2 的布局：
             //   [0           .. LIMB_Q*MAX_OUT_COLS-1]  : weights  (15 个)
             //   [LIMB_Q*MAX_OUT_COLS .. +MAX_OUT_COLS-1]: out_mod  (5 个)
-            //   [+MAX_OUT_COLS       .. +MAX_OUT_COLS-1]: k_half   (5 个)
+            //   [+MAX_OUT_COLS       .. +MAX_OUT_COLS-1]: S        (5 个)
             //   [+MAX_OUT_COLS       .. +MAX_OUT_COLS-1]: m_barrett(5 个)
             // 总共: 15 + 5 + 5 + 5 = 30 个 uint64_t
             // -------------------------------------------------------
@@ -714,10 +776,10 @@ public:
             // (1) Copy weights [0..14]
             std::memcpy(meta_buffer.data(), w, weights_count * sizeof(uint64_t));
 
-            // (2) Copy output moduli + 计算 Barrett 参数 k_half 和 m_barrett
+            // (2) Copy output moduli + 计算 Barrett 参数 S 和 m_barrett
             size_t mod_offset   = weights_count;                       // 15
-            size_t khalf_offset = mod_offset + KERNEL_MAX_OUT_COLS;    // 20
-            size_t m_offset     = khalf_offset + KERNEL_MAX_OUT_COLS;  // 25
+            size_t S_offset = mod_offset + KERNEL_MAX_OUT_COLS;    // 20
+            size_t m_offset     = S_offset + KERNEL_MAX_OUT_COLS;  // 25
 
             for (int i = 0; i < KERNEL_MAX_OUT_COLS; i++) {
                 if (i < sizeP) {
@@ -730,11 +792,11 @@ public:
                     unsigned __int128 power = (unsigned __int128)1 << S;
                     uint64_t m = (uint64_t)(power / p);
 
-                    meta_buffer[khalf_offset + i] = (uint64_t)S;   // S = 总移位量
+                    meta_buffer[S_offset + i] = (uint64_t)S;   // S = 总移位量
                     meta_buffer[m_offset + i]     = m;              // m_barrett
                 } else {
                     meta_buffer[mod_offset + i]   = 0;
-                    meta_buffer[khalf_offset + i] = 0;
+                    meta_buffer[S_offset + i] = 0;
                     meta_buffer[m_offset + i]     = 0;
                 }
             }
@@ -807,6 +869,7 @@ private:
     xrt::kernel m_kernel_top;
 #endif
     bool m_is_ready = false;                   // set to true only when FPGA is successfully initialized
+    bool m_hks_digit_only = false;
     std::vector<uint64_t> m_stored_moduli;
     std::vector<uint64_t> m_stored_roots; // <--- 新增
 

@@ -36,6 +36,126 @@
 
 <!-- 新会话记录追加在下方 -->
 
+### [2026-09-04] 复合算子接入 OpenFHE 并验证（完成）
+
+**Agent**: Codex。按用户「接入openfhe并验证」实施；保留原暂存区与学习路线，不写个人学习笔记。
+
+**实现**:
+- 在 HYBRID EvalKeySwitchPrecomputeCore 的 CPU digit materialization 前加入显式 opt-in 接口。
+  直接使用 OpenFHE 的 EVAL、单位根、PartQlHatInvModq 和 PartQlHatModp；返回完整 QlP digit。
+- 新增 HLS C-model / XRT / CPU 选择、按完整 modulus/root 顺序的初始化缓存、上下文互斥、
+  参数/元数据检查及失败时不发布半成品。显式配置后旧逐算子 FPGA hooks 保持关闭。
+- XRT 入口按三个不同 BO 大小打包，opcode 8 纳入统计。默认未配置的应用保持原行为。
+- 新增可选 CMake/CTest 目标，把真实 OpenFHE 库与真实 Top/ap_int 代码链接起来；无板卡。
+
+**验证**:
+- 集成测试 400 checks、991232 residues 精确对比通过。五个模数独立 NTT/INTT 对照；
+  7 类 ModUp 输入；两个 digit 全部五塔；缓存复用和 A/B/A 参数切换；输入不变。
+- EvalRotate(+1/-1) 均执行两个融合 digit；与 CPU 密文 bit-exact，解密误差远低于 1e-6。
+- EvalMult 因 FLEXIBLEAUTOEXT 降到 Q=2，验证的是 CPU 回退正确性，不是融合乘法。
+- Q=2/N=8192/P=1/MP/OC/COEFFICIENT/无XRT回退；缺少C-model、旧bitstream无opcode8、
+  第二digit传输失败均有检查；失败不交付部分结果，重新配置后正常恢复。
+- 全库 AddressSanitizer（detect_leaks=1）通过同一套集成测试。
+- 原 Top 18/18、HKS 22 cases 回归通过；XRT-enabled 及 WITH_REDUCED_NOISE 分支语法编译通过。
+- 旧 build/unittest/pke_tests 在列测试阶段已因 stoul 异常退出，根目录/构建目录均如此；
+  不宣称全量 PKE suite 通过，不在本任务修改无关 CSV 用例加载逻辑。
+
+**被验证修正的假设**: 上轮 cyclic oracle 不代表硬件只能 cyclic。现有 Host
+BuildCgTwiddle_Unified 已支持 OpenFHE negacyclic 表，本轮用真实参数对拍确认无须改 HLS
+或增加 Host bit-reversal/twist。只缓存初始化参数，没有实现跨调用密文/密钥驻留。
+
+**测量边界**: useful payload 416 KiB + 288 metadata bytes / 两digit；当前诊断 XRT
+实现另上传 320 KiB 输出 sentinel，INIT 输入另有 3 MiB+120 bytes，故不等于真实 PCIe 流量。
+XRT 仅语法编译，未运行 sw_emu/hw_emu/RTL co-sim/上板/P&R。旧综合时序缺口未解决，
+不声称加速比。复现与原始输出在 `docs/reports/hls/hks_digit_openfhe_20260904/`。
+
+### [2026-09-04] OP_HKS_DIGIT 无板卡 PoC（完成）
+
+**Agent**: Codex。用户明确要求开始实现复合算子；按本轮授权实施，不修改学习笔记。
+
+**范围**: 单 digit 原始 EVAL bypass + INTT + QHatInv 预缩放 + BConv + complement NTT；
+不接入 XRT/OpenFHE 主链，不含 KeyMult。接口约定见 `src/fpga_backend/HKS_DIGIT.md`。
+
+**综合前预测**（2026-09-04，非上板墙钟）:
+- useful payload 口径：两 digit 1056 KiB → 416 KiB；排除 INIT、metadata、dummy BO、协议开销。
+- 参考本地 `Solution/Top/solution1/syn/report/` 2026-09-03 报告：同为 Vitis 2023.2、U55C、
+  6 ns/uncertainty 0.75 ns；NTT/INTT 包装每 limb 15678 cycles；BConv c=3/4 分别
+  由区间推算 7206/7718 cycles（每增加输出列约 512 cycles）。
+- 新算子纯片内阶段预测：5*15678 + 5*4096(copy) + 3*4096(scale/pad) + BConv，
+  alpha=2: 118364 cycles ±15%；alpha=1: 118876 cycles ±15%。假设 copy/scale II=1、
+  transform 单价不因新调用点改变；排除 Load/Store AXI 等待、metadata、控制握手，
+  不与 Top 墙钟直接比较。综合若显示不同 II/函数克隆，应分项解释而非调系数。
+- 基线资源（历史同约束参考，非本轮重跑）：BRAM_18K=640、DSP=1334、FF=61659、
+  LUT=186193、URAM=96。没有新增源代码层面的整环持久数组，不保证 HLS 不克隆子模块。
+
+**已验证**: 修改前 Top 12/12；修改后本机 C++ 与 Vitis C-sim 均为 Top 18/18，
+其中 HKS 22 个有效 case 与独立 scalar cyclic-NTT/CRT、分步 opcode 路径逐系数一致；
+覆盖 distinct 30/60-bit primes、全部合法 digit 区间、零/边界输入、无效描述符与输出 canary。
+
+**限制**: 现有 Top native EVAL/cyclic NTT 的等价性不等于 OpenFHE negacyclic NTT 接口验收。
+本轮保留此前全部 staged changes，新增改动保持 unstaged。
+
+**最终验证/对账**:
+- native、AddressSanitizer、Vitis C-sim 通过；新增一键 test-hks-digit / hks-csim /
+  hks-csynth / hks-baseline（及尚未运行的 hks-cosim）入口。
+- fused 与本轮新跑 baseline 均生成 RTL；比较器只关闭 opcode 8，不回退用户已有优化。
+- BRAM_18K 640→896、DSP 1566→2088、FF 69805→106709、LUT 181969→278242、URAM 96→96。
+  顶层 Memory 分配不变，新增 BRAM 来自函数克隆/局部 scratch，不是新增顶层数据数组。
+- 时钟估计均 5.581ns；6ns - 0.75ns uncertainty - 5.581ns = -0.331ns。
+  有 II 警告，不能声明时序收敛。总 Top/HKS latency 是 `?`，不能报总周期或加速比。
+- 预测偏差 >15% 已定位：旧报告 CG core 为 14643 cycles，当前源码两种设计均为 8499；
+  新调用点另有 reshape 1026 vs 原调用点 514 cycles。当前片内阶段加总为
+  90238/90750 cycles（非完整 kernel 延迟）；保留原预测以便追溯，不调系数拟合。
+- 归档在 `docs/reports/hls/hks_digit_poc_20260904/`；接口与复现说明见 HKS_DIGIT.md。
+  task.yaml YAML 校验、git diff --check 通过。未修改/提交/清理已有暂存区。
+
+### [2026-08-26] D3 出题；查出 `0.32/0.89/2.1` 是无出处数字
+
+**Agent**: Claude Code (Opus 5)　**方式**: 用户读完 D3 三份材料，AI 出题（角色翻转：你画我改）
+
+**任务**: 用户报「D3 已看完，做相关任务」。按 MAP §2 第 3 项，本轮 AI 的职责是出题 + 批改，不产出图。
+
+**过程**:
+1. 读 README / MAP / task.yaml / 对表 / 推导v1 / 符号表，确认 D3 的验收题与交付物
+2. 收集给定值时逐条核出处 → 撞到下面这个发现
+3. 按 step 1.1 `exercise_order` + step 1.4 `warmup_exercise` 的规格出题（给定/映射/假设/过关线四件套）
+
+**关键发现——`B0/B1/B4 = 0.32/0.89/2.1 ops/byte` 是拍脑袋常数**:
+- 它标注的出处「推导v1 §四」是**失效引用**：§4 的标题是「口径对账（F2）」，全文 grep 这三个数计数为 **0**
+- 全仓库四处引用（task.yaml step 1.3 / 符号表 §9.1 / 对表 §1.4·§3.3 / 本 log 08-11）**互相指认**，
+  无一处含推导。git 溯源：2026-08-04 首次写下（676dd65），此后只被复制，从未被推过
+- 附带：**`B2` / `B3` 两个边界在全仓库从未被定义过**，只有 B0/B1/B4 以 AI 值的形式露过面。
+  「B0–B4 五点上图」这个交付要求，其实有两个点连名字都没有
+- 同类：`open_questions` q1 的机器平衡点 **0.22 / 25.6** 也只有结论没有推导，且未声明分母是哪条带宽
+- **影响**：D3 验收题 1「把 B0/B1/B4 放上图」不能是查表，必须重推。
+  这与 step 1.3 `output_requirement`（必须填符号式）本来就是同一件事 → 已写成练习的第 0/1 步
+
+**另一处口径隐患（画 HBM 屋顶前必须先解决）**:
+- `u55c.cfg` 把三个 AXI 端口绑到 `DDR[0..2]`，但 **U55C 是 HBM-only 卡、无 DDR**
+- `connectivity.ini` 绑的是 `HBM[0..2]`，但 `Makefile:72` 把 `--config connectivity.ini` **注释掉了**
+- → 两份配置互相矛盾，且哪一份都没生效。「HBM 屋顶」当前没有可信的高度值
+
+**修改文件**:
+- `AI_Cowork/task.yaml` - step 1.3 新增 `exercise_roofline`（四步题，56 行）与
+  `givens_for_roofline`（给定值清单，每条带出处，38 行）；
+  `changes` 里那条失效引用改成核查标注；`global_validation.traceability` 存量问题 **+2 条**
+- `docs/notes/L0_符号表.md` - §9.1 表中三个数标 ⚠️【出处失效，待重推】，并加一段核查说明与禁用范围
+- `AI_Cowork/MAP.md` - §1 改写为 08-26 现状；§2 第 2 项打勾、第 3 项展开成四步
+- `问题回答.md` - **新建**。学习收件箱（project-learning Phase 1），
+  `sync-to-ob.sh` 的 SYNC_FILES 早已列它但文件一直不存在，同步必然漏一半
+
+**验证结果**:
+- [x] task.yaml YAML 解析通过：7 顶层键 / 4 phase / 17 step / 8 open_question / 无 tab
+- [x] `0.32|0.89|2.1` 在 推导v1 中的出现次数 = 0（结论可复现）
+
+**注意事项 / 踩坑记录**:
+- **失效引用比错误数字更难发现**：错数字会被下游算出矛盾，失效引用只会被复制。
+  这三个数活了 22 天、扩散到四个文件，靠的就是「每一处都注明了出处」这个外观
+- **规矩**：`doc_ref_format` 只规定了引用的**写法**，没规定引用要被**验证**。
+  建议加一条——新增「别名 §章节」引用时，当场 grep 一次目标节确认数字在场
+- `AI_Cowork/scripts/sync-to-ob.sh` 的 PROJECT_DIR（`/f/project/...`）与 OB_VAULT（`/f/Obsidian/...`）
+  是旧机器路径，与 doc_refs.external 里的 `C:/Users/20521/...` 是同一类漂移，用前须改
+
 ### [2026-08-14] 步 1.4 warmup_exercise 闭卷结果：A 3/5，B 2/8
 
 **Agent**: Claude Code (Opus 5)　**方式**: 用户闭卷推导，AI 批改

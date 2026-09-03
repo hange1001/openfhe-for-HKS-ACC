@@ -1,0 +1,293 @@
+HKS_MODE=csim HLS_SRC_FILES="./src/top.cpp  ./src/load.cpp ./src/mod_add_kernel.cpp ./src/mod_mult_kernel.cpp ./src/mod_sub_kernel.cpp ./src/ntt_kernel.cpp ./src/arithmetic.cpp ./src/bconv.cpp ./src/interleave.cpp ./src/auto.cpp ./src/cg_ntt.cpp ./src/bconv_naive.cpp ./src/bconv_systolic.cpp" \
+	/tools/Xilinx/Vitis_HLS/2023.2/bin/vitis_hls -f hks_digit.tcl
+
+****** Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2023.2 (64-bit)
+  **** SW Build 4023990 on Oct 11 2023
+  **** IP Build 4028589 on Sat Oct 14 00:45:43 MDT 2023
+  **** SharedData Build 4025554 on Tue Oct 10 17:18:54 MDT 2023
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source /tools/Xilinx/Vitis_HLS/2023.2/scripts/vitis_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running '/tools/Xilinx/Vitis_HLS/2023.2/bin/unwrapped/lnx64.o/vitis_hls'
+INFO: [HLS 200-10] For user 'timhan' on host 'LAPTOP-PERMR8RO.localdomain' (Linux_x86_64 version 6.18.33.2-microsoft-standard-WSL2) on Fri Sep 04 05:54:46 CST 2026
+INFO: [HLS 200-10] On os Ubuntu 22.04.5 LTS
+INFO: [HLS 200-10] In directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend'
+INFO: [HLS 200-2053] The vitis_hls executable is being deprecated. Consider using vitis-run --mode hls --tcl
+Sourcing Tcl script 'hks_digit.tcl'
+INFO: [HLS 200-1510] Running: open_project Solution/hks_digit_csim 
+INFO: [HLS 200-10] Creating and opening project '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/hks_digit_csim'.
+INFO: [HLS 200-1510] Running: set_top Top 
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/top.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/load.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_add_kernel.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_add_kernel.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_mult_kernel.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_mult_kernel.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_sub_kernel.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/mod_sub_kernel.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/ntt_kernel.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/ntt_kernel.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/arithmetic.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/arithmetic.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/interleave.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/interleave.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/auto.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/auto.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/cg_ntt.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_naive.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_naive.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_systolic.cpp -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_systolic.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/top_tb.cpp -tb -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding test bench file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/top_tb.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/hks_digit_tb.cpp -tb -cflags -std=c++14 -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -DHKS_DIGIT_TB 
+INFO: [HLS 200-10] Adding test bench file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/hks_digit_tb.cpp' to the project
+INFO: [HLS 200-1510] Running: open_solution solution1 
+INFO: [HLS 200-10] Creating and opening solution '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/hks_digit_csim/solution1'.
+INFO: [HLS 200-1505] Using default flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2023.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+INFO: [HLS 200-1510] Running: set_part xcu55c-fsvh2892-2L-e 
+INFO: [HLS 200-1611] Setting target device to 'xcu55c-fsvh2892-2L-e'
+INFO: [HLS 200-1510] Running: create_clock -period 6ns 
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 6ns.
+INFO: [HLS 200-1510] Running: set_clock_uncertainty 0.75ns 
+INFO: [SYN 201-201] Setting up clock 'default' with an uncertainty of 0.75ns.
+INFO: [HLS 200-1510] Running: config_interface -m_axi_max_widen_bitwidth 512 
+INFO: [HLS 200-1510] Running: csim_design 
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+INFO: [HLS 200-2036] Building debug C Simulation binaries
+make[1]: Entering directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/hks_digit_csim/solution1/csim/build'
+   Compiling ../../../../../testbench/hks_digit_tb.cpp in debug mode
+   Compiling ../../../../../testbench/top_tb.cpp in debug mode
+   Compiling ../../../../../src/bconv_systolic.cpp in debug mode
+   Compiling ../../../../../src/bconv_naive.cpp in debug mode
+   Compiling ../../../../../src/cg_ntt.cpp in debug mode
+   Compiling ../../../../../src/auto.cpp in debug mode
+   Compiling ../../../../../src/interleave.cpp in debug mode
+   Compiling ../../../../../src/bconv.cpp in debug mode
+   Compiling ../../../../../src/arithmetic.cpp in debug mode
+   Compiling ../../../../../src/ntt_kernel.cpp in debug mode
+   Compiling ../../../../../src/mod_sub_kernel.cpp in debug mode
+   Compiling ../../../../../src/mod_mult_kernel.cpp in debug mode
+   Compiling ../../../../../src/mod_add_kernel.cpp in debug mode
+   Compiling ../../../../../src/load.cpp in debug mode
+   Compiling ../../../../../src/top.cpp in debug mode
+   Generating csim.exe
+make[1]: Leaving directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/hks_digit_csim/solution1/csim/build'
+============================================================
+  Top Kernel Testbench
+  RING_DIM=4096  MAX_LIMBS=8  LIMB_Q=3  LIMB_P=2
+============================================================
+  [PASS] HKS rejects calls before OP_INIT
+
+[Test 1] OP_INIT：写入 MODULUS/S/M 与 CG-NTT 旋转因子表
+[FPGA] Initializing Modulus Parameters...
+[FPGA Init] P[0] (idx=3): MOD=3221225473, S=94, M=6148914689327642852
+[FPGA Init] P[1] (idx=4): MOD=3221225473, S=94, M=6148914689327642852
+  [PASS] OP_INIT 调用返回
+
+[Test 2] OP_ADD (num_limbs=3, mod_index=0)
+  [PASS] OP_ADD 逐元素结果正确
+
+[Test 3] OP_SUB (num_limbs=3, mod_index=0)
+  [PASS] OP_SUB 逐元素结果正确
+
+[Test 4] OP_MULT (num_limbs=3, mod_index=0)
+  [PASS] OP_MULT 逐元素结果正确
+
+[Test 5] OP_NTT → OP_INTT 往返 (num_limbs=1, mod_index=0)
+  [PASS] OP_NTT 产生变换（输出 ≠ 输入）
+  [PASS] OP_INTT(OP_NTT(x)) == x
+
+[Test 5] OP_NTT → OP_INTT 往返 (num_limbs=3, mod_index=0)
+  [PASS] OP_NTT 产生变换（输出 ≠ 输入）
+  [PASS] OP_INTT(OP_NTT(x)) == x
+
+[Test 6] OP_AUTO 往返 (num_limbs=3, mod_index=0)
+  [PASS] OP_AUTO(kinv, OP_AUTO(k, x)) == x
+
+[Test 2] OP_ADD (num_limbs=2, mod_index=1)
+  [PASS] OP_ADD 逐元素结果正确
+
+[Test 7] OP_BCONV Q→P (sizeP=2, seed=0xbc01)
+[BCONV] sizeP=2
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 786433, S=82, m_barrett=6148906872497106172
+  [PASS] OP_BCONV Q→P 结果正确 (sizeP=2)
+
+[Test 7] OP_BCONV Q→P (sizeP=5, seed=0xbc02)
+[BCONV] sizeP=5
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 786433, S=82, m_barrett=6148906872497106172
+  out_mod[2] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[3] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[4] = 1004535809, S=92, m_barrett=4929401334205221050
+  [PASS] OP_BCONV Q→P 结果正确 (sizeP=5)
+[FPGA] Initializing Modulus Parameters...
+[FPGA Init] P[0] (idx=3): MOD=167772161, S=90, M=7378697585503355797
+[FPGA Init] P[1] (idx=4): MOD=1224736769, S=93, M=8086243970914081537
+[BCONV] sizeP=4
+  out_mod[0] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[1] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=0 seed=28930 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=1 seed=28931 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=28932 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=28931 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=1 seed=28932 pattern=0
+[BCONV] sizeP=2
+  out_mod[0] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[1] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=3 start=0 seed=28932 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=33026 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=33026 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=37123 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=37123 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=41220 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=41220 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=1 pattern=1
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=2 pattern=1
+[BCONV] sizeP=3
+  out_mod[0] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[1] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[2] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=2 start=0 seed=1 pattern=2
+[BCONV] sizeP=4
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 1004535809, S=92, m_barrett=4929401334205221050
+  out_mod[2] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[3] = 1224736769, S=93, m_barrett=8086243970914081537
+[HKS PASS] alpha=1 start=2 seed=2 pattern=2
+[FPGA] Initializing Modulus Parameters...
+[FPGA Init] P[0] (idx=3): MOD=167772161, S=90, M=7378697585503355797
+[FPGA Init] P[1] (idx=4): MOD=1224736769, S=93, M=8086243970914081537
+[FPGA] Initializing Modulus Parameters...
+[FPGA Init] P[0] (idx=3): MOD=1152921504606601217, S=122, M=4611686018428370940
+[FPGA Init] P[1] (idx=4): MOD=1152921504606584833, S=122, M=4611686018428436476
+[BCONV] sizeP=3
+  out_mod[0] = 1152921504606683137, S=122, m_barrett=4611686018428043260
+  out_mod[1] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[2] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=2 start=0 seed=45317 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 1152921504606830593, S=122, m_barrett=4611686018427453436
+  out_mod[1] = 1152921504606748673, S=122, m_barrett=4611686018427781116
+  out_mod[2] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[3] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=1 start=2 seed=45317 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 1152921504606683137, S=122, m_barrett=4611686018428043260
+  out_mod[1] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[2] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=2 start=0 seed=49414 pattern=0
+[BCONV] sizeP=4
+  out_mod[0] = 1152921504606830593, S=122, m_barrett=4611686018427453436
+  out_mod[1] = 1152921504606748673, S=122, m_barrett=4611686018427781116
+  out_mod[2] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[3] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=1 start=2 seed=49414 pattern=0
+[BCONV] sizeP=3
+  out_mod[0] = 1152921504606683137, S=122, m_barrett=4611686018428043260
+  out_mod[1] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[2] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=2 start=0 seed=1 pattern=2
+[BCONV] sizeP=4
+  out_mod[0] = 1152921504606830593, S=122, m_barrett=4611686018427453436
+  out_mod[1] = 1152921504606748673, S=122, m_barrett=4611686018427781116
+  out_mod[2] = 1152921504606601217, S=122, m_barrett=4611686018428370940
+  out_mod[3] = 1152921504606584833, S=122, m_barrett=4611686018428436476
+[HKS PASS] alpha=1 start=2 seed=2 pattern=2
+[HKS SUMMARY] 22 valid cases, 0 failures; invalid descriptors and canaries checked
+  [PASS] HKS fused digit regression
+[FPGA] Initializing Modulus Parameters...
+[FPGA Init] P[0] (idx=3): MOD=3221225473, S=94, M=6148914689327642852
+[FPGA Init] P[1] (idx=4): MOD=3221225473, S=94, M=6148914689327642852
+
+[Test 2] OP_ADD (num_limbs=2, mod_index=1)
+  [PASS] OP_ADD 逐元素结果正确
+
+[Test 5] OP_NTT → OP_INTT 往返 (num_limbs=3, mod_index=0)
+  [PASS] OP_NTT 产生变换（输出 ≠ 输入）
+  [PASS] OP_INTT(OP_NTT(x)) == x
+
+[Test 7] OP_BCONV Q→P (sizeP=5, seed=0xbc03)
+[BCONV] sizeP=5
+  out_mod[0] = 998244353, S=92, m_barrett=4960468989641778719
+  out_mod[1] = 786433, S=82, m_barrett=6148906872497106172
+  out_mod[2] = 469762049, S=91, m_barrett=5270498295554651222
+  out_mod[3] = 167772161, S=90, m_barrett=7378697585503355797
+  out_mod[4] = 1004535809, S=92, m_barrett=4929401334205221050
+  [PASS] OP_BCONV Q→P 结果正确 (sizeP=5)
+
+============================================================
+  Top 结果：18 / 18 通过
+  *** Top ALL TESTS PASSED ***
+  (含 OP_BCONV sizeP=LIMB_P 与 sizeP=MAX_OUT_COLS 两项)
+============================================================
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [HLS 200-111] Finished Command csim_design CPU user time: 24.5 seconds. CPU system time: 1.46 seconds. Elapsed time: 26.58 seconds; current allocated memory: 0.047 MB.
+INFO: [HLS 200-112] Total CPU user time: 25.54 seconds. Total CPU system time: 1.78 seconds. Total elapsed time: 28.59 seconds; peak allocated memory: 240.395 MB.
+INFO: [Common 17-206] Exiting vitis_hls at Fri Sep  4 05:55:14 2026...

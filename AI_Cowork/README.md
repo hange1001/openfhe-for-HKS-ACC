@@ -7,7 +7,8 @@
 
 - **项目**：openfhe-for-HKS-ACC — 基于 OpenFHE 的全同态加密 (CKKS) Hybrid Key-switching 软硬协同加速器
 - **语言**：C++17（OpenFHE 本体）+ HLS C++（FPGA backend）
-- **工具链**：CMake / Vitis HLS 2024.1 / XRT / Xilinx Alveo U55C（备用 U250）
+- **工具链**：CMake / Vitis HLS **2023.2** / XRT / Xilinx Alveo U55C（备用 U250）
+  <br>（2026-08-26 修正：原写 2024.1，但 `docs/reports/hls/` 全部 11 份报告的 Version 均为 2023.2）
 - **License**：BSD-2-Clause（继承自 OpenFHE）
 - **当前分支**：main
 

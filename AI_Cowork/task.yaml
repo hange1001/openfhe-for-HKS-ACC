@@ -7,6 +7,19 @@
 #       2026-08-13 — 建 doc_refs / MAP.md；status 与实际进度对齐（原 not_started 是漏改）
 # ============================================================
 
+active_implementation:
+  id: hks-digit-openfhe-integration
+  requested: 2026-09-04
+  status: done
+  scope: "复合算子接入 OpenFHE HYBRID；真实 HLS C-model 验证，XRT 传输入口；不含 KeyMult 融合"
+  contract: src/fpga_backend/HKS_DIGIT.md
+  validation: "OpenFHE 逐系数对拍、旋转解密、参数回退、失败不发布半成品；无板卡"
+  results: "集成及全库 ASan 均 400 checks / 991232 residues 通过；Top 18/18、HKS 22 cases 回归通过；XRT 宏语法编译通过"
+  report: docs/reports/hls/hks_digit_openfhe_20260904/README.md
+  limits: "仅 CKKS/DC/N4096/当前Q3/P2；EvalMult 降层回退CPU；未做 XRT运行/RTL co-sim/P&R/上板；旧综合 slack -0.331ns"
+  previous_poc_report: docs/reports/hls/hks_digit_poc_20260904/README.md
+  note: "按本轮明确实现请求执行，保留已有暂存改动和学习路线，不修改个人学习笔记"
+
 task:
   id: fullstack-l0-to-l5-closure
   title: 从 L0 算法到 L4 物理，把 HKS 加速器的全栈推导链走通一遍
@@ -60,24 +73,33 @@ doc_refs:
     实验规划:     docs/papers/实验规划.md                        # 补 4-2 / 补 4-3 / 表 5-4
     ADR:          AI_Cowork/decisions.md                        # ADR-001~010 全在此（已核实）
     日志:         AI_Cowork/log.md
-    综合报告:     docs/reports/bconv/                           # 10 份 csynth/cosim；⚠️ 旧配置口径，见 q7
+    综合报告:     docs/reports/hls/                            # 11 份 csynth/cosim（2026-08-26 修正：原写 bconv/ 不存在）
+                  # ⚠️ 两个时钟混在一起：Apr 22-23 的 4 份子模块报告是 5ns；
+                  #    Aug 19 的 Top_csynth.rpt 是 6ns（= csynth.tcl:35 现行值）。跨报告比周期前必须先核时钟。
+                  # ⚠️ q7 的「旧配置口径」判断只适用于 Apr 那批；Top 那份是现行的，数字已于 08-26 核实
 
   # 仓库外，但路径已写死可直接打开（2026-08-13 由用户提供并核实）
   # 【不入库的理由】Portfolio 是个人职业材料；论文 PDF 有 IEEE/ACM 版权，不应提交进 git
   external:
 
     Portfolio:
-      path: "C:/Users/20521/Desktop/career-plan/HKS-ACC-Portfolio.md"
+      path: "⚠️ 未知——2026-08-26 核查：C:/Users/20521/... 与 C:/Users/Tim/Desktop/career-plan/... 均不存在。
+             按 doc_ref_format「拿不到的文献不得作为任何推导或数字的依据」，
+             Portfolio 定义的 L0-L5 金字塔 / R1 相图 / R2 批深度当前【不可核对】。待用户提供新路径。"
       note: "L0-L5 金字塔 / R1 相图 / R2 批深度的定义源。被 task.yaml context 与 推导v1 §5 依赖。
              ⚠️ 与本仓库无同步机制（sync-to-ob.sh 的 SYNC_FILES 里没有它）——
              改了 Portfolio 不会反映到这里，反之亦然。引用其结论前先确认两边未漂移。"
 
     HERA:
-      path: "C:/Users/20521/Zotero/storage/E3FEV6Y6/HERA a bandwidth-efficient accelerator for fully homomorphic encryption on HBM-enabled FPGA.pdf"
-      note: "FPGA'26。正文引用 §3.1（NTT 分解）、§3.4（off-chip strided read）。"
+      path: "C:/Users/Tim/Zotero/storage/E3FEV6Y6/HERA a bandwidth-efficient accelerator for fully homomorphic encryption on HBM-enabled FPGA.pdf"
+      note: "FPGA'26 (Xu, Kannan, Prasanna, USC)。2026-08-26 用户提供新路径并核实可打开；
+             原记 C:/Users/20521/... 已失效（换机器），Portfolio 与 CiFlow 两条同源路径【很可能同样失效，待核】。
+             已提取要点：§2.2.1 NTT 分解 = four-step（N=N1xN2，转置+twiddle 乘）；
+             §3.1 分解动机是消除 off-chip strided 访问；§4 数据布局让同系数跨 limb 共 PC；
+             HMO = 逐 limb 细粒度融合流水。平台 U280 / 300MHz / 512-bit x 32 AXI / ~13GB/s 每端口。"
 
     CiFlow:
-      path: "C:/Users/20521/Zotero/storage/SPCSXXS2/Neda 等 - 2024 - CiFlow dataflow analysis and optimization of key switching for homomorphic encryption.pdf"
+      path: "C:/Users/Tim/Zotero/storage/SPCSXXS2/Neda 等 - 2024 - CiFlow dataflow analysis and optimization of key switching for homomorphic encryption.pdf"
       note: "ISPASS'24。正文引用 §IV.D（算子总数与 dataflow 无关）、表 II（含 evk 的 AI）。"
 
     zotero_caveat: |
@@ -107,6 +129,16 @@ global_validation:
         - 45 次 kernel 调用里那 30 次是什么？            → phase1 step 1.2
         - 787 MB/s 是带宽还是被固定开销污染的折算值？    → phase1 step 1.2
         - CG-NTT 的 bit-reversal 在哪一步被抵消的？      → phase1 step 1.5
+        - B0/B1/B4 = 0.32/0.89/2.1 ops/byte 是怎么推出来的？「推导v1 §四」是失效引用，
+          四处引用互指、无一处含推导（2026-08-26 grep 核实）  → phase1 step 1.3 exercise_roofline
+        - 机器平衡点 0.22 / 25.6 ops/byte 的分子分母各是什么？分母用的是哪条带宽？
+          （open_questions q1 只给结论未给推导）              → phase1 step 1.3 exercise_roofline
+      【2026-08-26 新增两条硬规则，均来自当日撞到的错误】
+        · 引用 docs/reports/ 的周期数前，必须先从 Latency(cycles) 与 Latency(ns) 相除反推时钟；
+          该目录下 5ns 与 6ns 两批报告混放，直接比周期数会得到错误的加速比
+        · 引用某个模块的延迟前，必须先确认它的接口类型（m_axi / AP_MEMORY / s_axilite）。
+          把 AP_MEMORY（片上 BRAM）模块的周期数拿去与 AXI 或 PCIe 带宽比较，
+          是本项目「跨层数字直接相除」的又一实例——推导v1 §2.1 即因此得出错误结论
       【2026-08-04 已答】twiddle 是否压缩存储：
         PACK_RATIO=512/64=8 是 AXI 打包比不是压缩，字节数不变（详见 open_questions q6）。
   - id: predict_before_measure
@@ -269,7 +301,13 @@ phases:
           与 推导v1 §3.2 从代码反推的「真实 peak」完全一致，但这次是纯推的，不看代码。
         changes:
           - 每个方案算出 n_call / n_op / V_h2d / V_d2h / peak（全部符号式）
-          - 已有初版见 推导v1 §四（B0=0.32, B1=0.89, B4=2.1 ops/byte，但那是数字版）
+          - |
+            ⚠️【2026-08-26 核查】原文写「已有初版见 推导v1 §四（B0=0.32, B1=0.89, B4=2.1 ops/byte）」——
+            这是【失效引用】。推导v1 §4 的标题是「口径对账（F2）」，全文不含这三个数（grep 计数 0）。
+            全仓库四处引用（本行 / 符号表 §9.1 / 对表 §1.4·§3.3 / log 08-11）互相指认，无一处含推导。
+            自 2026-08-04 首次写下起从未被推过 → 按 traceability 属拍脑袋常数，不得直接上图。
+            另：B2 / B3 两个边界在全仓库【从未被定义过】，只有 B0/B1/B4 以 AI 值的形式露过面。
+            → 处置：由 exercise_roofline 第 0/1 步重推，复现或证伪都算过关，沿用而不推不算。
           - 补上 evk 口径（CiFlow 表 II 的 AI 是含 evk 的，当前口径不可直接对比）
           - "补 P4 的 MAC 计数：2 × dnum × (l+K) × N（符号表 §6 缺此项）"
           - |
@@ -279,6 +317,104 @@ phases:
             硬要求：每个点标注分母跨的是哪条边界（AI_pcie / AI_axi，见符号表 §9.1），
             混用边界的图无效。画图前先声明系统边界（含 host↔加速器）——
             这条边界线是本项目与 HERA/CiFlow 框图的差异所在。
+        exercise_roofline: |
+          【2026-08-26 增】D3 的交付练习。角色：**用户画，AI 改**（MAP §1 角色翻转，源 log 08-13·续）。
+          规格照 step 1.1 的 exercise_order 与 step 1.4 的 warmup_exercise：
+          给定 / 映射 / 假设 / 过关线【四件套】写全（08-14 教训：AI 出题两次栽在规格不清）。
+
+          ── 第 0 步：把五个边界定义出来 ──────────────────────
+          【为什么第 0 步不是画图】见本 step changes 里那条 ⚠️：给定值 0.32/0.89/2.1 出处失效，
+            且 B2/B3 从未被定义过。定义缺失时画出来的图是把四个未经推导的数摆在坐标轴上。
+          【推】B0-B4 各一句话：一次 offload 调用包住哪些算子？
+            已知锚点：B0 = 每算子一次（现状，n_call=15，推导v1 §2.3）
+                      B1 = 每 digit 一次（步 3.3 复合 opcode；被 NTT 钉死在「一个完整 limb」，
+                           理由见本 step derived_mechanism）
+                      B4 = 整条 HKS 一次（n_call=1）
+                      B2 / B3 由你插在中间，并说明【为什么是这两个点而不是别的】
+          【过关】五行都给出 n_call 与 V 的符号式（含 N, l, K, dnum, alpha_j），
+                  代入当前参数后 B0 必须还原成 n_call=15、V=36 limb。还原不出即公式错
+
+          ── 第 1 步：重推 AI，每个数标边界 ───────────────────
+          【给定】见 givens_for_roofline（AI 只负责查表带出处，不负责推导）
+          【映射】分子：按 符号表 §9.1 规定 1 统一为「1 MAC = 1 op」；
+                        若沿用文献的「乘、加分开数」口径须先 /2 归一——这是【换算】不是重推
+                  分母：按规定 2 把边界写进变量名 AI_pcie / AI_hbm / AI_axi
+                  evk：按规定 3 声明含不含（当前不含；与 CiFlow 表 II 对比前必须换算）
+          【推】B0-B4 的 AI_pcie 五个值 + BConv 单算子 AI_axi + NTT 单算子
+                （q1 给的 log N / 32，先核对它的分母跨的是哪条边界）
+          【复核】08-14 两个坏习惯之一是「算完不复核」，本步强制反验：
+                  每个 AI 用第二条路子验一次 —— AI x BW = 该屋顶下可达 op/s，
+                  与 csynth 观测速率（BConv 8232 cyc / 4096 系数）对得上吗？对不上差在哪
+          【过关】0.32 / 0.89 / 2.1 要么被复现、要么被证伪并给出新值——两种都算过关；
+                  【继续沿用而不推】不算过关
+
+          ── 第 2 步：画三层 roofline ─────────────────────────
+          【假设】画之前把这三条显式写下来，写不出即等于没想过：
+            (a) 系统边界画在哪？含不含 host <-> 加速器这条线——这正是与 HERA/CiFlow 框图的差异所在
+            (b) PCIe 屋顶取【渐近带宽 3.0 GB/s】还是【含 T_fixed 的有效带宽】？
+                T_fixed ~ 38 us/call 占 DC 的 21%（推导v1 §3.4）。教科书 roofline 默认无固定开销，
+                本系统不满足。两种画法拐点不同 —— 选哪个、代价是什么，写下来
+            (c) 并发度 = 1（q8 已由源码证实）→ 三条屋顶之间取 min()，不是重叠
+          【推】三条带宽屋顶（PCIe / HBM / 片上 AXI）+ 一条算力屋顶；
+                图上放：B0-B4 五点 + BConv 单算子点 + csynth 的 I/O-bound 观测点
+          【过关】图上没有任何一个点跨边界比较；每点旁注 AI_pcie 或 AI_axi
+
+          ── 第 3 步：三道验收题（对表 §5 的 D3）──────────────
+          Q1  为什么「BConv 卡 I/O」（推导v1 §2.1）与「AI=0.32」不矛盾？
+              过关线不是「屋顶不同」这句话，是答出【混画会得到哪一个具体的错误结论】
+          Q2  机器平衡点 0.22 与 BConv 的 0.23 只差 4%。这是巧合吗？
+              先把机器平衡点的分子、分母各自写出来再回答。
+              提示：3x5 阵列每拍吃进几个字、吐出几个字？
+          Q3  算力工业化后机器平衡点 0.22 -> 25.6：图上是哪条屋顶动了？拐点往哪边移、移到哪个 AI 值？
+              移完之后 B0-B4 五个点里还剩几个在计算受限一侧？
+          【过关】Q2 必须答对，它是本题的题眼；Q1 / Q3 结构对即可
+
+          ── 交付形式 ────────────────────────────────────────
+          一张表（点名 / AI 符号式 / AI 数值 / 边界变量名 / 落在哪条屋顶下 / 预测 bound）
+          + 一张草图（手画拍照或 ASCII 皆可）+ Q1-Q3 答案。交 AI 批改。
+          批改通过后：正式图由 AI 出脚本（放 docs/papers/，参照现有 fig5-3_*.py），
+          结论落到 全栈思维实践 §3.2.3【实例 2】。
+
+        givens_for_roofline: |
+          【2026-08-26】exercise_roofline 的给定值。每条带出处；标 ⚠️ 的是【有问题的给定】，
+          不是让你绕过，是让你先处置再用。
+
+          参数（符号表 §1-3）：
+            N=4096, l=3, K=2, dnum=2, alpha_0=2 / alpha_1=1, |C_0|=3 / |C_1|=4, 1 limb = 32 KB
+
+          算子账（推导v1 §2.3，DC 列）：
+            INTT 3 limb / BConv 2 call（输入 3 limb，输出 7 limb）/ NTT 10 limb
+            n_call = 15；H2D 16 limb；D2H 20 limb；V = 36 limb = 1152 KB
+
+          单价（推导v1 §3.1）：
+            CG-NTT / INTT = 15,701 cyc/limb（csynth）；BConv full 3->5 = 8,232 cyc
+            f_clk = 166.67 MHz（6 ns）；csynth -> 上板修正系数 1.35（整体拟合，弱点已写在原处）
+            ⚠️ 对表 §1.3 另记「L1 片内 14,644 cyc/limb」，与 15,701 不同源：
+               q6 查明 14,644 属架构 A（每 limb 流式载 twiddle，其中 6150 cyc 是加载），
+               部署核走架构 B（twiddle 常驻，加载为 0）。用哪个由你选，选了要写理由
+
+          三条边界的带宽：
+            PCIe      BW_eff ~ 3.0 GB/s（推导v1 §3.2；两点拟合自由度为零，787 MB/s 禁止入模型）
+                      T_fixed ~ 38 us/call（同上；当前只有上界没有值）
+            片上 AXI  512-bit x 166.67 MHz = 10.67 GB/s 【每端口】；
+                      3 个端口 gmem0 / gmem1 / gmem2（top.cpp:206-208）。
+                      一次 BConv 实际占用几个端口 —— 由你判定，它直接决定这条屋顶的高度
+            HBM       ⚠️【当前无值，且构建里根本没绑定】：
+                      u55c.cfg 写 DDR[0..2]，但 U55C 是 HBM-only 卡、无 DDR；
+                      connectivity.ini 写 HBM[0..2]；而 Makefile:72 把 --config connectivity.ini
+                      注释掉了 —— 两份配置互相矛盾，且哪一份都没生效。
+                      U55C 规格（AI 提供，属 doc_ref_format 意义上的外部源，入图前须核对官方 datasheet）：
+                        16 GB HBM2 / 460 GB/s 总带宽 / 32 pseudo-channel -> ~14.4 GB/s per PC
+                      → 画 HBM 屋顶之前先答一句：本设计到底连到哪个 memory？
+
+          算力屋顶（open_questions q1）：
+            机器平衡点当前 0.22 ops/byte，算力工业化后 25.6 ops/byte
+            ⚠️ 这两个数与 0.32/0.89/2.1 是同一类问题：只有结论没有推导。
+               先答「0.22 的分母用的是哪条带宽」，再画算力屋顶
+            单算子 NTT 的 AI = log N / 32（q1）；整条 HKS 全融合 ~ 4.4（q1）
+
+          口径三规定：符号表 §9.1（分子 MAC 计 1 / 分母写进变量名 / 声明含不含 evk）
+
         open_subquestion: |
           未占点：n 放最外层的两种排列，peak 与 DC 同为 |C_j|，看似无优势。
           但一次只处理一个系数时，X[i][n] 与 W[i][j] 各需几个值？与 DC(i 最外) 比差别在哪？

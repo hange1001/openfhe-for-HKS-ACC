@@ -82,7 +82,7 @@ static void CG_PE(
     uint64_t &res1,
     uint64_t &res2,
     const uint64_t &modulus,
-    const uint64_t &K_HALF,
+    const uint64_t &S,
     const uint64_t &M,
     const bool &is_ntt
 ) {
@@ -93,7 +93,7 @@ static void CG_PE(
     uint64_t res1_temp, res2_temp;
 
     if (is_ntt) {
-        MultMod(input2_temp, twiddle_factor, modulus, M, K_HALF, temp);
+        MultMod(input2_temp, twiddle_factor, modulus, M, S, temp);
 
         AddMod(input1_temp, temp, modulus, true);
         res1_temp = input1_temp;
@@ -120,7 +120,7 @@ static void CG_PE(
         uint64_t mult_in = res2_temp + 0;
         #pragma HLS BIND_OP variable=mult_in op=add impl=fabric latency=1
 
-        MultMod(mult_in, twiddle_factor, modulus, M, K_HALF, temp);
+        MultMod(mult_in, twiddle_factor, modulus, M, S, temp);
 
         // INTT 结果除以 2（乘以 2 的逆元），同时处理奇数情况（模加上半模）
         res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);
@@ -168,8 +168,8 @@ void cg_ntt_reorder(uint64_t data[RING_DIM]) {
 
 // ============================================================
 // CG_NTT_Kernel：单 limb CG-NTT / INTT 核心
-// IS_NTT 为编译期常量，HLS 在每个实例中消除死分支，
-// BUTTERFLY_LOOP 内 4-way select 降为 2-way（stage & 1）。
+// IS_NTT 为编译期常量，HLS 在每个实例中消除 NTT/INTT 死分支；
+// STAGE_LOOP 按 2 展开后，偶/奇 stage 的 ping-pong 方向也成为编译期常量。
 // ============================================================
 
 template <bool IS_NTT>
@@ -177,7 +177,7 @@ void CG_NTT_Kernel(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],
     const uint64_t modulus,
-    const uint64_t K_HALF,
+    const uint64_t S,
     const uint64_t M_barrett,
     const uint64_t cg_twiddle[STAGE][CG_HALF_N]
 ) {
@@ -191,8 +191,8 @@ void CG_NTT_Kernel(
 
     #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=CG_BUF_PARTITION dim=1
     #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=CG_BUF_PARTITION dim=1
-    #pragma HLS BIND_STORAGE variable=buf_A type=ram_2p impl=bram
-    #pragma HLS BIND_STORAGE variable=buf_B type=ram_2p impl=bram
+    #pragma HLS BIND_STORAGE variable=buf_A type=ram_t2p impl=bram
+    #pragma HLS BIND_STORAGE variable=buf_B type=ram_t2p impl=bram
 
     // 旋转因子：位置维按 CG_PE_NUM cyclic 切分，保证 CG_PE_NUM 个 PE 同时读
     // cg_twiddle[s][i*CG_PE_NUM + 0 .. CG_PE_NUM-1] 时各自落在不同 bank。
@@ -225,6 +225,8 @@ void CG_NTT_Kernel(
     // ============================================================
     STAGE_LOOP:
     for (int stage = 0; stage < STAGE; stage++) {
+        // 成对展开只用于固化偶/奇 stage 的 buffer 方向；相邻 stage 仍因数据依赖顺序执行。
+        #pragma HLS UNROLL factor=2
         // 禁止与外层/内层展平，保证 ping-pong 在 stage 边界完成排空
         #pragma HLS LOOP_FLATTEN off
 
@@ -234,11 +236,10 @@ void CG_NTT_Kernel(
         BUTTERFLY_LOOP:
         for (int i = 0; i < CG_HALF_N / CG_PE_NUM; i++) {
             // 带宽核算（ping-pong 使读、写分属两块 buffer，各自独立计端口）：
-            //   读侧 CG_PE_NUM×2 次：u/v 相距 CG_HALF_N 且同余于 bank 数，两组读挤在
-            //        同一批 CG_PE_NUM 个 bank 上 → 2 访问/bank，由 ram_2p 双端口吸收。
-            //   写侧 CG_PE_NUM×2 次：地址连续，恰好铺满 CG_BUF_PARTITION 个 bank
-            //        → 1 写/bank。
-            // 两侧都不超端口，II=1 可行。
+            //   NTT：读侧 2 访问/bank，写侧 1 访问/bank。
+            //   INTT：读侧 1 访问/bank，写侧 2 访问/bank。
+            // stage 成对展开后每个 buffer 在单个 loop body 中只读或只写；ram_t2p 的
+            // 两个通用端口可覆盖两种方向的最坏 2 访问/bank，因此 II=1 可行。
             #pragma HLS PIPELINE II=1
             // 解除 HLS 对 buf_A/buf_B 的假性依赖（ping-pong 保证跨迭代/迭代内均无地址冲突）
             #pragma HLS DEPENDENCE variable=buf_A type=inter dependent=false
@@ -281,7 +282,7 @@ void CG_NTT_Kernel(
 
                 // ③ 蝶形运算（CG-NTT 专用 PE，与 NTT_Kernel 完全独立）
                 uint64_t out_u, out_v;
-                CG_PE(u, v, tf, out_u, out_v, modulus, K_HALF, M_barrett, IS_NTT);
+                CG_PE(u, v, tf, out_u, out_v, modulus, S, M_barrett, IS_NTT);
 
                 if (IS_NTT) {
                     // NTT 写：完美洗牌 [2*global_i, 2*global_i + 1]
@@ -336,7 +337,7 @@ void Compute_CG_NTT(
     const ap_uint<512> *cg_ntt_twiddle,
     const ap_uint<512> *cg_intt_twiddle,
     const uint64_t modulus[MAX_LIMBS],
-    const uint64_t K_HALF[MAX_LIMBS],
+    const uint64_t S[MAX_LIMBS],
     const uint64_t M_barrett[MAX_LIMBS],
     bool is_ntt,
     int num_active_limbs,
@@ -350,14 +351,14 @@ void Compute_CG_NTT(
     #pragma HLS INTERFACE m_axi port=cg_ntt_twiddle  bundle=gmem1 offset=slave depth=24576
     #pragma HLS INTERFACE m_axi port=cg_intt_twiddle bundle=gmem2 offset=slave depth=24576
     #pragma HLS INTERFACE m_axi port=modulus         bundle=gmem3 offset=slave depth=8
-    #pragma HLS INTERFACE m_axi port=K_HALF          bundle=gmem3 offset=slave depth=8
+    #pragma HLS INTERFACE m_axi port=S          bundle=gmem3 offset=slave depth=8
     #pragma HLS INTERFACE m_axi port=M_barrett       bundle=gmem3 offset=slave depth=8
 
     #pragma HLS INTERFACE s_axilite port=in_data
     #pragma HLS INTERFACE s_axilite port=cg_ntt_twiddle
     #pragma HLS INTERFACE s_axilite port=cg_intt_twiddle
     #pragma HLS INTERFACE s_axilite port=modulus
-    #pragma HLS INTERFACE s_axilite port=K_HALF
+    #pragma HLS INTERFACE s_axilite port=S
     #pragma HLS INTERFACE s_axilite port=M_barrett
     #pragma HLS INTERFACE s_axilite port=is_ntt
     #pragma HLS INTERFACE s_axilite port=num_active_limbs
@@ -423,7 +424,7 @@ void Compute_CG_NTT(
                 local_in_data,
                 local_out_data,
                 modulus[l],
-                K_HALF[l],
+                S[l],
                 M_barrett[l],
                 local_twiddle
             );
@@ -432,7 +433,7 @@ void Compute_CG_NTT(
                 local_in_data,
                 local_out_data,
                 modulus[l],
-                K_HALF[l],
+                S[l],
                 M_barrett[l],
                 local_twiddle
             );
@@ -460,7 +461,7 @@ template void CG_NTT_Kernel<true>(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],
     const uint64_t modulus,
-    const uint64_t K_HALF,
+    const uint64_t S,
     const uint64_t M_barrett,
     const uint64_t cg_twiddle[STAGE][CG_HALF_N]
 );
@@ -469,7 +470,7 @@ template void CG_NTT_Kernel<false>(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],
     const uint64_t modulus,
-    const uint64_t K_HALF,
+    const uint64_t S,
     const uint64_t M_barrett,
     const uint64_t cg_twiddle[STAGE][CG_HALF_N]
 );

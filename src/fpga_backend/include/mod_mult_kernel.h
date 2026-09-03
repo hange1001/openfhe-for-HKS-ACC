@@ -10,7 +10,7 @@ extern "C" {
         uint64_t in2[MAX_LIMBS][SQRT][SQRT], // 输入 B (片上 BRAM)
         uint64_t out[MAX_LIMBS][SQRT][SQRT], // 输出 C (片上 BRAM)
         uint64_t MODULUS[MAX_LIMBS],
-        uint64_t K_HALF[MAX_LIMBS],
+        uint64_t S[MAX_LIMBS],
         uint64_t M[MAX_LIMBS],
         int num_active_limbs,                // 当前有效层数 (比如 44)
         int mod_idx_offset = 0                // 如果有模数偏移 (通常是 0)

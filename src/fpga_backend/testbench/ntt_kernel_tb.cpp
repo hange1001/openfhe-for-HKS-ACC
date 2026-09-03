@@ -84,15 +84,11 @@ static uint64_t sw_powmod(uint64_t base, uint64_t exp, uint64_t mod) {
 
 // ============================================================
 // Barrett 预计算参数（与 MultMod 的接口保持一致）
-//   k_half = ceil(log2(mod))
-//   M      = floor(2^(2*k_half) / mod)  (但 MultMod 实际用的是 m)
-//   按照 MultMod 实现：
-//     res_mult_high = res_mult >> (k_half - 1)
-//     q             = (res_mult_high * m) >> (k_half + 1)
-//   => m = floor(2^(2*k_half + 2) / mod)   (简单近似即可)
+//   S = bitwidth(mod) + 62  （全精度总移位量）
+//   m = floor(2^S / mod)
 // ============================================================
 static void compute_barrett_params(uint64_t mod,
-                                   uint64_t &K_HALF_out,
+                                   uint64_t &S_out,
                                    uint64_t &M_out)
 {
     // 与 arithmetic.cpp MultMod 的 S 参数语义一致：S = bitwidth(mod) + 62
@@ -101,7 +97,7 @@ static void compute_barrett_params(uint64_t mod,
     int bits = 0;
     while (tmp) { tmp >>= 1; ++bits; }
     uint64_t S = (uint64_t)bits + 62;
-    K_HALF_out = S;
+    S_out = S;
     unsigned __int128 numer = (unsigned __int128)1 << S;
     M_out = (uint64_t)(numer / mod);
 }
@@ -374,7 +370,7 @@ static void test_twiddle_index() {
 // 测试 7：Configurable_PE 正向 NTT 蝶形
 //   验证 res1 = a + w*b, res2 = a - w*b  (mod p)
 // ============================================================
-static void test_pe_ntt(uint64_t mod, uint64_t K_HALF, uint64_t M) {
+static void test_pe_ntt(uint64_t mod, uint64_t S, uint64_t M) {
     std::cout << "\n[Test 7] Configurable_PE (NTT 正向蝶形)\n";
     bool all_pass = true;
     std::mt19937_64 rng(777);
@@ -383,7 +379,7 @@ static void test_pe_ntt(uint64_t mod, uint64_t K_HALF, uint64_t M) {
     for (int t = 0; t < 1000 && all_pass; t++) {
         uint64_t a = dis(rng), b = dis(rng), w = dis(rng);
         uint64_t r1, r2;
-        Configurable_PE(a, b, w, r1, r2, mod, K_HALF, M, true);
+        Configurable_PE(a, b, w, r1, r2, mod, S, M, true);
 
         uint64_t wb   = sw_mulmod(b, w, mod);
         uint64_t exp1 = sw_addmod(a, wb, mod);
@@ -406,7 +402,7 @@ static void test_pe_ntt(uint64_t mod, uint64_t K_HALF, uint64_t M) {
 //   验证 res1 = (a+b)/2, res2 = w^{-1}*(a-b)/2  (mod p)
 //   其中 /2 = 乘以模 2 的逆元，这与 HLS 代码中的移位实现等价当 mod 为奇数质数时
 // ============================================================
-static void test_pe_intt(uint64_t mod, uint64_t K_HALF, uint64_t M) {
+static void test_pe_intt(uint64_t mod, uint64_t S, uint64_t M) {
     std::cout << "\n[Test 8] Configurable_PE (INTT 逆向蝶形)\n";
     bool all_pass = true;
     std::mt19937_64 rng(888);
@@ -415,7 +411,7 @@ static void test_pe_intt(uint64_t mod, uint64_t K_HALF, uint64_t M) {
     for (int t = 0; t < 1000 && all_pass; t++) {
         uint64_t a = dis(rng), b = dis(rng), w = dis(rng);
         uint64_t r1, r2;
-        Configurable_PE(a, b, w, r1, r2, mod, K_HALF, M, false);
+        Configurable_PE(a, b, w, r1, r2, mod, S, M, false);
 
         // HLS 代码实现：
         //   sum  = a + b
@@ -455,8 +451,8 @@ static void test_ntt_kernel_roundtrip() {
     const uint64_t MOD  = 3221225473ULL;   // 3 * (1<<30) + 1
     const uint64_t ROOT = 5ULL;            // 模 MOD 的原根
 
-    uint64_t K_HALF, M;
-    compute_barrett_params(MOD, K_HALF, M);
+    uint64_t S, M;
+    compute_barrett_params(MOD, S, M);
 
     // 2*RING_DIM 次本原根 = ROOT^((MOD-1)/(2*RING_DIM))
     uint64_t root_2N = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
@@ -481,7 +477,7 @@ static void test_ntt_kernel_roundtrip() {
             in_mem[i][l] = backup[i][l] = dis(rng);
 
     // 正向 NTT
-    NTT_Kernel(in_mem, MOD, K_HALF, M, ntt_tw, intt_tw, true);
+    NTT_Kernel(in_mem, MOD, S, M, ntt_tw, intt_tw, true);
 
     // 验证 NTT 后数据已变化（极小概率相同，可接受误报）
     bool changed = false;
@@ -491,7 +487,7 @@ static void test_ntt_kernel_roundtrip() {
     check(changed, "NTT 后数据发生变化");
 
     // 逆向 INTT
-    NTT_Kernel(in_mem, MOD, K_HALF, M, ntt_tw, intt_tw, false);
+    NTT_Kernel(in_mem, MOD, S, M, ntt_tw, intt_tw, false);
 
     // 验证恢复
     bool recovered = true;
@@ -518,8 +514,8 @@ static void test_compute_ntt_roundtrip() {
     const uint64_t MOD  = 3221225473ULL;
     const uint64_t ROOT = 5ULL;
 
-    uint64_t K_HALF_val, M_val;
-    compute_barrett_params(MOD, K_HALF_val, M_val);
+    uint64_t S_val, M_val;
+    compute_barrett_params(MOD, S_val, M_val);
 
     uint64_t root_2N     = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
     uint64_t inv_root_2N = sw_powmod(root_2N, MOD - 2, MOD);
@@ -531,10 +527,10 @@ static void test_compute_ntt_roundtrip() {
         build_twiddle_table(intt_tw[li], MOD, inv_root_2N);
     }
 
-    uint64_t modulus[MAX_LIMBS], K_HALF[MAX_LIMBS], M[MAX_LIMBS];
+    uint64_t modulus[MAX_LIMBS], S[MAX_LIMBS], M[MAX_LIMBS];
     for (int li = 0; li < MAX_LIMBS; li++) {
         modulus[li] = MOD;
-        K_HALF[li]  = K_HALF_val;
+        S[li]  = S_val;
         M[li]       = M_val;
     }
 
@@ -549,8 +545,8 @@ static void test_compute_ntt_roundtrip() {
                 in_mem[li][i][l] = backup[li][i][l] = dis(rng);
 
     // 测试：num_active_limbs = MAX_LIMBS，offset = 0
-    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, K_HALF, M, true,  MAX_LIMBS, 0);
-    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, K_HALF, M, false, MAX_LIMBS, 0);
+    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, S, M, true,  MAX_LIMBS, 0);
+    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, S, M, false, MAX_LIMBS, 0);
 
     bool recovered = true;
     for (int li = 0; li < MAX_LIMBS && recovered; li++) {
@@ -574,8 +570,8 @@ static void test_compute_ntt_roundtrip() {
             for (int l = 0; l < SQRT; l++)
                 in_mem[li][i][l] = backup[li][i][l] = dis(rng);
 
-    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, K_HALF, M, true,  2, 1);
-    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, K_HALF, M, false, 2, 1);
+    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, S, M, true,  2, 1);
+    Compute_NTT(in_mem, ntt_tw, intt_tw, modulus, S, M, false, 2, 1);
 
     bool recovered2 = true;
     // limb 1 和 2 应被处理
@@ -653,8 +649,8 @@ int run_ntt_tests() {
 
     // 准备 Barrett 参数（用于 PE 测试）
     const uint64_t TEST_MOD = 3221225473ULL;  // 3*2^30+1
-    uint64_t K_HALF, M;
-    compute_barrett_params(TEST_MOD, K_HALF, M);
+    uint64_t S, M;
+    compute_barrett_params(TEST_MOD, S, M);
 
     // 运行所有测试
     test_exact_log2();
@@ -663,8 +659,8 @@ int run_ntt_tests() {
     test_read_rewrite();
     test_permutation();
     test_twiddle_index();
-    test_pe_ntt(TEST_MOD, K_HALF, M);
-    test_pe_intt(TEST_MOD, K_HALF, M);
+    test_pe_ntt(TEST_MOD, S, M);
+    test_pe_intt(TEST_MOD, S, M);
     test_ntt_kernel_roundtrip();
     test_compute_ntt_roundtrip();
     test_permute_twiddle_factors();

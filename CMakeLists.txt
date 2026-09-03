@@ -734,6 +734,14 @@ add_subdirectory(src/core)
 add_subdirectory(src/pke)
 add_subdirectory(src/binfhe)
 
+# Optional board-free integration test: real OpenFHE + the actual HLS C++ Top.
+# No XRT emulation or software stand-in for the FPGA arithmetic is used.
+option(OPENFHE_HKS_CMODEL_TESTS "Build OpenFHE/HLS fused-digit integration tests" OFF)
+if(OPENFHE_HKS_CMODEL_TESTS)
+    enable_testing()
+    add_subdirectory(src/fpga_backend)
+endif()
+
 ### build the google test handlers
 if(BUILD_UNITTESTS)
     add_subdirectory(third-party/google-test EXCLUDE_FROM_ALL)

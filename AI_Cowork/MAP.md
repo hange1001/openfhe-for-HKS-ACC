@@ -5,27 +5,57 @@
 
 ---
 
-## §1 你在这里（2026-08-14）
+## §1 你在这里（2026-09-04）
+
+**本轮工程进展**：按用户要求实现 `OP_HKS_DIGIT` 无板卡 PoC：
+INTT → QHatInv 预缩放 → BConv → NTT，保留原 EVAL digit，结果一次回写。
+native / ASan / Vitis C-sim 通过（Top 18/18、HKS 22 cases）；已完成同源码基线与融合综合。
+已接入 OpenFHE HYBRID：C-model 集成 400 项检查 / 991232 个模数元素精确对比通过，
+EvalRotate 两 digit 融合且解密正确；EvalMult 降为 Q=2 时正确回退 CPU。XRT 入口仅编译检查。
+全库 AddressSanitizer（含泄漏检查）通过；旧全量 PKE 测试用例加载抛出 stoul 异常，未计入通过项。
+时序未闭合（旧综合估计 slack -0.331ns），XRT 运行、RTL co-sim 和上板未做。
+接口见 [HKS_DIGIT](../src/fpga_backend/HKS_DIGIT.md)，证据见
+[综合报告](../docs/reports/hls/hks_digit_poc_20260904/README.md) 与
+[OpenFHE 接入报告](../docs/reports/hls/hks_digit_openfhe_20260904/README.md)。以下学习主线保留，未代用户完成练习。
 
 ```
 phase1 ██████░░░░  step 1.1 ✅ → 【step 1.3 进行中】 → 1.5/1.6 → 1.2 → 1.4
-材料   D1–D2 ✅ → 【D3 Roofline，角色翻转：你画我改】
+材料   D1–D2 ✅ → D3 三份【已读完】→ 【题已出，等你交图】
 ```
+
+**当前动作**：做 task.yaml step 1.3 的 `exercise_roofline`（四步：定义 B0–B4 → 重推 AI →
+画三层 roofline → 三道验收题）。给定值在同 step 的 `givens_for_roofline`。**你画，我改。**
+
+**08-26 核查结果，会改变这道题的做法**：给定值 `B0/B1/B4 = 0.32/0.89/2.1` 是**无出处数字**——
+标的来源「推导v1 §四」是失效引用（该节是「口径对账」，全文无此三数）；四处引用互指、无一处含推导。
+且 **B2/B3 两个边界从未被定义过**。→ 第 0 步不是画图，是把 B0–B4 定义出来并重推 AI。
+同类：机器平衡点 0.22 / 25.6 也只有结论没有推导。
 
 **08-14 闭卷结果**：A 3/5、B 2/8（上次 quiz 0.5/5）。概念已通，卡在两个习惯——
 **算完不复核**、**跨层数字直接相除**（B0 得 0，正是本项目历次翻车的同一根源）。详见 log 08-14。
+→ 这两条已作为强制项写进本次练习（第 1 步的【复核】、第 2 步假设 (b)）。
 
-**欠账一笔**：D3 的 roofline 图
-**待你处理**：F1 (MICRO'21) PDF 不在 Zotero（D7 的 ★）；步 1.2 实验 A–D 需 U55C 板卡
+**待你处理**：F1 (MICRO'21) PDF 不在 Zotero（D7 的 ★）；步 1.2 实验 A–D 需 U55C 板卡；
+`AI_Cowork/scripts/sync-to-ob.sh` 里 PROJECT_DIR / OB_VAULT 两个路径是旧机器的，同步前先改
 
 ---
 
 ## §2 下一步（线性队列，从上往下照做）
 
+**复合算子工程后续（待选）**：看新增实例/局部缓冲的资源代价、
+RTL co-sim 和 Q=2 降层支持。OpenFHE negacyclic 语义已用其真实单位根和变换结果验证。
+已有学习队列如下，状态未改。
+
 1. [x] ~~闭卷热身推导~~ **08-14 完成，A 3/5 / B 2/8**（题在 task.yaml 步 1.4 `warmup_exercise`）
        → 两条待改的习惯：**算完必复核**（用自己写的公式反验）、**跨层数字先问口径再相除**
-2. [ ] **D3 读三份**：Roofline (CACM'09) / TPU (ISCA'17) 的 roofline 节 / CS149《Locality, Communication and Contention》
-3. [ ] **画分层 roofline**（三条屋顶 PCIe/HBM/AXI + B0–B4 五点 + BConv 点，每点标 AI_pcie 或 AI_axi）→ 交我批改。验收题：为什么「BConv 卡 I/O」与「AI=0.32」不矛盾
+2. [x] ~~**D3 读三份**~~ **08-26 读完**：Roofline (CACM'09) / TPU (ISCA'17) 的 roofline 节 /
+       CS149《Locality, Communication and Contention》
+3. [ ] **← 你在这**　做 `exercise_roofline`（题在 task.yaml 搜 `id: 1.3`，给定值在同 step 的 `givens_for_roofline`）
+       第 0 步 定义 B0–B4（含从未定义过的 B2/B3），n_call 与 V 写符号式
+       第 1 步 重推 AI，每个数标 AI_pcie / AI_axi，**算完必须反验**
+       第 2 步 画三层 roofline（PCIe/HBM/AXI + 算力屋顶），先写下三条假设再画
+       第 3 步 三道验收题（题眼是 Q2：0.22 与 0.23 差 4% 是不是巧合）
+       → 交我批改；过了我再出正式图脚本
 4. [ ] **D4–D5**：Timeloop + MAESTRO + CS149《Work Distribution》→ 把 B0–B4 表填成**符号式**（= step 1.3 主交付物）+ 负载均衡符号式
 5. [ ] **D7**：F1（先弄到 PDF）+ 扫 BTS/ARK → 画系统框图，**边界线含 host↔加速器**（= step 1.3 交付物之三）
 6. [ ] **step 1.5**（0.5 天）：跑 test-cg-ntt 验证 bit-reversal 归宿

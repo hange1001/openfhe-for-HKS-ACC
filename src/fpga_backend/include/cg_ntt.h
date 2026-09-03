@@ -55,7 +55,7 @@ void CG_NTT_Kernel(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],
     const uint64_t modulus,
-    const uint64_t K_HALF,
+    const uint64_t S,
     const uint64_t M_barrett,
     const uint64_t cg_twiddle[STAGE][CG_HALF_N]
 );
@@ -70,7 +70,7 @@ extern "C" {
         const ap_uint<512> *cg_ntt_twiddle,
         const ap_uint<512> *cg_intt_twiddle,
         const uint64_t modulus[MAX_LIMBS],
-        const uint64_t K_HALF[MAX_LIMBS],
+        const uint64_t S[MAX_LIMBS],
         const uint64_t M_barrett[MAX_LIMBS],
         bool is_ntt,
         int num_active_limbs,

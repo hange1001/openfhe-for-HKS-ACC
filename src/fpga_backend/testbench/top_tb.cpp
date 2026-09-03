@@ -3,7 +3,7 @@
 // Brief  : Top 模块测试台（opcode 调度验证）
 //
 // 测试项：
-//   Test 1 - OP_INIT：将 MODULUS/K_HALF/M 和 CG-NTT 旋转因子写入片上常量表
+//   Test 1 - OP_INIT：将 MODULUS/S/M 和 CG-NTT 旋转因子写入片上常量表
 //   Test 2 - OP_ADD：多 limb 逐元素模加
 //   Test 3 - OP_SUB：多 limb 逐元素模减
 //   Test 4 - OP_MULT：多 limb 逐元素 Barrett 模乘
@@ -12,7 +12,7 @@
 //   Test 7 - OP_BCONV：BConv Q→P（sizeP=LIMB_P 与 sizeP=MAX_OUT_COLS）
 //
 // 说明：
-//   - Top 函数内部维护 static MODULUS/K_HALF/M/NTTTwiddleFactor 等全局表，
+//   - Top 函数内部维护 static MODULUS/S/M/NTTTwiddleFactor 等全局表，
 //     故一次 OP_INIT 后，后续 ADD/SUB/MULT/NTT/INTT/AUTO 共用该状态。
 //   - 为简化测试，所有 limb 使用同一 NTT-friendly 素数 3221225473 (≡1 mod 2N)。
 //
@@ -96,11 +96,11 @@ static uint64_t sw_powmod(uint64_t base, uint64_t exp, uint64_t mod) {
 }
 
 // Barrett 参数计算（与 cg_ntt_tb / arithmetic.cpp 语义一致）
-static void compute_barrett_params(uint64_t mod, uint64_t &K_out, uint64_t &M_out) {
+static void compute_barrett_params(uint64_t mod, uint64_t &S_out, uint64_t &M_out) {
     uint64_t tmp = mod; int bits = 0;
     while (tmp) { tmp >>= 1; ++bits; }
     uint64_t S = (uint64_t)bits + 62;
-    K_out = S;
+    S_out = S;
     unsigned __int128 numer = (unsigned __int128)1 << S;
     M_out = (uint64_t)(numer / mod);
 }
@@ -139,14 +139,14 @@ static void build_cg_twiddle(
 // ------------------------------------------------------------
 // OP_INIT：构建 mem_in1 / mem_in2 布局并调用 Top
 //
-// mem_in1: [MOD×LIMB_Q] [K_HALF×LIMB_Q] [M×LIMB_Q] [NTT_TF: MAX_LIMBS×STAGE×CG_HALF_N]
-// mem_in2: [MOD×LIMB_P] [K_HALF×LIMB_P] [M×LIMB_P] [INTT_TF: MAX_LIMBS×STAGE×CG_HALF_N]
+// mem_in1: [MOD×LIMB_Q] [S×LIMB_Q] [M×LIMB_Q] [NTT_TF: MAX_LIMBS×STAGE×CG_HALF_N]
+// mem_in2: [MOD×LIMB_P] [S×LIMB_P] [M×LIMB_P] [INTT_TF: MAX_LIMBS×STAGE×CG_HALF_N]
 // ------------------------------------------------------------
 static const int CG_TF_SIZE       = STAGE * CG_HALF_N;                      // 24576
 static const int INIT_MEM_IN1_LEN = LIMB_Q * 3 + MAX_LIMBS * CG_TF_SIZE;
 static const int INIT_MEM_IN2_LEN = LIMB_P * 3 + MAX_LIMBS * CG_TF_SIZE;
 
-static void do_init(uint64_t MOD, uint64_t K_HALF, uint64_t M_barrett,
+static void do_init(uint64_t MOD, uint64_t S, uint64_t M_barrett,
                     uint64_t root_2N, uint64_t inv_root_2N)
 {
     static std::vector<uint64_t> in1(INIT_MEM_IN1_LEN);
@@ -156,13 +156,13 @@ static void do_init(uint64_t MOD, uint64_t K_HALF, uint64_t M_barrett,
     // Q 参数
     for (int i = 0; i < LIMB_Q; i++) {
         in1[i]                = MOD;
-        in1[LIMB_Q + i]       = K_HALF;
+        in1[LIMB_Q + i]       = S;
         in1[LIMB_Q * 2 + i]   = M_barrett;
     }
     // P 参数
     for (int j = 0; j < LIMB_P; j++) {
         in2[j]                = MOD;
-        in2[LIMB_P + j]       = K_HALF;
+        in2[LIMB_P + j]       = S;
         in2[LIMB_P * 2 + j]   = M_barrett;
     }
 
@@ -191,11 +191,11 @@ static void do_init(uint64_t MOD, uint64_t K_HALF, uint64_t M_barrett,
 // ------------------------------------------------------------
 // Test 1 — OP_INIT（只验证不崩溃；正确性由后续测试间接验证）
 // ------------------------------------------------------------
-static void test_init(uint64_t MOD, uint64_t K_HALF, uint64_t M_b,
+static void test_init(uint64_t MOD, uint64_t S, uint64_t M_b,
                       uint64_t root_2N, uint64_t inv_root_2N)
 {
-    std::cout << "\n[Test 1] OP_INIT：写入 MODULUS/K_HALF/M 与 CG-NTT 旋转因子表\n";
-    do_init(MOD, K_HALF, M_b, root_2N, inv_root_2N);
+    std::cout << "\n[Test 1] OP_INIT：写入 MODULUS/S/M 与 CG-NTT 旋转因子表\n";
+    do_init(MOD, S, M_b, root_2N, inv_root_2N);
     check(true, "OP_INIT 调用返回");
 }
 
@@ -443,6 +443,11 @@ static void test_bconv(uint64_t q_mod, int sizeP, unsigned seed) {
 // ------------------------------------------------------------
 // main
 // ------------------------------------------------------------
+#ifdef HKS_DIGIT_TB
+int hks_digit_uninitialized_test();
+int run_hks_digit_tests();
+#endif
+
 int main() {
     std::cout << "============================================================\n";
     std::cout << "  Top Kernel Testbench\n";
@@ -455,12 +460,15 @@ int main() {
     // NTT-friendly 素数：3221225473 = 3·2^30 + 1 (≡ 1 mod 2·4096)
     const uint64_t MOD = 3221225473ULL;
     const uint64_t ROOT = 5ULL;
-    uint64_t K_HALF, M_b;
-    compute_barrett_params(MOD, K_HALF, M_b);
+    uint64_t S, M_b;
+    compute_barrett_params(MOD, S, M_b);
     uint64_t root_2N     = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
     uint64_t inv_root_2N = sw_powmod(root_2N, MOD - 2, MOD);
 
-    test_init(MOD, K_HALF, M_b, root_2N, inv_root_2N);
+#ifdef HKS_DIGIT_TB
+    check(hks_digit_uninitialized_test() == 0, "HKS rejects calls before OP_INIT");
+#endif
+    test_init(MOD, S, M_b, root_2N, inv_root_2N);
 
     test_add (MOD, /*num_limbs=*/LIMB_Q, /*mod_index=*/0);
     test_sub (MOD, /*num_limbs=*/LIMB_Q, /*mod_index=*/0);
@@ -478,6 +486,14 @@ int main() {
     test_bconv(MOD, /*sizeP=*/LIMB_P,       /*seed=*/0xBC01U);
     test_bconv(MOD, /*sizeP=*/MAX_OUT_COLS, /*seed=*/0xBC02U);
 
+#ifdef HKS_DIGIT_TB
+    check(run_hks_digit_tests() == 0, "HKS fused digit regression");
+    // Restore the old context and check legacy operations after fused calls.
+    do_init(MOD, S, M_b, root_2N, inv_root_2N);
+    test_add(MOD, 2, 1);
+    test_ntt_intt_roundtrip(MOD, LIMB_Q, 0);
+    test_bconv(MOD, MAX_OUT_COLS, 0xBC03U);
+#endif
     std::cout << "\n============================================================\n";
     std::cout << "  Top 结果：" << g_passed << " / " << g_total << " 通过\n";
     if (g_passed == g_total) {

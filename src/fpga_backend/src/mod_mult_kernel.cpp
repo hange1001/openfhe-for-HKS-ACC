@@ -5,7 +5,7 @@ void Compute_Mult(
     uint64_t in2[MAX_LIMBS][SQRT][SQRT], // 输入 B (片上 BRAM)
     uint64_t out[MAX_LIMBS][SQRT][SQRT], // 输出 C (片上 BRAM)
     uint64_t MODULUS[MAX_LIMBS],
-    uint64_t K_HALF[MAX_LIMBS],
+    uint64_t S[MAX_LIMBS],
     uint64_t M[MAX_LIMBS],
 
     int num_active_limbs,                // 当前有效层数 (比如 44)
@@ -18,7 +18,7 @@ void Compute_Mult(
     Limb_Loop:
     for (int r = mod_idx_offset; r < num_active_limbs + mod_idx_offset; r++) {
         uint64_t q = MODULUS[r];
-        uint64_t k_half = K_HALF[r];
+        uint64_t S_val = S[r];
         uint64_t m = M[r];
         Row_Loop:
         for (int i = 0; i < SQRT; i++) {
@@ -29,7 +29,7 @@ void Compute_Mult(
                 uint64_t a = in1[r][i][j];
                 uint64_t b = in2[r][i][j];
                 uint64_t res;
-                MultMod(a, b, q, m, k_half, res);
+                MultMod(a, b, q, m, S_val, res);
                 out[r][i][j] = res;
             }
         }

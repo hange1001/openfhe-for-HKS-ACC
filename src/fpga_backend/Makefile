@@ -10,7 +10,7 @@
 # 目标板卡：Alveo U55C。必须与 csynth.tcl / cosim.tcl / csim.tcl 里的
 # `set_part xcu55c-fsvh2892-2L-e` 保持一致，否则 HLS 综合报告的资源/时序
 # 与 Vitis 实际链接出的 xclbin 不是同一颗器件（论文数据会对不上）。
-PLATFORM ?= xilinx_u55c_gen3x16_xdma_4_1_202310_1
+PLATFORM ?= xilinx_u55c_gen3x16_xdma_3_202210_1
 HLS_PART ?= xcu55c-fsvh2892-2L-e
 
 # 备用平台（U250，早期 hw_emu 用过）。切换时必须同步改三个 tcl 的 set_part：
@@ -266,7 +266,29 @@ report_all:
 	done
 
 # ===================================================================
-# 5. 清理
+# 5. Board-free HKS prototype
+# ===================================================================
+
+# Board-free fused-digit prototype. Separate project directories preserve baselines.
+HLS_ROOT ?= /tools/Xilinx/Vitis_HLS/2023.2
+HKS_TEST_BIN := ./build/hks_digit/hks_digit_tb
+HKS_TB := ./testbench/top_tb.cpp ./testbench/hks_digit_tb.cpp
+.PHONY: test-hks-digit hks-csim hks-csynth hks-cosim hks-baseline
+
+$(HKS_TEST_BIN): $(KERNEL_SRC) $(HKS_TB) $(wildcard $(INC_DIR)/*.h)
+	@mkdir -p $(@D)
+	$(CXX) -std=c++14 -O2 -Wno-unknown-pragmas -DHKS_DIGIT_TB \
+		-I$(INC_DIR) -I$(HLS_ROOT)/include $(KERNEL_SRC) $(HKS_TB) -lgmp -o $@
+
+test-hks-digit: $(HKS_TEST_BIN)
+	$(HKS_TEST_BIN)
+
+hks-csim hks-csynth hks-cosim hks-baseline:
+	HKS_MODE=$(patsubst hks-%,%,$@) HLS_SRC_FILES="$(KERNEL_SRC)" \
+		$(HLS_ROOT)/bin/vitis_hls -f hks_digit.tcl
+
+# ===================================================================
+# 6. 清理
 # ===================================================================
 clean:
 	@echo "-> Cleaning build artifacts for TARGET=$(TARGET)..."

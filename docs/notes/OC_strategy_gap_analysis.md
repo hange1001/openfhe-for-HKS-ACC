@@ -1,5 +1,13 @@
 # OC 策略 vs CiFlow OC：差距分析与修复路径
 
+> ⚠️ **【2026-08-26 降级为历史文档】本文不再作为任何推导的依据。**
+> 已知失效项：§4「等价计算量 9/20/10」表**概念上不该存在**（CiFlow §IV.D：算子总数与 dataflow 无关）；
+> Gap#1 标 ✅ 但它恰是唯一没做的（做到的是「只算一次」，CiFlow 要的是「只加载一次」）；
+> 真 OC 的 BConv 次数是 **7** 不是 9；Gap#5 的字面描述在「跨 digit 累加」上是错的
+> （累的是 `Σ_d ĉ_d[p]·evk_d[p]`，不是 `Σ_d ĉ_d[p]`）。
+> **现行结论见 `推导v1 §2.3 / §2.4 / §2.5`。** 本文保留仅因 ADR 与 log 引用了它的历史状态。
+
+
 > 参考文献：Neda et al., *CiFlow: Dataflow Analysis and Optimization of Key Switching for Homomorphic Encryption*, ISPASS 2024.
 > 分析时间：2026-06-29
 

@@ -125,7 +125,7 @@ void compute_core(
     uint64_t NTTData[SQRT],
 
     uint64_t modulus,
-    uint64_t K_HALF,
+    uint64_t S,
     uint64_t M,
 
     bool is_ntt
@@ -147,7 +147,7 @@ void compute_core(
                 NTTData[idx1], 
                 NTTData[idx2], 
                 modulus, 
-                K_HALF, 
+                S,
                 M, 
                 is_ntt
             );
@@ -199,7 +199,7 @@ void Configurable_PE(
     uint64_t &res2,
 
     const uint64_t &modulus,
-    const uint64_t &K_HALF,
+    const uint64_t &S,
     const uint64_t &M,
     const bool &is_ntt     
 ) {
@@ -212,7 +212,7 @@ void Configurable_PE(
 
 
     if (is_ntt) {
-        MultMod(input2_temp, twiddle_factor, modulus, M, K_HALF, temp);
+        MultMod(input2_temp, twiddle_factor, modulus, M, S, temp);
 
         AddMod(input1_temp, temp, modulus, true);
         res1_temp = input1_temp;
@@ -239,7 +239,7 @@ void Configurable_PE(
         uint64_t mult_in = res2_temp;
         #pragma HLS BIND_REGISTER variable=mult_in
 
-        MultMod(mult_in, twiddle_factor, modulus, M, K_HALF, temp);
+        MultMod(mult_in, twiddle_factor, modulus, M, S, temp);
 
         // INTT 结果除以 2（乘以 2 的逆元），同时处理奇数情况（模加上半模）
         res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);
@@ -250,7 +250,7 @@ void NTT_Kernel(
     uint64_t in_memory[SQRT][SQRT],
 
     const uint64_t modulus,
-    const uint64_t K_HALF,
+    const uint64_t S,
     const uint64_t M,
 
     const uint64_t ntt_twiddle_memory[PE_PARALLEL][RING_DIM],
@@ -367,7 +367,7 @@ void NTT_Kernel(
             }
 
             // -- Step 5: 蝶形运算（8 个 PE × 4 次串行迭代）
-            compute_core(PermuteData, TwiddleFactor, NTTData, modulus, K_HALF, M, is_ntt);
+            compute_core(PermuteData, TwiddleFactor, NTTData, modulus, S, M, is_ntt);
 
             // -- Step 6: 输出置换
             repermute_data(NTTData, OutputIndex, RepermuteData);
@@ -412,7 +412,7 @@ void Compute_NTT(
     const uint64_t intt_twiddle_memory[MAX_LIMBS][PE_PARALLEL][RING_DIM],
 
     const uint64_t modulus[MAX_LIMBS],
-    const uint64_t K_HALF[MAX_LIMBS],
+    const uint64_t S[MAX_LIMBS],
     const uint64_t M[MAX_LIMBS],
 
     bool is_ntt,
@@ -435,7 +435,7 @@ void Compute_NTT(
         NTT_Kernel(
             in_memory[l],
             modulus[l],
-            K_HALF[l],
+            S[l],
             M[l],
             ntt_twiddle_memory[l],
             intt_twiddle_memory[l],

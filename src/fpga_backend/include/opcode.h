@@ -16,5 +16,6 @@
 #define OP_INTT 5
 #define OP_BCONV 6
 #define OP_AUTO  7
+#define OP_HKS_DIGIT 8
 
 #endif // OPCODE_H

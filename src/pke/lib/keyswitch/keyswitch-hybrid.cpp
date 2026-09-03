@@ -37,6 +37,7 @@
 
 #include "keyswitch/keyswitch-hybrid.h"
 #include "keyswitch/hks_strategy.h"
+#include "keyswitch/hks_digit_offload.h"
 
 #include <chrono>
 
@@ -345,6 +346,10 @@ std::shared_ptr<std::vector<DCRTPoly>> KeySwitchHYBRID::EvalKeySwitchPrecomputeC
     uint32_t numPartQl = ceil((static_cast<double>(sizeQl)) / alpha);
     if (numPartQl > cryptoParams->GetNumberOfQPartitions())
         numPartQl = cryptoParams->GetNumberOfQPartitions();
+
+    std::vector<DCRTPoly> fusedParts;
+    if (TryHKSDigitOffload(c, cryptoParamsBase, fusedParts))
+        return std::make_shared<std::vector<DCRTPoly>>(std::move(fusedParts));
 
     std::vector<DCRTPoly> partsCt(numPartQl);
 

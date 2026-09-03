@@ -4,7 +4,7 @@ void Compute_BConv_Naive(
     uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
-    const uint64_t out_k_half[MAX_OUT_COLS],
+    const uint64_t out_S[MAX_OUT_COLS],
     const uint64_t out_m_barrett[MAX_OUT_COLS],
     int sizeP
 ) {
@@ -26,11 +26,11 @@ void Compute_BConv_Naive(
     // 权重、模数与 Barrett 常数数据量小，完全打散成寄存器
     uint64_t local_w[LIMB_Q][MAX_OUT_COLS];
     uint64_t local_mod[MAX_OUT_COLS];
-    uint64_t local_k_half[MAX_OUT_COLS];
+    uint64_t local_S[MAX_OUT_COLS];
     uint64_t local_m_barrett[MAX_OUT_COLS];
     #pragma HLS ARRAY_PARTITION variable=local_w          complete dim=0
     #pragma HLS ARRAY_PARTITION variable=local_mod        complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=local_k_half     complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=local_S     complete dim=0
     #pragma HLS ARRAY_PARTITION variable=local_m_barrett  complete dim=0
 
     // -----------------------------------------
@@ -46,7 +46,7 @@ void Compute_BConv_Naive(
     Load_Mod: for (int p = 0; p < MAX_OUT_COLS; ++p) {
         #pragma HLS PIPELINE II=1
         local_mod[p]       = out_mod[p];
-        local_k_half[p]    = out_k_half[p];
+        local_S[p]    = out_S[p];
         local_m_barrett[p] = out_m_barrett[p];
     }
 

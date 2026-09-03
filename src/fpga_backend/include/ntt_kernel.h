@@ -54,7 +54,7 @@ extern "C" {
         uint64_t NTTData[SQRT],
         
         uint64_t modulus,
-        uint64_t K_HALF,
+        uint64_t S,
         uint64_t M,
 
         bool is_ntt
@@ -109,7 +109,7 @@ extern "C" {
         uint64_t &res2,
 
         const uint64_t &modulus,
-        const uint64_t &K_HALF,
+        const uint64_t &S,
         const uint64_t &M,
         const bool &is_ntt     
     );
@@ -120,7 +120,7 @@ extern "C" {
         uint64_t in_memory[SQRT][SQRT],
 
         const uint64_t modulus,
-        const uint64_t K_HALF,
+        const uint64_t S,
         const uint64_t M,
 
         const uint64_t ntt_twiddle_memory[PE_PARALLEL][RING_DIM],
@@ -140,7 +140,7 @@ extern "C" {
         const uint64_t intt_twiddle_memory[MAX_LIMBS][PE_PARALLEL][RING_DIM],
 
         const uint64_t modulus[MAX_LIMBS],
-        const uint64_t K_HALF[MAX_LIMBS],
+        const uint64_t S[MAX_LIMBS],
         const uint64_t M[MAX_LIMBS],
 
         bool is_ntt,

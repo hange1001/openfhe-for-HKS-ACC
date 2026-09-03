@@ -15,9 +15,10 @@ puts "INFO: Testbench    : $tb_files"
 puts "INFO: Extra cflags : $extra_cf"
 puts "======================================="
 
-# 2. 每个模块使用独立工程目录，避免与 csim/csynth 互相覆盖
+# 2. 每个模块使用独立工程目录；实验可通过 HLS_PROJECT_NAME 覆盖，
+#    避免覆盖既有 cosim project。
 file mkdir Solution
-set proj_name "Solution/cosim_${top_func}"
+set proj_name [expr {[info exists ::env(HLS_PROJECT_NAME)] ? $::env(HLS_PROJECT_NAME) : "Solution/cosim_${top_func}"}]
 open_project -reset $proj_name
 
 set_top $top_func

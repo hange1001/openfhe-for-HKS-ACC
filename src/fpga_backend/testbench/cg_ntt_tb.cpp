@@ -67,13 +67,13 @@ static uint64_t sw_powmod(uint64_t base, uint64_t exp, uint64_t mod) {
 // Barrett 预计算参数（与 arithmetic.cpp MultMod 接口一致）
 // ============================================================
 static void compute_barrett_params(uint64_t mod,
-                                   uint64_t &K_HALF_out,
+                                   uint64_t &S_out,
                                    uint64_t &M_out)
 {
     uint64_t tmp = mod; int bits = 0;
     while (tmp) { tmp >>= 1; ++bits; }
     uint64_t S = (uint64_t)bits + 62;   // 全精度总移位量，与 MultMod 的 S 参数语义一致
-    K_HALF_out = S;
+    S_out = S;
     unsigned __int128 numer = (unsigned __int128)1 << S;
     M_out = (uint64_t)(numer / mod);
 }
@@ -208,7 +208,7 @@ static void build_cg_twiddle(
 // ============================================================
 static void sw_cg_ntt(
     uint64_t *data, int N, uint64_t mod,
-    uint64_t K_HALF, uint64_t M_barrett,
+    uint64_t S, uint64_t M_barrett,
     uint64_t tf[STAGE][CG_HALF_N],
     bool is_ntt
 ) {
@@ -324,8 +324,8 @@ static void test_cg_ntt_roundtrip() {
 
     const uint64_t MOD   = 3221225473ULL;
     const uint64_t ROOT  = 5ULL;
-    uint64_t K_HALF, M_barrett;
-    compute_barrett_params(MOD, K_HALF, M_barrett);
+    uint64_t S, M_barrett;
+    compute_barrett_params(MOD, S, M_barrett);
 
     uint64_t root_2N     = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
     uint64_t inv_root_2N = sw_powmod(root_2N, MOD - 2, MOD);
@@ -344,16 +344,16 @@ static void test_cg_ntt_roundtrip() {
     static uint64_t backup[RING_DIM];
     for (int i = 0; i < RING_DIM; i++) data[i] = backup[i] = dis(rng);
 
-    // 正向 NTT：data → ntt_out
-    CG_NTT_Kernel(data, ntt_out, MOD, K_HALF, M_barrett, ntt_tf, true);
+    // 正向 NTT：data → ntt_out（IS_NTT=true 为编译期模板参数）
+    CG_NTT_Kernel<true>(data, ntt_out, MOD, S, M_barrett, ntt_tf);
 
     // 验证 NTT 后数据发生变化（极低概率误报）
     bool changed = false;
     for (int i = 0; i < RING_DIM; i++) if (ntt_out[i] != backup[i]) { changed = true; break; }
     check(changed, "NTT 后数据已发生变化");
 
-    // 逆向 INTT：ntt_out → data
-    CG_NTT_Kernel(ntt_out, data, MOD, K_HALF, M_barrett, intt_tf, false);
+    // 逆向 INTT：ntt_out → data（IS_NTT=false 为编译期模板参数）
+    CG_NTT_Kernel<false>(ntt_out, data, MOD, S, M_barrett, intt_tf);
 
     // 验证恢复
     bool recovered = true;
@@ -397,8 +397,8 @@ static void test_compute_cg_ntt_roundtrip() {
 
     const uint64_t MOD   = 3221225473ULL;
     const uint64_t ROOT  = 5ULL;
-    uint64_t K_HALF_val, M_val;
-    compute_barrett_params(MOD, K_HALF_val, M_val);
+    uint64_t S_val, M_val;
+    compute_barrett_params(MOD, S_val, M_val);
 
     uint64_t root_2N     = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
     uint64_t inv_root_2N = sw_powmod(root_2N, MOD - 2, MOD);
@@ -416,9 +416,9 @@ static void test_compute_cg_ntt_roundtrip() {
     pack_data((const uint64_t *)ntt_tw,  packed_ntt_tw,  MAX_LIMBS * STAGE * CG_HALF_N);
     pack_data((const uint64_t *)intt_tw, packed_intt_tw, MAX_LIMBS * STAGE * CG_HALF_N);
 
-    uint64_t modulus[MAX_LIMBS], K_HALF[MAX_LIMBS], M[MAX_LIMBS];
+    uint64_t modulus[MAX_LIMBS], S[MAX_LIMBS], M[MAX_LIMBS];
     for (int li = 0; li < MAX_LIMBS; li++) {
-        modulus[li] = MOD; K_HALF[li] = K_HALF_val; M[li] = M_val;
+        modulus[li] = MOD; S[li] = S_val; M[li] = M_val;
     }
 
     // 生成随机数据
@@ -434,8 +434,8 @@ static void test_compute_cg_ntt_roundtrip() {
     static ap_uint<512> packed_data[MAX_LIMBS * PACKED_RING_DIM];
     pack_data((const uint64_t *)data, packed_data, MAX_LIMBS * RING_DIM);
 
-    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, true,  MAX_LIMBS, 0);
-    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, false, MAX_LIMBS, 0);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, S, M, true,  MAX_LIMBS, 0);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, S, M, false, MAX_LIMBS, 0);
 
     unpack_data(packed_data, (uint64_t *)data, MAX_LIMBS * RING_DIM);
 
@@ -451,8 +451,8 @@ static void test_compute_cg_ntt_roundtrip() {
             data[li][i] = backup[li][i] = dis(rng);
 
     pack_data((const uint64_t *)data, packed_data, MAX_LIMBS * RING_DIM);
-    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, true,  2, 1);
-    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, K_HALF, M, false, 2, 1);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, S, M, true,  2, 1);
+    Compute_CG_NTT(packed_data, packed_ntt_tw, packed_intt_tw, modulus, S, M, false, 2, 1);
     unpack_data(packed_data, (uint64_t *)data, MAX_LIMBS * RING_DIM);
 
     bool partial_ok = true;
@@ -475,8 +475,8 @@ static void test_cg_vs_standard_ntt() {
 
     const uint64_t MOD   = 3221225473ULL;
     const uint64_t ROOT  = 5ULL;
-    uint64_t K_HALF, M_barrett;
-    compute_barrett_params(MOD, K_HALF, M_barrett);
+    uint64_t S, M_barrett;
+    compute_barrett_params(MOD, S, M_barrett);
 
     uint64_t root_2N = sw_powmod(ROOT, (MOD - 1) / (2 * RING_DIM), MOD);
 
@@ -491,7 +491,7 @@ static void test_cg_vs_standard_ntt() {
     for (int i = 0; i < RING_DIM; i++) data_cg[i] = data_std[i] = dis(rng);
 
     // 软件参考 CG-NTT（仅用于正确性验证，与硬件逻辑相同）
-    sw_cg_ntt(data_cg, RING_DIM, MOD, K_HALF, M_barrett, ntt_tf, true);
+    sw_cg_ntt(data_cg, RING_DIM, MOD, S, M_barrett, ntt_tf, true);
 
     // 对 CG-NTT 输出进行重排
     cg_ntt_reorder(data_cg);

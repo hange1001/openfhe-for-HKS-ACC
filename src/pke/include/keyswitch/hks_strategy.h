@@ -33,6 +33,8 @@ struct HKSStats {
     int ntt_poly    = 0;  // DCRTPoly-level NTT  calls
     int ntt_limb    = 0;  // single-limb NTT calls (OC: one per P-tower per digit)
     int bconv       = 0;  // ApproxSwitchCRTBasis (BConv) calls
+    int fused_digits = 0;  // OP_HKS_DIGIT calls; not separate CPU INTT/BConv/NTT
+    int64_t time_fused_us = 0;  // Host wall time incl. packing and context init if needed
 
     // --- Operation counts (EvalFastKeySwitchCoreExt) ---
     int modmul_limb = 0;  // limb-level multiply-accumulate iterations

@@ -1,5 +1,13 @@
 # MemoryTracker: 实时存储占用监控
 
+> ⚠️ **【2026-08-26 降级为历史文档】本文的 peak 单位是错的，数字不可引用。**
+> 插桩用 `sizeP`(=2) 作单位，而 BConv 的输出基是**补基** `|C_d| = sizeQlP − α_d`（=3 或 4）；
+> 且 OC 分支的 `peak_p_towers = 1` 是硬编码常量，代码实际持有完整 `fullCompl`。
+> 由此报出的 DC 64KB / MP 128KB / OC 32KB **全部是虚构**，
+> 「伪OC 峰值缓冲比 DC 优 4×」这个结论**不成立（真实优势 = 0）**。
+> **正确公式见 `task.yaml` step 1.3 `derived_mechanism`；真值见 `推导v1 §3.2`。** 修复项见 `open_questions q3`。
+
+
 ## Context
 
 用户需要在 HKS KeySwitch 调度中追踪中间数据（P-tower complement buffers）的实时存储占用，用于论文中对比 DC/MP/OC 三种策略的峰值 SRAM 差异。目标是输出 CSV 时间序列日志，可直接用 Python 画折线图。
