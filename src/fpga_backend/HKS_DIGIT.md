@@ -8,6 +8,11 @@ or throughput claim is included. Modulus/twiddle initialization is cached.
 ## Interface contract
 
 - `opcode = OP_HKS_DIGIT (8)`; the Top signature is unchanged.
+- The optimized Top uses three 256-bit AXI data interfaces. Device buffer base
+  addresses must be 32-byte aligned; the uint64 word layout and logical lengths
+  are unchanged. XRT uses device BOs, not raw CPU vector addresses. C-model
+  pointers retain ordinary uint64 alignment. Narrow/unaligned metadata offsets
+  remain handled by HLS's AXI adapter; no host-side ap_uint packing is required.
 - `num_active_limbs = alpha` (1..LIMB_Q), `mod_index = digit_start`
   (0..LIMB_Q-alpha). Call OP_INIT first with consistent Q/P parameters.
 - `mem_in1`: alpha*RING_DIM uint64 words, compact digit-local rows in the
@@ -28,18 +33,35 @@ or throughput claim is included. Modulus/twiddle initialization is cached.
 
 ## Device sequence
 
-1. Load into poly_buffer_2; preserve original EVAL in result_buffer.
+1. Load into poly_buffer_2 and broadcast original EVAL into result_buffer in
+   the same pass (no separate bypass copy).
 2. INTT with each source tower's global modulus/twiddle index.
 3. Multiply by QHatInv modulo the source qi; compact into poly_buffer_1,
    explicitly zeroing inactive BConv rows.
 4. BConv into poly_buffer_1 rows LIMB_Q..LIMB_Q+complement_count-1.
-5. Copy compact complement towers to their global result slots and NTT.
+5. Load each complement directly from poly_buffer_1 into the shared transform
+   banks; NTT, then write directly to its global result_buffer slot.
 6. Store the complete result once.
 
 Reuses all three existing Top polynomial buffers. No additional persistent
 ring-sized array. Internal BConv/NTT scratch and bank overhead still count
 toward area. AXI loops remain in non-inlined helpers. This is sequential
 fusion, not DATAFLOW or cross-digit output-stationary scheduling.
+
+Since the `c073b11` checkpoint, OP_NTT, OP_INTT and OP_HKS_DIGIT all enter
+`Execute_Transform_Operation`. Its single transform call uses runtime direction,
+one four-lane CG engine and one set of ping-pong buffers. No flat/flat_out
+intermediate arrays or Copy_HKS_Tower passes remain in Top. A template
+wrapper is retained for direct-kernel tests, but is not reachable from Top.
+Forward/inverse twiddle memories and the two BConv scratch allocations remain.
+The standalone transform wrapper remains compatible. The optimized generated
+RTL hoists four shared MultMod units to Top and also uses that pool for OP_MULT;
+zero DSP in the CG submodule report therefore does NOT mean zero multipliers.
+All opcodes are still sequential; PE_PARALLEL=4 and the BConv array are unchanged.
+
+Fixed-length, non-inlined single-tower transfer helpers are intentional. Keeping
+the runtime limb loop outside this boundary lets Vitis infer 256-bit bursts;
+merely unrolling a variable-length flattened transfer produced 64-bit traffic.
 
 ## Board-free validation
 
@@ -78,19 +100,31 @@ make hks-csynth       # standalone experimental synthesis
 make hks-baseline     # same checkout/settings, fused opcode disabled
 # Optional, potentially long; not part of the completed C-sim acceptance:
 make hks-cosim
+# Shared-engine projects, preserving the pre-sharing experiment directories:
+HKS_PROJECT_TAG=shared_v1 make hks-csim
+HKS_PROJECT_TAG=shared_v1 make hks-csynth
+python3 check_shared_transform.py Solution/hks_digit_csynth_shared_v1/solution1
+HKS_PROJECT_TAG=shared_v1 make hks-cosim-smoke
+# Optimized interface / direct-bank version (use new project tags):
+HKS_PROJECT_TAG=wide256_direct_final make hks-cosim-smoke
+python3 check_shared_transform.py Solution/hks_digit_cosim-smoke_wide256_direct_final/solution1 \
+  --axi-width 256 --lanes 4 --total-multipliers 20
+make hks-impl HKS_IMPL_PROJECT=Solution/hks_digit_cosim-smoke_wide256_direct_final
+make hks-postroute HKS_IMPL_PROJECT=Solution/hks_digit_cosim-smoke_wide256_direct_final
 ```
 
 Override HLS_ROOT if Vitis HLS 2023.2 is not installed under
 `/tools/Xilinx/Vitis_HLS/2023.2`. HLS_PART uses the existing Makefile setting
 (U55C); the experiment uses 6 ns and 0.75 ns uncertainty. HLS projects go to
 `Solution/hks_digit_{csim,csynth,cosim,baseline}`, leaving `Solution/Top` untouched.
+Set HKS_PROJECT_TAG to append a unique suffix to a new experiment directory.
 Run these HLS targets sequentially; Vitis shares its working-directory log.
 
 Initial verification on 2026-09-04: native g++, AddressSanitizer and Vitis
 C-sim all pass. Top: 18/18; HKS: 22 valid cases with zero mismatches. Invalid
 descriptors, pre-INIT calls and output guards are checked separately.
 
-## Synthesis result (2026-09-04)
+## Pre-sharing synthesis result (checkpoint c073b11, 2026-09-04)
 
 Both fused and freshly rebuilt opcode-disabled baseline generate RTL under
 Vitis 2023.2 / U55C / 6 ns / 0.75 ns uncertainty. Archived evidence and limits:
@@ -114,8 +148,51 @@ The extra 256 BRAM_18K are instance-local scratch (128 for BConv, 64 each for
 NTT/INTT); the top-level polynomial/twiddle memory allocation is unchanged.
 Reuse at the source-buffer level does not imply zero additional hardware:
 HLS creates additional transform/BConv wrapper instances. Area sharing and
-timing closure remain follow-ups. OpenFHE transform compatibility is now tested
+timing closure were follow-ups at this checkpoint. OpenFHE compatibility is tested
 with its own roots and the existing Host negacyclic table generator.
+
+## Shared-engine synthesis result (2026-09-04)
+
+Historical result before the direct-bank / wide-interface optimization below.
+
+Same device/clock/PE settings: Top now uses 704 BRAM_18K, 1392 DSP,
+79656 FF, 175140 LUT and 96 URAM. Compared with the fused checkpoint this
+removes 192 BRAM and 696 DSP: exactly three former transform instances.
+The generated RTL audit confirms one CG engine with four shared MultMod lanes.
+Both butterfly parity-loop bodies achieve II=1; core latency is 8523 cycles
+(10068 including flatten/reshape). Whole-Top latency remains undefined in csynth.
+Top estimated period is 5.541 ns, so budget slack is still -0.291 ns, not closure.
+The extra on-chip complement copy must be included in any later performance model.
+Expanded OpenFHE/ASan regression passes 470 checks / 1,523,712 exact residues.
+Verilog/xsim smoke co-simulation also passes: 24 transactions, three valid
+fused digit shapes, independent cyclic reference and no-write checks.
+Full evidence and RTL co-simulation status:
+[shared-engine report](../../docs/reports/hls/hks_shared_transform_20260904/README.md).
+
+## Matched-input resource / performance experiment
+
+`hks-digit-openfhe-test --benchmark-export fixture.txt cpu.json` measures warm
+CPU ModUp (both digits, including result allocation/destruction), verifies the
+C-model against CPU, and exports actual OpenFHE inputs/constants plus the CPU
+oracle. This is separate from the default correctness suite.
+
+`make hks-cosim-perf` replays exactly INIT + alpha=2/start=0 + alpha=1/start=2
+against RTL. Set HKS_RTL_FIXTURE to the absolute exported file path with basename
+`openfhe_rtl_fixture.txt`. Set HKS_SOURCE_ROOT to an isolated source snapshot to
+compare an older revision without changing the working tree; use a unique
+HKS_PROJECT_TAG. `analyze_hks_performance.py` compares the two synthesis summaries,
+per-transaction RTL cycles and CPU samples. It excludes INIT from the warm
+two-digit total and explicitly labels clock, PCIe and host-overhead assumptions.
+Evidence and exact commands:
+[matched-input performance report](../../docs/reports/hls/hks_performance_20260904/README.md).
+
+Measured RTL-cycle result for the same OpenFHE two-digit fixture: checkpoint
+239250 cycles versus shared 268170 cycles (+12.1%), both outputs bit-exact.
+At the unclosed 6 ns target this is 1.4355 versus 1.6090 ms, excluding INIT.
+Warm CPU median on the tested Core Ultra 5 225H/WSL2 is 0.4631 ms (OpenMP=2).
+Thus area sharing is successful but this configuration does not indicate a
+CPU acceleration benefit. Extra complement copies explain most of the shared
+latency increase; no real PCIe/host overhead or board speedup was measured.
 
 ## OpenFHE integration (2026-09-04)
 
@@ -146,7 +223,8 @@ ctest --test-dir build-hks-check -R hks-digit --output-on-failure
 Set `-DHKS_HLS_ROOT=/path/to/Vitis_HLS/2023.2` if needed. This executable links
 the actual HLS Top/ap_int code and actual OpenFHE libraries, not a duplicate
 software implementation of the compound opcode. It is **not** XRT sw_emu or
-C/RTL co-simulation. HLS implementation files were not changed for this integration.
+C/RTL co-simulation. The original integration did not change HLS arithmetic;
+the subsequent shared-engine refactor is independently revalidated as above.
 
 Application API (`keyswitch/hks_digit_offload.h`, namespace lbcrypto):
 
@@ -175,6 +253,20 @@ sends 320 KiB of output sentinels per two digits, to detect an old/no-op bitstre
 thus its buffer-sync bytes are **not** the 416 KiB useful-payload prediction.
 XRT timings go into FpgaTransferStats; C-model runtime is never labeled PCIe or
 hardware timing. A future status ABI could eliminate sentinel uploads.
+
+## Direct-bank / 256-bit interface validation
+
+The latest optimization keeps arithmetic parallelism unchanged, removes the
+17 explicit two-digit tower-copy passes and the flat adapters, and actually
+generates 256-bit GMEM0/1/2 ports. Reference results, exact reproduction commands,
+RTL-cycle estimates and board-free implementation limits are recorded in
+[the wide-interface report](../../docs/reports/hls/hks_wide256_direct_20260904/README.md).
+Software and RTL checks pass; OOC routing completes with zero routing errors.
+The original 6 ns target fails (-0.779 ns WNS with 0.75 ns user setup uncertainty).
+The same routed checkpoint passes a 7 ns internal-path timing scenario
+(+0.221 ns WNS), but external I/O and platform clock timing are not signed off.
+The repository's 6 ns target is unchanged. INIT regresses to 295063 cycles;
+warm two-digit latency improves to 139734 cycles. Neither is a board measurement.
 
 Evidence and remaining limits:
 [OpenFHE integration report](../../docs/reports/hls/hks_digit_openfhe_20260904/README.md).

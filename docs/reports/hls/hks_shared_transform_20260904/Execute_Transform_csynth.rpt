@@ -1,0 +1,541 @@
+
+
+================================================================
+== Vitis HLS Report for 'Execute_Transform'
+================================================================
+* Date:           Fri Sep  4 07:49:19 2026
+
+* Version:        2023.2 (Build 4023990 on Oct 11 2023)
+* Project:        hks_digit_csynth_shared_v1
+* Solution:       solution1 (Vivado IP Flow Target)
+* Product family: virtexuplusHBM
+* Target device:  xcu55c-fsvh2892-2L-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  6.00 ns|  5.043 ns|     0.75 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+-----------+-----------+-------+-------+---------+
+    |  Latency (cycles) |   Latency (absolute)  |    Interval   | Pipeline|
+    |   min   |   max   |    min    |    max    |  min  |  max  |   Type  |
+    +---------+---------+-----------+-----------+-------+-------+---------+
+    |    10068|    10068|  60.408 us|  60.408 us|  10068|  10068|       no|
+    +---------+---------+-----------+-----------+-------+-------+---------+
+
+    + Detail: 
+        * Instance: 
+        +---------------------------------------------------+----------------------------------------+---------+---------+-----------+-----------+------+------+---------+
+        |                                                   |                                        |  Latency (cycles) |   Latency (absolute)  |   Interval  | Pipeline|
+        |                      Instance                     |                 Module                 |   min   |   max   |    min    |    max    |  min |  max |   Type  |
+        +---------------------------------------------------+----------------------------------------+---------+---------+-----------+-----------+------+------+---------+
+        |grp_Execute_Transform_Pipeline_FLATTEN_ROW_fu_336  |Execute_Transform_Pipeline_FLATTEN_ROW  |      514|      514|   3.084 us|   3.084 us|   514|   514|       no|
+        |grp_CG_Transform_Kernel_fu_357                     |CG_Transform_Kernel                     |     8523|     8523|  51.138 us|  51.138 us|  8523|  8523|       no|
+        |grp_Execute_Transform_Pipeline_RESHAPE_ROW_fu_569  |Execute_Transform_Pipeline_RESHAPE_ROW  |     1026|     1026|   6.156 us|   6.156 us|  1026|  1026|       no|
+        +---------------------------------------------------+----------------------------------------+---------+---------+-----------+-----------+------+------+---------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++---------------------+---------+------+---------+---------+-----+
+|         Name        | BRAM_18K|  DSP |    FF   |   LUT   | URAM|
++---------------------+---------+------+---------+---------+-----+
+|DSP                  |        -|     -|        -|        -|    -|
+|Expression           |        -|     -|        -|        -|    -|
+|FIFO                 |        -|     -|        -|        -|    -|
+|Instance             |       32|   232|    19215|    38880|    -|
+|Memory               |       32|     -|        0|        0|    0|
+|Multiplexer          |        -|     -|        -|      625|    -|
+|Register             |        -|     -|      204|        -|    -|
++---------------------+---------+------+---------+---------+-----+
+|Total                |       64|   232|    19419|    39505|    0|
++---------------------+---------+------+---------+---------+-----+
+|Available SLR        |     1344|  3008|   869120|   434560|  320|
++---------------------+---------+------+---------+---------+-----+
+|Utilization SLR (%)  |        4|     7|        2|        9|    0|
++---------------------+---------+------+---------+---------+-----+
+|Available            |     4032|  9024|  2607360|  1303680|  960|
++---------------------+---------+------+---------+---------+-----+
+|Utilization (%)      |        1|     2|       ~0|        3|    0|
++---------------------+---------+------+---------+---------+-----+
+
++ Detail: 
+    * Instance: 
+    +---------------------------------------------------+----------------------------------------+---------+-----+-------+-------+-----+
+    |                      Instance                     |                 Module                 | BRAM_18K| DSP |   FF  |  LUT  | URAM|
+    +---------------------------------------------------+----------------------------------------+---------+-----+-------+-------+-----+
+    |grp_CG_Transform_Kernel_fu_357                     |CG_Transform_Kernel                     |       32|  232|  17076|  35955|    0|
+    |grp_Execute_Transform_Pipeline_FLATTEN_ROW_fu_336  |Execute_Transform_Pipeline_FLATTEN_ROW  |        0|    0|     40|   1279|    0|
+    |grp_Execute_Transform_Pipeline_RESHAPE_ROW_fu_569  |Execute_Transform_Pipeline_RESHAPE_ROW  |        0|    0|   2099|   1603|    0|
+    |sparsemux_17_3_64_1_1_U2316                        |sparsemux_17_3_64_1_1                   |        0|    0|      0|     43|    0|
+    +---------------------------------------------------+----------------------------------------+---------+-----+-------+-------+-----+
+    |Total                                              |                                        |       32|  232|  19215|  38880|    0|
+    +---------------------------------------------------+----------------------------------------+---------+-----+-------+-------+-----+
+
+    * DSP: 
+    N/A
+
+    * Memory: 
+    +--------------+-----------------------------------------------+---------+---+----+-----+------+-----+------+-------------+
+    |    Memory    |                     Module                    | BRAM_18K| FF| LUT| URAM| Words| Bits| Banks| W*Bits*Banks|
+    +--------------+-----------------------------------------------+---------+---+----+-----+------+-----+------+-------------+
+    |flat_U        |Execute_Transform_flat_RAM_AUTO_1R1W           |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_4_U      |Execute_Transform_flat_RAM_AUTO_1R1W           |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_5_U      |Execute_Transform_flat_RAM_AUTO_1R1W           |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_6_U      |Execute_Transform_flat_RAM_AUTO_1R1W           |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_out_U    |Execute_Transform_flat_out_RAM_1WNR_AUTO_1R1W  |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_out_4_U  |Execute_Transform_flat_out_RAM_1WNR_AUTO_1R1W  |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_out_5_U  |Execute_Transform_flat_out_RAM_1WNR_AUTO_1R1W  |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    |flat_out_6_U  |Execute_Transform_flat_out_RAM_1WNR_AUTO_1R1W  |        4|  0|   0|    0|  1024|   64|     1|        65536|
+    +--------------+-----------------------------------------------+---------+---+----+-----+------+-----+------+-------------+
+    |Total         |                                               |       32|  0|   0|    0|  8192|  512|     8|       524288|
+    +--------------+-----------------------------------------------+---------+---+----+-----+------+-----+------+-------------+
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    N/A
+
+    * Multiplexer: 
+    +--------------------------------+----+-----------+-----+-----------+
+    |              Name              | LUT| Input Size| Bits| Total Bits|
+    +--------------------------------+----+-----------+-----+-----------+
+    |ap_NS_fsm                       |  37|          7|    1|          7|
+    |flat_4_address0                 |  14|          3|   10|         30|
+    |flat_4_ce0                      |  14|          3|    1|          3|
+    |flat_4_ce1                      |   9|          2|    1|          2|
+    |flat_4_we0                      |   9|          2|    1|          2|
+    |flat_4_we1                      |   9|          2|    1|          2|
+    |flat_5_address0                 |  14|          3|   10|         30|
+    |flat_5_ce0                      |  14|          3|    1|          3|
+    |flat_5_ce1                      |   9|          2|    1|          2|
+    |flat_5_we0                      |   9|          2|    1|          2|
+    |flat_5_we1                      |   9|          2|    1|          2|
+    |flat_6_address0                 |  14|          3|   10|         30|
+    |flat_6_ce0                      |  14|          3|    1|          3|
+    |flat_6_ce1                      |   9|          2|    1|          2|
+    |flat_6_we0                      |   9|          2|    1|          2|
+    |flat_6_we1                      |   9|          2|    1|          2|
+    |flat_address0                   |  14|          3|   10|         30|
+    |flat_ce0                        |  14|          3|    1|          3|
+    |flat_ce1                        |   9|          2|    1|          2|
+    |flat_out_4_address0             |  14|          3|   10|         30|
+    |flat_out_4_ce0                  |  14|          3|    1|          3|
+    |flat_out_4_ce1                  |   9|          2|    1|          2|
+    |flat_out_4_we0                  |   9|          2|    1|          2|
+    |flat_out_5_address0             |  14|          3|   10|         30|
+    |flat_out_5_ce0                  |  14|          3|    1|          3|
+    |flat_out_5_ce1                  |   9|          2|    1|          2|
+    |flat_out_5_we0                  |   9|          2|    1|          2|
+    |flat_out_6_address0             |  14|          3|   10|         30|
+    |flat_out_6_ce0                  |  14|          3|    1|          3|
+    |flat_out_6_ce1                  |   9|          2|    1|          2|
+    |flat_out_6_we0                  |   9|          2|    1|          2|
+    |flat_out_address0               |  14|          3|   10|         30|
+    |flat_out_ce0                    |  14|          3|    1|          3|
+    |flat_out_ce1                    |   9|          2|    1|          2|
+    |flat_out_we0                    |   9|          2|    1|          2|
+    |flat_we0                        |   9|          2|    1|          2|
+    |flat_we1                        |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_0_address1  |  14|          3|   13|         39|
+    |p_ZL13poly_buffer_2_0_ce0       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_0_ce1       |  14|          3|    1|          3|
+    |p_ZL13poly_buffer_2_0_we1       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_1_address1  |  14|          3|   13|         39|
+    |p_ZL13poly_buffer_2_1_ce0       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_1_ce1       |  14|          3|    1|          3|
+    |p_ZL13poly_buffer_2_1_we1       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_2_address1  |  14|          3|   13|         39|
+    |p_ZL13poly_buffer_2_2_ce0       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_2_ce1       |  14|          3|    1|          3|
+    |p_ZL13poly_buffer_2_2_we1       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_3_address1  |  14|          3|   13|         39|
+    |p_ZL13poly_buffer_2_3_ce0       |   9|          2|    1|          2|
+    |p_ZL13poly_buffer_2_3_ce1       |  14|          3|    1|          3|
+    |p_ZL13poly_buffer_2_3_we1       |   9|          2|    1|          2|
+    +--------------------------------+----+-----------+-----+-----------+
+    |Total                           | 625|        135|  173|        495|
+    +--------------------------------+----+-----------+-----+-----------+
+
+    * Register: 
+    +----------------------------------------------------------------+----+----+-----+-----------+
+    |                              Name                              | FF | LUT| Bits| Const Bits|
+    +----------------------------------------------------------------+----+----+-----+-----------+
+    |M_load_reg_698                                                  |  64|   0|   64|          0|
+    |S_load_reg_693                                                  |  64|   0|   64|          0|
+    |ap_CS_fsm                                                       |   6|   0|    6|          0|
+    |grp_CG_Transform_Kernel_fu_357_ap_start_reg                     |   1|   0|    1|          0|
+    |grp_Execute_Transform_Pipeline_FLATTEN_ROW_fu_336_ap_start_reg  |   1|   0|    1|          0|
+    |grp_Execute_Transform_Pipeline_RESHAPE_ROW_fu_569_ap_start_reg  |   1|   0|    1|          0|
+    |tmp_reg_688                                                     |  64|   0|   64|          0|
+    |tmp_s_reg_667                                                   |   3|   0|    9|          6|
+    +----------------------------------------------------------------+----+----+-----+-----------+
+    |Total                                                           | 204|   0|  210|          6|
+    +----------------------------------------------------------------+----+----+-----+-----------+
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++---------------------------------------+-----+-----+------------+------------------------------+--------------+
+|               RTL Ports               | Dir | Bits|  Protocol  |         Source Object        |    C Type    |
++---------------------------------------+-----+-----+------------+------------------------------+--------------+
+|ap_clk                                 |   in|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|ap_rst                                 |   in|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|ap_start                               |   in|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|ap_done                                |  out|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|ap_idle                                |  out|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|ap_ready                               |  out|    1|  ap_ctrl_hs|             Execute_Transform|  return value|
+|limb                                   |   in|    3|     ap_none|                          limb|        scalar|
+|is_ntt                                 |   in|    1|     ap_none|                        is_ntt|        scalar|
+|p_ZL13poly_buffer_2_0_address0         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_ce0              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_q0               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_address1         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_ce1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_we1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_d1               |  out|   64|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_0_q1               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_0|         array|
+|p_ZL13poly_buffer_2_1_address0         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_ce0              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_q0               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_address1         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_ce1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_we1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_d1               |  out|   64|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_1_q1               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_1|         array|
+|p_ZL13poly_buffer_2_2_address0         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_ce0              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_q0               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_address1         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_ce1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_we1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_d1               |  out|   64|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_2_q1               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_2|         array|
+|p_ZL13poly_buffer_2_3_address0         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_ce0              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_q0               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_address1         |  out|   13|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_ce1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_we1              |  out|    1|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_d1               |  out|   64|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL13poly_buffer_2_3_q1               |   in|   64|   ap_memory|         p_ZL13poly_buffer_2_3|         array|
+|p_ZL7MODULUS_0                         |   in|   64|     ap_none|                p_ZL7MODULUS_0|       pointer|
+|p_ZL7MODULUS_1                         |   in|   64|     ap_none|                p_ZL7MODULUS_1|       pointer|
+|p_ZL7MODULUS_2                         |   in|   64|     ap_none|                p_ZL7MODULUS_2|       pointer|
+|p_ZL7MODULUS_3                         |   in|   64|     ap_none|                p_ZL7MODULUS_3|       pointer|
+|p_ZL7MODULUS_4                         |   in|   64|     ap_none|                p_ZL7MODULUS_4|       pointer|
+|S_address0                             |  out|    3|   ap_memory|                             S|         array|
+|S_ce0                                  |  out|    1|   ap_memory|                             S|         array|
+|S_q0                                   |   in|   64|   ap_memory|                             S|         array|
+|M_address0                             |  out|    3|   ap_memory|                             M|         array|
+|M_ce0                                  |  out|    1|   ap_memory|                             M|         array|
+|M_q0                                   |   in|   64|   ap_memory|                             M|         array|
+|p_ZL16NTTTwiddleFactor_0_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_0_0|         array|
+|p_ZL16NTTTwiddleFactor_0_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_0_0|         array|
+|p_ZL16NTTTwiddleFactor_0_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_0_0|         array|
+|p_ZL16NTTTwiddleFactor_0_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_0_1|         array|
+|p_ZL16NTTTwiddleFactor_0_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_0_1|         array|
+|p_ZL16NTTTwiddleFactor_0_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_0_1|         array|
+|p_ZL16NTTTwiddleFactor_0_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_0_2|         array|
+|p_ZL16NTTTwiddleFactor_0_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_0_2|         array|
+|p_ZL16NTTTwiddleFactor_0_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_0_2|         array|
+|p_ZL16NTTTwiddleFactor_0_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_0_3|         array|
+|p_ZL16NTTTwiddleFactor_0_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_0_3|         array|
+|p_ZL16NTTTwiddleFactor_0_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_0_3|         array|
+|p_ZL16NTTTwiddleFactor_1_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_1_0|         array|
+|p_ZL16NTTTwiddleFactor_1_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_1_0|         array|
+|p_ZL16NTTTwiddleFactor_1_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_1_0|         array|
+|p_ZL16NTTTwiddleFactor_1_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_1_1|         array|
+|p_ZL16NTTTwiddleFactor_1_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_1_1|         array|
+|p_ZL16NTTTwiddleFactor_1_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_1_1|         array|
+|p_ZL16NTTTwiddleFactor_1_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_1_2|         array|
+|p_ZL16NTTTwiddleFactor_1_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_1_2|         array|
+|p_ZL16NTTTwiddleFactor_1_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_1_2|         array|
+|p_ZL16NTTTwiddleFactor_1_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_1_3|         array|
+|p_ZL16NTTTwiddleFactor_1_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_1_3|         array|
+|p_ZL16NTTTwiddleFactor_1_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_1_3|         array|
+|p_ZL16NTTTwiddleFactor_2_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_2_0|         array|
+|p_ZL16NTTTwiddleFactor_2_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_2_0|         array|
+|p_ZL16NTTTwiddleFactor_2_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_2_0|         array|
+|p_ZL16NTTTwiddleFactor_2_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_2_1|         array|
+|p_ZL16NTTTwiddleFactor_2_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_2_1|         array|
+|p_ZL16NTTTwiddleFactor_2_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_2_1|         array|
+|p_ZL16NTTTwiddleFactor_2_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_2_2|         array|
+|p_ZL16NTTTwiddleFactor_2_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_2_2|         array|
+|p_ZL16NTTTwiddleFactor_2_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_2_2|         array|
+|p_ZL16NTTTwiddleFactor_2_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_2_3|         array|
+|p_ZL16NTTTwiddleFactor_2_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_2_3|         array|
+|p_ZL16NTTTwiddleFactor_2_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_2_3|         array|
+|p_ZL16NTTTwiddleFactor_3_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_3_0|         array|
+|p_ZL16NTTTwiddleFactor_3_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_3_0|         array|
+|p_ZL16NTTTwiddleFactor_3_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_3_0|         array|
+|p_ZL16NTTTwiddleFactor_3_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_3_1|         array|
+|p_ZL16NTTTwiddleFactor_3_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_3_1|         array|
+|p_ZL16NTTTwiddleFactor_3_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_3_1|         array|
+|p_ZL16NTTTwiddleFactor_3_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_3_2|         array|
+|p_ZL16NTTTwiddleFactor_3_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_3_2|         array|
+|p_ZL16NTTTwiddleFactor_3_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_3_2|         array|
+|p_ZL16NTTTwiddleFactor_3_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_3_3|         array|
+|p_ZL16NTTTwiddleFactor_3_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_3_3|         array|
+|p_ZL16NTTTwiddleFactor_3_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_3_3|         array|
+|p_ZL16NTTTwiddleFactor_4_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_4_0|         array|
+|p_ZL16NTTTwiddleFactor_4_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_4_0|         array|
+|p_ZL16NTTTwiddleFactor_4_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_4_0|         array|
+|p_ZL16NTTTwiddleFactor_4_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_4_1|         array|
+|p_ZL16NTTTwiddleFactor_4_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_4_1|         array|
+|p_ZL16NTTTwiddleFactor_4_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_4_1|         array|
+|p_ZL16NTTTwiddleFactor_4_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_4_2|         array|
+|p_ZL16NTTTwiddleFactor_4_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_4_2|         array|
+|p_ZL16NTTTwiddleFactor_4_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_4_2|         array|
+|p_ZL16NTTTwiddleFactor_4_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_4_3|         array|
+|p_ZL16NTTTwiddleFactor_4_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_4_3|         array|
+|p_ZL16NTTTwiddleFactor_4_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_4_3|         array|
+|p_ZL16NTTTwiddleFactor_5_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_5_0|         array|
+|p_ZL16NTTTwiddleFactor_5_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_5_0|         array|
+|p_ZL16NTTTwiddleFactor_5_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_5_0|         array|
+|p_ZL16NTTTwiddleFactor_5_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_5_1|         array|
+|p_ZL16NTTTwiddleFactor_5_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_5_1|         array|
+|p_ZL16NTTTwiddleFactor_5_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_5_1|         array|
+|p_ZL16NTTTwiddleFactor_5_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_5_2|         array|
+|p_ZL16NTTTwiddleFactor_5_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_5_2|         array|
+|p_ZL16NTTTwiddleFactor_5_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_5_2|         array|
+|p_ZL16NTTTwiddleFactor_5_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_5_3|         array|
+|p_ZL16NTTTwiddleFactor_5_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_5_3|         array|
+|p_ZL16NTTTwiddleFactor_5_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_5_3|         array|
+|p_ZL16NTTTwiddleFactor_6_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_6_0|         array|
+|p_ZL16NTTTwiddleFactor_6_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_6_0|         array|
+|p_ZL16NTTTwiddleFactor_6_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_6_0|         array|
+|p_ZL16NTTTwiddleFactor_6_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_6_1|         array|
+|p_ZL16NTTTwiddleFactor_6_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_6_1|         array|
+|p_ZL16NTTTwiddleFactor_6_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_6_1|         array|
+|p_ZL16NTTTwiddleFactor_6_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_6_2|         array|
+|p_ZL16NTTTwiddleFactor_6_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_6_2|         array|
+|p_ZL16NTTTwiddleFactor_6_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_6_2|         array|
+|p_ZL16NTTTwiddleFactor_6_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_6_3|         array|
+|p_ZL16NTTTwiddleFactor_6_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_6_3|         array|
+|p_ZL16NTTTwiddleFactor_6_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_6_3|         array|
+|p_ZL16NTTTwiddleFactor_7_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_7_0|         array|
+|p_ZL16NTTTwiddleFactor_7_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_7_0|         array|
+|p_ZL16NTTTwiddleFactor_7_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_7_0|         array|
+|p_ZL16NTTTwiddleFactor_7_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_7_1|         array|
+|p_ZL16NTTTwiddleFactor_7_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_7_1|         array|
+|p_ZL16NTTTwiddleFactor_7_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_7_1|         array|
+|p_ZL16NTTTwiddleFactor_7_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_7_2|         array|
+|p_ZL16NTTTwiddleFactor_7_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_7_2|         array|
+|p_ZL16NTTTwiddleFactor_7_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_7_2|         array|
+|p_ZL16NTTTwiddleFactor_7_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_7_3|         array|
+|p_ZL16NTTTwiddleFactor_7_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_7_3|         array|
+|p_ZL16NTTTwiddleFactor_7_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_7_3|         array|
+|p_ZL16NTTTwiddleFactor_8_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_8_0|         array|
+|p_ZL16NTTTwiddleFactor_8_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_8_0|         array|
+|p_ZL16NTTTwiddleFactor_8_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_8_0|         array|
+|p_ZL16NTTTwiddleFactor_8_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_8_1|         array|
+|p_ZL16NTTTwiddleFactor_8_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_8_1|         array|
+|p_ZL16NTTTwiddleFactor_8_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_8_1|         array|
+|p_ZL16NTTTwiddleFactor_8_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_8_2|         array|
+|p_ZL16NTTTwiddleFactor_8_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_8_2|         array|
+|p_ZL16NTTTwiddleFactor_8_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_8_2|         array|
+|p_ZL16NTTTwiddleFactor_8_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_8_3|         array|
+|p_ZL16NTTTwiddleFactor_8_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_8_3|         array|
+|p_ZL16NTTTwiddleFactor_8_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_8_3|         array|
+|p_ZL16NTTTwiddleFactor_9_0_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_9_0|         array|
+|p_ZL16NTTTwiddleFactor_9_0_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_9_0|         array|
+|p_ZL16NTTTwiddleFactor_9_0_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_9_0|         array|
+|p_ZL16NTTTwiddleFactor_9_1_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_9_1|         array|
+|p_ZL16NTTTwiddleFactor_9_1_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_9_1|         array|
+|p_ZL16NTTTwiddleFactor_9_1_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_9_1|         array|
+|p_ZL16NTTTwiddleFactor_9_2_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_9_2|         array|
+|p_ZL16NTTTwiddleFactor_9_2_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_9_2|         array|
+|p_ZL16NTTTwiddleFactor_9_2_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_9_2|         array|
+|p_ZL16NTTTwiddleFactor_9_3_address0    |  out|   12|   ap_memory|    p_ZL16NTTTwiddleFactor_9_3|         array|
+|p_ZL16NTTTwiddleFactor_9_3_ce0         |  out|    1|   ap_memory|    p_ZL16NTTTwiddleFactor_9_3|         array|
+|p_ZL16NTTTwiddleFactor_9_3_q0          |   in|   64|   ap_memory|    p_ZL16NTTTwiddleFactor_9_3|         array|
+|p_ZL16NTTTwiddleFactor_10_0_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_10_0|         array|
+|p_ZL16NTTTwiddleFactor_10_0_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_10_0|         array|
+|p_ZL16NTTTwiddleFactor_10_0_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_10_0|         array|
+|p_ZL16NTTTwiddleFactor_10_1_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_10_1|         array|
+|p_ZL16NTTTwiddleFactor_10_1_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_10_1|         array|
+|p_ZL16NTTTwiddleFactor_10_1_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_10_1|         array|
+|p_ZL16NTTTwiddleFactor_10_2_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_10_2|         array|
+|p_ZL16NTTTwiddleFactor_10_2_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_10_2|         array|
+|p_ZL16NTTTwiddleFactor_10_2_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_10_2|         array|
+|p_ZL16NTTTwiddleFactor_10_3_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_10_3|         array|
+|p_ZL16NTTTwiddleFactor_10_3_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_10_3|         array|
+|p_ZL16NTTTwiddleFactor_10_3_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_10_3|         array|
+|p_ZL16NTTTwiddleFactor_11_0_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_11_0|         array|
+|p_ZL16NTTTwiddleFactor_11_0_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_11_0|         array|
+|p_ZL16NTTTwiddleFactor_11_0_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_11_0|         array|
+|p_ZL16NTTTwiddleFactor_11_1_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_11_1|         array|
+|p_ZL16NTTTwiddleFactor_11_1_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_11_1|         array|
+|p_ZL16NTTTwiddleFactor_11_1_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_11_1|         array|
+|p_ZL16NTTTwiddleFactor_11_2_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_11_2|         array|
+|p_ZL16NTTTwiddleFactor_11_2_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_11_2|         array|
+|p_ZL16NTTTwiddleFactor_11_2_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_11_2|         array|
+|p_ZL16NTTTwiddleFactor_11_3_address0   |  out|   12|   ap_memory|   p_ZL16NTTTwiddleFactor_11_3|         array|
+|p_ZL16NTTTwiddleFactor_11_3_ce0        |  out|    1|   ap_memory|   p_ZL16NTTTwiddleFactor_11_3|         array|
+|p_ZL16NTTTwiddleFactor_11_3_q0         |   in|   64|   ap_memory|   p_ZL16NTTTwiddleFactor_11_3|         array|
+|p_ZL17INTTTwiddleFactor_0_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_0_0|         array|
+|p_ZL17INTTTwiddleFactor_0_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_0_0|         array|
+|p_ZL17INTTTwiddleFactor_0_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_0_0|         array|
+|p_ZL17INTTTwiddleFactor_0_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_0_1|         array|
+|p_ZL17INTTTwiddleFactor_0_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_0_1|         array|
+|p_ZL17INTTTwiddleFactor_0_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_0_1|         array|
+|p_ZL17INTTTwiddleFactor_0_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_0_2|         array|
+|p_ZL17INTTTwiddleFactor_0_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_0_2|         array|
+|p_ZL17INTTTwiddleFactor_0_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_0_2|         array|
+|p_ZL17INTTTwiddleFactor_0_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_0_3|         array|
+|p_ZL17INTTTwiddleFactor_0_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_0_3|         array|
+|p_ZL17INTTTwiddleFactor_0_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_0_3|         array|
+|p_ZL17INTTTwiddleFactor_1_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_1_0|         array|
+|p_ZL17INTTTwiddleFactor_1_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_1_0|         array|
+|p_ZL17INTTTwiddleFactor_1_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_1_0|         array|
+|p_ZL17INTTTwiddleFactor_1_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_1_1|         array|
+|p_ZL17INTTTwiddleFactor_1_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_1_1|         array|
+|p_ZL17INTTTwiddleFactor_1_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_1_1|         array|
+|p_ZL17INTTTwiddleFactor_1_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_1_2|         array|
+|p_ZL17INTTTwiddleFactor_1_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_1_2|         array|
+|p_ZL17INTTTwiddleFactor_1_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_1_2|         array|
+|p_ZL17INTTTwiddleFactor_1_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_1_3|         array|
+|p_ZL17INTTTwiddleFactor_1_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_1_3|         array|
+|p_ZL17INTTTwiddleFactor_1_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_1_3|         array|
+|p_ZL17INTTTwiddleFactor_2_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_2_0|         array|
+|p_ZL17INTTTwiddleFactor_2_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_2_0|         array|
+|p_ZL17INTTTwiddleFactor_2_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_2_0|         array|
+|p_ZL17INTTTwiddleFactor_2_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_2_1|         array|
+|p_ZL17INTTTwiddleFactor_2_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_2_1|         array|
+|p_ZL17INTTTwiddleFactor_2_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_2_1|         array|
+|p_ZL17INTTTwiddleFactor_2_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_2_2|         array|
+|p_ZL17INTTTwiddleFactor_2_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_2_2|         array|
+|p_ZL17INTTTwiddleFactor_2_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_2_2|         array|
+|p_ZL17INTTTwiddleFactor_2_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_2_3|         array|
+|p_ZL17INTTTwiddleFactor_2_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_2_3|         array|
+|p_ZL17INTTTwiddleFactor_2_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_2_3|         array|
+|p_ZL17INTTTwiddleFactor_3_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_3_0|         array|
+|p_ZL17INTTTwiddleFactor_3_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_3_0|         array|
+|p_ZL17INTTTwiddleFactor_3_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_3_0|         array|
+|p_ZL17INTTTwiddleFactor_3_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_3_1|         array|
+|p_ZL17INTTTwiddleFactor_3_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_3_1|         array|
+|p_ZL17INTTTwiddleFactor_3_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_3_1|         array|
+|p_ZL17INTTTwiddleFactor_3_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_3_2|         array|
+|p_ZL17INTTTwiddleFactor_3_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_3_2|         array|
+|p_ZL17INTTTwiddleFactor_3_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_3_2|         array|
+|p_ZL17INTTTwiddleFactor_3_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_3_3|         array|
+|p_ZL17INTTTwiddleFactor_3_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_3_3|         array|
+|p_ZL17INTTTwiddleFactor_3_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_3_3|         array|
+|p_ZL17INTTTwiddleFactor_4_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_4_0|         array|
+|p_ZL17INTTTwiddleFactor_4_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_4_0|         array|
+|p_ZL17INTTTwiddleFactor_4_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_4_0|         array|
+|p_ZL17INTTTwiddleFactor_4_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_4_1|         array|
+|p_ZL17INTTTwiddleFactor_4_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_4_1|         array|
+|p_ZL17INTTTwiddleFactor_4_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_4_1|         array|
+|p_ZL17INTTTwiddleFactor_4_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_4_2|         array|
+|p_ZL17INTTTwiddleFactor_4_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_4_2|         array|
+|p_ZL17INTTTwiddleFactor_4_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_4_2|         array|
+|p_ZL17INTTTwiddleFactor_4_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_4_3|         array|
+|p_ZL17INTTTwiddleFactor_4_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_4_3|         array|
+|p_ZL17INTTTwiddleFactor_4_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_4_3|         array|
+|p_ZL17INTTTwiddleFactor_5_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_5_0|         array|
+|p_ZL17INTTTwiddleFactor_5_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_5_0|         array|
+|p_ZL17INTTTwiddleFactor_5_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_5_0|         array|
+|p_ZL17INTTTwiddleFactor_5_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_5_1|         array|
+|p_ZL17INTTTwiddleFactor_5_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_5_1|         array|
+|p_ZL17INTTTwiddleFactor_5_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_5_1|         array|
+|p_ZL17INTTTwiddleFactor_5_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_5_2|         array|
+|p_ZL17INTTTwiddleFactor_5_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_5_2|         array|
+|p_ZL17INTTTwiddleFactor_5_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_5_2|         array|
+|p_ZL17INTTTwiddleFactor_5_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_5_3|         array|
+|p_ZL17INTTTwiddleFactor_5_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_5_3|         array|
+|p_ZL17INTTTwiddleFactor_5_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_5_3|         array|
+|p_ZL17INTTTwiddleFactor_6_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_6_0|         array|
+|p_ZL17INTTTwiddleFactor_6_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_6_0|         array|
+|p_ZL17INTTTwiddleFactor_6_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_6_0|         array|
+|p_ZL17INTTTwiddleFactor_6_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_6_1|         array|
+|p_ZL17INTTTwiddleFactor_6_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_6_1|         array|
+|p_ZL17INTTTwiddleFactor_6_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_6_1|         array|
+|p_ZL17INTTTwiddleFactor_6_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_6_2|         array|
+|p_ZL17INTTTwiddleFactor_6_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_6_2|         array|
+|p_ZL17INTTTwiddleFactor_6_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_6_2|         array|
+|p_ZL17INTTTwiddleFactor_6_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_6_3|         array|
+|p_ZL17INTTTwiddleFactor_6_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_6_3|         array|
+|p_ZL17INTTTwiddleFactor_6_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_6_3|         array|
+|p_ZL17INTTTwiddleFactor_7_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_7_0|         array|
+|p_ZL17INTTTwiddleFactor_7_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_7_0|         array|
+|p_ZL17INTTTwiddleFactor_7_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_7_0|         array|
+|p_ZL17INTTTwiddleFactor_7_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_7_1|         array|
+|p_ZL17INTTTwiddleFactor_7_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_7_1|         array|
+|p_ZL17INTTTwiddleFactor_7_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_7_1|         array|
+|p_ZL17INTTTwiddleFactor_7_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_7_2|         array|
+|p_ZL17INTTTwiddleFactor_7_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_7_2|         array|
+|p_ZL17INTTTwiddleFactor_7_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_7_2|         array|
+|p_ZL17INTTTwiddleFactor_7_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_7_3|         array|
+|p_ZL17INTTTwiddleFactor_7_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_7_3|         array|
+|p_ZL17INTTTwiddleFactor_7_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_7_3|         array|
+|p_ZL17INTTTwiddleFactor_8_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_8_0|         array|
+|p_ZL17INTTTwiddleFactor_8_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_8_0|         array|
+|p_ZL17INTTTwiddleFactor_8_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_8_0|         array|
+|p_ZL17INTTTwiddleFactor_8_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_8_1|         array|
+|p_ZL17INTTTwiddleFactor_8_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_8_1|         array|
+|p_ZL17INTTTwiddleFactor_8_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_8_1|         array|
+|p_ZL17INTTTwiddleFactor_8_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_8_2|         array|
+|p_ZL17INTTTwiddleFactor_8_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_8_2|         array|
+|p_ZL17INTTTwiddleFactor_8_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_8_2|         array|
+|p_ZL17INTTTwiddleFactor_8_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_8_3|         array|
+|p_ZL17INTTTwiddleFactor_8_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_8_3|         array|
+|p_ZL17INTTTwiddleFactor_8_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_8_3|         array|
+|p_ZL17INTTTwiddleFactor_9_0_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_9_0|         array|
+|p_ZL17INTTTwiddleFactor_9_0_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_9_0|         array|
+|p_ZL17INTTTwiddleFactor_9_0_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_9_0|         array|
+|p_ZL17INTTTwiddleFactor_9_1_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_9_1|         array|
+|p_ZL17INTTTwiddleFactor_9_1_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_9_1|         array|
+|p_ZL17INTTTwiddleFactor_9_1_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_9_1|         array|
+|p_ZL17INTTTwiddleFactor_9_2_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_9_2|         array|
+|p_ZL17INTTTwiddleFactor_9_2_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_9_2|         array|
+|p_ZL17INTTTwiddleFactor_9_2_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_9_2|         array|
+|p_ZL17INTTTwiddleFactor_9_3_address0   |  out|   12|   ap_memory|   p_ZL17INTTTwiddleFactor_9_3|         array|
+|p_ZL17INTTTwiddleFactor_9_3_ce0        |  out|    1|   ap_memory|   p_ZL17INTTTwiddleFactor_9_3|         array|
+|p_ZL17INTTTwiddleFactor_9_3_q0         |   in|   64|   ap_memory|   p_ZL17INTTTwiddleFactor_9_3|         array|
+|p_ZL17INTTTwiddleFactor_10_0_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_10_0|         array|
+|p_ZL17INTTTwiddleFactor_10_0_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_10_0|         array|
+|p_ZL17INTTTwiddleFactor_10_0_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_10_0|         array|
+|p_ZL17INTTTwiddleFactor_10_1_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_10_1|         array|
+|p_ZL17INTTTwiddleFactor_10_1_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_10_1|         array|
+|p_ZL17INTTTwiddleFactor_10_1_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_10_1|         array|
+|p_ZL17INTTTwiddleFactor_10_2_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_10_2|         array|
+|p_ZL17INTTTwiddleFactor_10_2_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_10_2|         array|
+|p_ZL17INTTTwiddleFactor_10_2_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_10_2|         array|
+|p_ZL17INTTTwiddleFactor_10_3_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_10_3|         array|
+|p_ZL17INTTTwiddleFactor_10_3_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_10_3|         array|
+|p_ZL17INTTTwiddleFactor_10_3_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_10_3|         array|
+|p_ZL17INTTTwiddleFactor_11_0_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_11_0|         array|
+|p_ZL17INTTTwiddleFactor_11_0_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_11_0|         array|
+|p_ZL17INTTTwiddleFactor_11_0_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_11_0|         array|
+|p_ZL17INTTTwiddleFactor_11_1_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_11_1|         array|
+|p_ZL17INTTTwiddleFactor_11_1_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_11_1|         array|
+|p_ZL17INTTTwiddleFactor_11_1_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_11_1|         array|
+|p_ZL17INTTTwiddleFactor_11_2_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_11_2|         array|
+|p_ZL17INTTTwiddleFactor_11_2_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_11_2|         array|
+|p_ZL17INTTTwiddleFactor_11_2_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_11_2|         array|
+|p_ZL17INTTTwiddleFactor_11_3_address0  |  out|   12|   ap_memory|  p_ZL17INTTTwiddleFactor_11_3|         array|
+|p_ZL17INTTTwiddleFactor_11_3_ce0       |  out|    1|   ap_memory|  p_ZL17INTTTwiddleFactor_11_3|         array|
+|p_ZL17INTTTwiddleFactor_11_3_q0        |   in|   64|   ap_memory|  p_ZL17INTTTwiddleFactor_11_3|         array|
++---------------------------------------+-----+-----+------------+------------------------------+--------------+
+

@@ -5,7 +5,7 @@
 static const int TOTAL_CYCLES = LIMB_Q + RING_DIM + MAX_OUT_COLS - 1;
 
 // ==================================================================
-// I/O 带宽参数：匹配 Alveo 512-bit AXI（8 × 64-bit/拍）
+// Local BRAM transfer width (8 x 64-bit/cycle), NOT Top's external AXI width.
 // ==================================================================
 constexpr int LOAD_PAR = 8;
 static_assert((SQRT & (SQRT - 1)) == 0, "SQRT must be power of 2");

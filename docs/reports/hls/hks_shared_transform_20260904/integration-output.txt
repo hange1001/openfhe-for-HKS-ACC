@@ -1,0 +1,113 @@
+[OUTPUT] 
+Internal ctest changing into directory: /home/timhan/FHE/openfhe-for-HKS-ACC/build
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/home/timhan/FHE/openfhe-for-HKS-ACC/build/DartConfiguration.tcl
+
+UpdateCTestConfiguration  from :/home/timhan/FHE/openfhe-for-HKS-ACC/build/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /home/timhan/FHE/openfhe-for-HKS-ACC/build
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+[HANDLER_OUTPUT] 
+    Start 1: hks-digit-openfhe
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+1: Test command: /home/timhan/FHE/openfhe-for-HKS-ACC/build/bin/tests/hks-digit-openfhe-test
+
+1: Environment variables: 
+1:  OMP_NUM_THREADS=2
+1: Test timeout computed to be: 180
+1: OpenFHE + actual HLS Top C-model; N=4096 Q=3 P=2 digits=[2,1]
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=0 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=1 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=2 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode 0
+1: [PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode 8
+1: [PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode 8
+1: [PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode 8
+1: [PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode 8
+1: [PASS] bit-exact ModUp pattern=3 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=4 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=5 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] bit-exact ModUp pattern=6 (both digits, all five towers)
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] context A/B/A reinitialization
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] EvalRotate 1 max_abs_error=4.26326e-14
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [PASS] EvalRotate -1 max_abs_error=4.50751e-14
+1: [PASS] EvalMult max_abs_error=5.54223e-13
+1:   EvalMult fused_digits=0 fallbacks=1
+1: [PASS] fallback Q=2 reduced level: requires EVAL, N=4096, current Q=3, P=2
+1: [PASS] fallback MP schedule: only DC scheduling is enabled
+1: [PASS] fallback OC schedule: only DC scheduling is enabled
+1: [PASS] fallback N=8192: requires EVAL, N=4096, current Q=3, P=2
+1: [PASS] fallback P=1: requires EVAL, N=4096, current Q=3, P=2
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: [FPGA] Initializing Modulus Parameters...
+1: [FPGA Init] P[0] (idx=3): MOD=1152921504606748673, S=122, M=4611686018427781116
+1: [FPGA Init] P[1] (idx=4): MOD=1152921504606683137, S=122, M=4611686018428043260
+1: PASS: 470 checks, 1523712 residues compared exactly.
+1: This is HLS C-model integration, NOT RTL/XRT emulation or hardware performance.
+[HANDLER_OUTPUT] 
+1/1 Test #1: hks-digit-openfhe ................
+   Passed    1.33 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	hks-digit-openfhe
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 1
+
+
+Total Test time (real) =   1.33 sec

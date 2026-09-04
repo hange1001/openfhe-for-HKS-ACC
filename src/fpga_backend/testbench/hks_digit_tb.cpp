@@ -139,6 +139,33 @@ bool same(const std::vector<uint64_t>& a, const std::vector<uint64_t>& b,
     return true;
 }
 
+// Exercise all widened AXI bundles, lane order and nonzero global tower slots.
+// Inputs sit near qi and differ at every coefficient; guards cover exact tails.
+void run_port_regression() {
+    const int count = 2, start = 1;
+    std::vector<uint64_t> a(count * RING_DIM), b(a.size()), expected(a.size());
+    for (int l = 0; l < count; ++l) {
+        const uint64_t q = primes[start + l];
+        for (int k = 0; k < RING_DIM; ++k) {
+            a[l * RING_DIM + k] = q - 1 - (k % 17);
+            b[l * RING_DIM + k] = (uint64_t(k) * 43 + l + 1) % q;
+        }
+    }
+    for (uint8_t op : {OP_ADD, OP_SUB, OP_MULT}) {
+        for (size_t k = 0; k < a.size(); ++k) {
+            const uint64_t q = primes[start + k / RING_DIM];
+            expected[k] = op == OP_ADD ? (a[k] + b[k]) % q :
+                          op == OP_SUB ? (a[k] + q - b[k]) % q : mul(a[k], b[k], q);
+        }
+        const auto out = call(op, count, start, a, b, a.size());
+        expect(same(out, expected, "wide-port opcode=" + std::to_string(op)),
+               "wide-port lane order / nonzero tower offset");
+    }
+    const auto identity = call(OP_AUTO, count, start, a, {1, 1}, a.size());
+    expect(same(identity, a, "wide-port identity automorphism"), "AUTO metadata / lane order");
+    std::cout << "[PORT REGRESSION] ADD/SUB/MULT/AUTO, two towers at start=1, guards checked\n";
+}
+
 void run_case(int alpha, int start, unsigned seed, int pattern) {
     ++cases;
     const int before = failures;
@@ -281,6 +308,7 @@ int run_hks_digit_tests() {
     const int invalid[][2] = {{0, 0}, {-1, 0}, {4, 0}, {2, -1}, {2, 2},
                               {1, 3}, {1, 2147483647}, {2147483647, 0}};
     for (const auto& d : invalid) call(OP_HKS_DIGIT, d[0], d[1], {}, {}, 0);
+    run_port_regression();
     initialize(true);
     call(OP_HKS_DIGIT, 1, 2, {}, {}, 0);
 
@@ -303,3 +331,25 @@ int run_hks_digit_tests() {
               << " failures; invalid descriptors and canaries checked\n";
     return failures - before;
 }
+
+#ifdef HKS_RTL_SMOKE
+// Bounded RTL acceptance: real N=4096, distinct 60-bit primes, all three
+// alpha values, direction switches, final partial digit and stale workspace.
+// Full native/C-sim regression remains the default and is not replaced.
+int main() {
+    hks_digit_uninitialized_test();
+    const uint64_t moduli[] = {1152921504606830593ULL, 1152921504606748673ULL,
+        1152921504606683137ULL, 1152921504606601217ULL, 1152921504606584833ULL};
+    std::copy(moduli, moduli + MAX_OUT_COLS, primes);
+    if (!set_roots()) return 1;
+    initialize();
+    run_case(2, 0, 0xD107U, 0);
+    run_case(1, 2, 0xD108U, 0);
+    run_case(3, 0, 0xD109U, 2);
+    run_case(2, 1, 0xD10AU, 0);
+    run_port_regression();
+    call(OP_HKS_DIGIT, 2, 2, {}, {}, 0);
+    std::cout << "[HKS RTL SMOKE] " << cases << " valid cases, " << failures << " failures\n";
+    return failures ? 1 : 0;
+}
+#endif

@@ -49,7 +49,7 @@ static const int PACKED_TW_SIZE  = (STAGE * CG_HALF_N) / PACK_RATIO; // 3072
 // =========================================================
 // IS_NTT = true  → 正向 NTT（Cooley-Tukey）
 // IS_NTT = false → 逆向 INTT（Gentleman-Sande）
-// 编译期常量消除 BUTTERFLY_LOOP 内的 is_ntt 分支，II: 4路→2路
+// Compatibility API for standalone tests; Top uses the runtime engine below.
 template <bool IS_NTT>
 void CG_NTT_Kernel(
     const uint64_t in_data[RING_DIM],
@@ -58,6 +58,24 @@ void CG_NTT_Kernel(
     const uint64_t S,
     const uint64_t M_barrett,
     const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+);
+
+// One physical engine: direction is a runtime control, not a template argument.
+// Both twiddle memories remain resident; only the selected direction is read.
+void CG_Transform_Kernel(
+    const uint64_t in_data[RING_DIM], uint64_t out_data[RING_DIM],
+    uint64_t modulus, uint64_t S, uint64_t M_barrett,
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+);
+
+// Transform already-loaded ping-pong banks; no intermediate flat arrays.
+// The caller owns both banks and loads/stores at the existing PE width.
+void CG_Transform_Banks(
+    uint64_t buf_A[RING_DIM], uint64_t buf_B[RING_DIM],
+    uint64_t modulus, uint64_t S, uint64_t M_barrett,
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
 );
 
 // =========================================================

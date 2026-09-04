@@ -36,6 +36,117 @@
 
 <!-- 新会话记录追加在下方 -->
 
+### [2026-09-04] 报告中文化，澄清 AUTO 与 HKS 的边界
+
+**Agent**: Codex。用户要求报告使用中文，并询问 AUTO 在 HKS 中的作用。
+
+**执行结果**:
+- 将宽接口优化报告正文完整改为中文，保留原始数值、命令、哈希及验收限制；
+  工具生成的 `.rpt` / 日志保留原文，不覆盖或翻译原始证据。
+- 报告新增 AUTO 边界说明：它是通用 Top 的独立自同构指令，不是 OP_HKS_DIGIT
+  的 ModUp 步骤。本仓库 EvalAutomorphism 先 KeySwitchInPlace 再对两个分量自同构；
+  当前融合卸载只接管 EvalKeySwitchPrecomputeCore 中的 digit 预处理。
+- 核对 HksDigitOnly：融合模式禁用旧单算子卸载，AUTO 留在 CPU；但通用 Top 中
+  仍有 AUTO 电路，因此它参与整核静态时序检查，不参与本次两个融合 digit 的执行周期。
+- 记录用户偏好：本项目报告正文使用中文，代码标识和工具原始证据保留原文。
+
+**验证与范围**: 核对 Top 指令分发、OpenFHE 旋转/密钥生成、融合入口及 FpgaManager
+的实际代码；仅修改报告和工程记录，没有改动 RTL/算术逻辑、删除 AUTO 或增加 false path，
+未重跑硬件测试，前轮测试结果仍对应原设计。按 mentor 分清算法和实现层次；
+按 mindmap-learning 只维护工程记录，不代写个人学习笔记，不同步 OB，不提交 Git。
+
+### [2026-09-04] 保持并行度，拓宽 AXI 与优化整塔拷贝（完成；6ns时序未闭合）
+
+**Agent**: Codex。用户明确要求「并行度先不提高，拓宽接口，优化拷贝塔，并软硬件验证」，
+并补充「记得写日志」。沿用 ai-cowork 工程记录；按 mindmap-learning 边界保留学习路线、
+个人笔记和收件箱，不同步 OB，不新增 Git 提交或推送。
+
+**实现与不变量**:
+- PE_PARALLEL=4、NTT 四路蝶形和 BConv 3×5 阵列不变，仍只有一个运行时双向 CG 引擎。
+- 加载时广播原 EVAL 到旁路结果；BConv 输出直接进入 CG A/B bank，变换后直接写目标。
+  去掉两个 digit 的全部 17 次独立 Copy_HKS_Tower，以及 flat/flat_out 中间数组。
+  保留 NTT 双缓冲和 BConv 多行/多列缓存；未增加算术并行度、未加入跨 digit DATAFLOW。
+- 三个 AXI 数据端口实际从 64 位变成 256 位。Top uint64 ABI 和数据排列不变；
+  设备地址要求 32 字节对齐，元数据偏移仍由 AXI adapter 处理。
+
+**试验与弯路**:
+1. r1：四字并行循环加 32 字节对齐，生成端口仅 64/128/64；OpenFHE RTL 40960 residues
+   通过，但不接受为拓宽完成。r2 改连续循环、禁止展平，仍为 64/128/64。
+2. r3：将运行时 limb 循环与固定 4096 元素传输分离到非内联单塔 helper。
+   HLS 才推导出 256/256/256；不能仅凭 max_widen_bitwidth=256 宣称拓宽。
+3. 移走内部适配数组后，Vitis 把四个 CG MultMod 提升到 Top，并与 OP_MULT 共享。
+   原审计只数 CG 子模块，误报 0；已增加四路外部接口与顶层物理池双重检查。
+   整机实际 20 个 MultMod，而非算术消失或并行度增加。
+4. OOC实现正常退出不代表时序通过：日志明确6ns失败。首次布线后诊断脚本误用
+   Vivado不支持的redirect，已保留失败日志，改为直接输出诊断并完整重跑成功；
+   同时去掉已弃用的report_timing -nets，未修改数据通路。
+
+**已完成验证**:
+- 最终 native：Top 18/18、HKS 22 valid cases、非法参数与 canary；新增非零塔偏移
+  ADD/SUB/MULT/AUTO 宽端口回归；旧 CG 包装器 11/11。
+- 最终 OpenFHE Release / ASan（补跑detect_leaks=1）：各470checks、1523712residues一致。
+- Vitis全量C-sim 0 errors；扩展RTL smoke 35次调用、4个融合case、0 failures/PASS，
+  覆盖alpha=1/2/3、start=1、方向切换、60bit模数、非法调用及ADD/SUB/MULT/AUTO端口。
+- 最终性能 RTL：真实 OpenFHE 同一 fixture，INIT+两个 digit，40960 residues 精确一致，PASS。
+- 结构：一个 CG 引擎、4 个共享模乘、总计20个 MultMod，三端口256位，无 Copy_HKS_Tower。
+- 性能RTL、smoke与P&R输入的三个syn/verilog目录逐文件完全一致；两个蝶形循环均II=1。
+- 同配置 HLS：BRAM 704→708、DSP 1392→1160、FF 79656→78528、LUT 175140→169991，
+  URAM96不变。NTT适配/缓冲 -32 BRAM、三 AXI adapter 合计 +36 BRAM，净 +4。
+- 两 digit 周期 268170→139734（-47.8935%），按6ns为1.609020→0.838404ms。
+  CPU双线程旧空闲环境中位0.4631475ms，CPU/RTL估计比0.5524，仍不宣称CPU加速。
+- 冷启动 INIT 196759→295063周期（1.180554→1.770378ms），退化必须单列；暖态排除INIT。
+
+**最终物理验证与限制**:
+- Vivado OOC P&R已完成：239992/239992条可布线网络全部布通，路由错误0。
+  物理资源LUT107471、FF64062、DSP1160、BRAM359.5个36K等效块（719个18K）、URAM96。
+  此处是Vivado口径，不能与旧HLS资源直接相减；未做旧版对照P&R。
+- 默认6ns：WNS -0.029ns、TNS -0.029ns、1个失败端点；补0.75ns用户setup裕量后：
+  WNS -0.779ns、TNS -1574.646ns、6083个失败端点，明确不通过。
+- 同一布线检查点只改时钟约束为7ns并保留0.75ns裕量：WNS +0.221ns、TNS 0、
+  失败端点0；三种情景hold最差均+0.019ns。源码/HLS的6ns目标未修改。
+- 最差路径：poly_buffer_1 BRAM→AUTO选bank/模取负→result_buffer BRAM；
+  数据路径5.681ns，其中布线4.137ns（72.821%），不是AXI端口本身的关键路径。
+  初始路由有level5/6局部拥塞，最后布通；无旧版物理对照，不能排除拓宽对布局的间接影响。
+- 7ns内部时序情景下暖态两digit估计0.978138ms，INIT 2.065441ms；仍慢于CPU0.4631475ms。
+  原0.838404ms仅是未达成6ns下的同频换算，不能当实际工作频率下的性能。
+- 580个输入、526个输出缺外部延迟，ap_clk缺平台HD.CLK_SRC；内部未约束端点0。
+  DRC保留200条DSP流水寄存器告警和1条无可布线负载告警；无DRC错误。
+  没有板卡/XRT运行/真实HBM/PCIe/平台shell链接，也未做布线后门级仿真。
+- HLS估计5.250ns不等于P&R达频；RTL功能通过+独立静态时序检查不等于整个平台签核。
+  所有时间估计不含主机打包、驱动、真实DMA，仅两digit ModUp。
+- 历史原始报告未覆盖；源码与本轮报告仍未提交。
+
+**主要文件与证据**: `src/fpga_backend/src/{top,load,cg_ntt}.cpp`、对应头文件、
+`testbench/hks_digit_tb.cpp`、`hks_digit.tcl`、`hks_impl.tcl`、结构/性能审计脚本；
+复现与报告：`docs/reports/hls/hks_wide256_direct_20260904/README.md`。
+
+### [2026-09-04] 先保存检查点，再统一 NTT/INTT 引擎（完成）
+
+**Agent**: Codex。按用户明确请求实施；ai-cowork / mindmap-learning 仅用于维护工程记录，
+保留学习路线和个人笔记。未推送、未重置已有改动。
+
+**检查点**: `c073b11`。重跑原 Top/HKS、OpenFHE、全库 ASan 通过后提交，包含原暂存优化。
+WSL 未配置身份，使用已存在的 Windows Git 身份作本次提交，不修改全局配置。
+原 `问题回答.md` 尾部空行原样保留；正确性范围是功能模型，不是硬件验收。
+
+**实现**: 独立 OP_NTT / OP_INTT 与 OP_HKS_DIGIT 统一到同一调度循环和工作缓冲。
+运行时方向选择地址、twiddle、蝶形前后处理；每路仅一个 MultMod 调用。
+保留原接口与测试模板包装；三份冗余变换实例移除，新增每补集塔一次片上拷贝。
+
+**验收**:
+- 原生 Top 18/18、HKS 22 cases、CG 11/11；Vitis C-sim 0 errors。
+- OpenFHE/全库 ASan：470 checks、1523712 residues 精确一致；包括多 limb、非零偏移、
+  独立 NTT/INTT 在每个融合 digit 后交错调用与 context cache 保持。
+- 生成 RTL 的结构审计确认一个 CG 引擎、4 个共享模乘；旧多引擎报告被反例检查拒绝。
+- Verilog/xsim smoke：24 transactions、3 valid fused cases、0 failures，C/RTL PASS。
+- 同配置综合：BRAM 896→704、DSP 2088→1392、FF 106709→79656、
+  LUT 278242→175140、URAM 96→96；蝶形循环 II=1。
+
+**限制**: 估计 slack -0.291ns，时序未闭合；RTL smoke 不等于完整 OpenFHE RTL 仿真。
+无 XRT 运行/P&R/上板/加速比。BConv 870 DSP、两份局部缓冲和双方向 twiddle 仍保留。
+新共享版暂未提交，供用户审阅；证据与复现见
+`docs/reports/hls/hks_shared_transform_20260904/README.md`。
+
 ### [2026-09-04] 复合算子接入 OpenFHE 并验证（完成）
 
 **Agent**: Codex。按用户「接入openfhe并验证」实施；保留原暂存区与学习路线，不写个人学习笔记。

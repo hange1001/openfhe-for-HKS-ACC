@@ -1,0 +1,107 @@
+{
+  "scope": "two ModUp digits; cached context; RTL includes testbench AXI, no PCIe/driver/host packing",
+  "hardware_performance_measured": false,
+  "clock_assumption_met_by_timing_signoff": false,
+  "interface_width_change_allowed": true,
+  "checkpoint": {
+    "resources": {
+      "BRAM_18K": 704,
+      "DSP": 1392,
+      "FF": 79656,
+      "LUT": 175140,
+      "URAM": 96
+    },
+    "part": "xcu55c-fsvh2892-2L-e",
+    "clock_ns": 6.0,
+    "uncertainty_ns": 0.75,
+    "estimated_period_ns": 5.541,
+    "budget_slack_ns": -0.291,
+    "axi_data_width_bits": {
+      "GMEM0": 64,
+      "GMEM1": 64,
+      "GMEM2": 64
+    },
+    "transactions": [
+      {
+        "opcode": 0,
+        "label": "INIT",
+        "cycles": 196759
+      },
+      {
+        "opcode": 8,
+        "alpha": 2,
+        "start": 0,
+        "cycles": 133827
+      },
+      {
+        "opcode": 8,
+        "alpha": 1,
+        "start": 2,
+        "cycles": 134343
+      }
+    ],
+    "two_digit_cycles": 268170,
+    "two_digit_nominal_us": 1609.02,
+    "init_nominal_us": 1180.554,
+    "cosim": "PASS"
+  },
+  "shared": {
+    "resources": {
+      "BRAM_18K": 708,
+      "DSP": 1160,
+      "FF": 78528,
+      "LUT": 169991,
+      "URAM": 96
+    },
+    "part": "xcu55c-fsvh2892-2L-e",
+    "clock_ns": 6.0,
+    "uncertainty_ns": 0.75,
+    "estimated_period_ns": 5.25,
+    "budget_slack_ns": 0.0,
+    "axi_data_width_bits": {
+      "GMEM0": 256,
+      "GMEM1": 256,
+      "GMEM2": 256
+    },
+    "transactions": [
+      {
+        "opcode": 0,
+        "label": "INIT",
+        "cycles": 295063
+      },
+      {
+        "opcode": 8,
+        "alpha": 2,
+        "start": 0,
+        "cycles": 70131
+      },
+      {
+        "opcode": 8,
+        "alpha": 1,
+        "start": 2,
+        "cycles": 69603
+      }
+    ],
+    "two_digit_cycles": 139734,
+    "two_digit_nominal_us": 838.404,
+    "init_nominal_us": 1770.378,
+    "cosim": "PASS"
+  },
+  "resource_delta_shared_minus_checkpoint": {
+    "BRAM_18K": 4,
+    "DSP": -232,
+    "FF": -1128,
+    "LUT": -5149,
+    "URAM": 0
+  },
+  "shared_latency_increase_percent": -47.89350039154267,
+  "cpu_comparison": [
+    {
+      "omp_max_threads": 2,
+      "cpu_median_us": 463.1475,
+      "cpu_p95_us": 773.967,
+      "idealized_cpu_over_checkpoint_rtl_ratio": 0.2878444643323265,
+      "idealized_cpu_over_shared_rtl_ratio": 0.5524156611848225
+    }
+  ]
+}

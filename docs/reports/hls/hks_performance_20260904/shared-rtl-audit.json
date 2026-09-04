@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "scope": "Vitis generated RTL structural audit only",
+  "chain_instances": {
+    "Top_Execute_Transform_Operation": 1,
+    "Top_Execute_Transform": 1,
+    "Top_CG_Transform_Kernel": 1
+  },
+  "core_shared_MultMod_instances": 4,
+  "top_resources": {
+    "BRAM_18K": 704,
+    "DSP": 1392,
+    "FF": 79656,
+    "LUT": 175140,
+    "URAM": 96
+  },
+  "transform_including_adapters_resources": {
+    "BRAM_18K": 64,
+    "DSP": 232,
+    "FF": 19419,
+    "LUT": 39505,
+    "URAM": 0
+  },
+  "core_resources": {
+    "BRAM_18K": 32,
+    "DSP": 232,
+    "FF": 17076,
+    "LUT": 35955,
+    "URAM": 0
+  },
+  "core_latency_cycles": "8523",
+  "transform_including_adapters_latency_cycles": "10068",
+  "top_latency_cycles": "undef",
+  "target_period_ns": 6.0,
+  "uncertainty_ns": 0.75,
+  "estimated_period_ns": 5.541,
+  "estimated_budget_slack_ns": -0.291
+}

@@ -149,61 +149,59 @@ static void Load_Auto_Meta(const uint64_t *mem_in2, uint32_t &k, uint32_t &kinv)
 }
 
 // =========================================================================
-// 提取 NTT/INTT 核心循环（含 flatten/CG_NTT_Kernel/reshape），
-// 消除 Top FSM 对 poly_buffer_1 BRAM 的直接访问，降低顶层 BRAM Port MUX。
+// One runtime call site and fixed bank pair: no direction/caller specialization.
+// Only two source/destination choices, local to the load/store boundary.
 // =========================================================================
-static void Execute_NTT(
-    uint64_t poly_buffer[MAX_LIMBS][SQRT][SQRT],
-    int num_active_limbs,
-    int mod_index
-) {
+static void Execute_Transform(int limb, bool is_ntt, bool complement,
+                              int source_limb, bool store_coeff) {
     #pragma HLS INLINE off
-
-    NTT_CG_LIMB_LOOP:
-    for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=5 avg=3
-        uint64_t flat[RING_DIM];
-        uint64_t flat_out[RING_DIM];
-        #pragma HLS ARRAY_PARTITION variable=flat     cyclic factor=PE_PARALLEL dim=1
-        #pragma HLS ARRAY_PARTITION variable=flat_out cyclic factor=PE_PARALLEL dim=1
-        flatten_2d_to_1d(poly_buffer[l], flat);
-        CG_NTT_Kernel<true>(flat, flat_out, MODULUS[l], S[l], M[l], NTTTwiddleFactor[l]);
-        reshape_1d_to_2d(flat_out, poly_buffer[l]);
-    }
-}
-
-static void Execute_INTT(
-    uint64_t poly_buffer[MAX_LIMBS][SQRT][SQRT],
-    int num_active_limbs,
-    int mod_index
-) {
-    #pragma HLS INLINE off
-
-    INTT_CG_LIMB_LOOP:
-    for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=5 avg=3
-        uint64_t flat[RING_DIM];
-        uint64_t flat_out[RING_DIM];
-        #pragma HLS ARRAY_PARTITION variable=flat     cyclic factor=PE_PARALLEL dim=1
-        #pragma HLS ARRAY_PARTITION variable=flat_out cyclic factor=PE_PARALLEL dim=1
-        flatten_2d_to_1d(poly_buffer[l], flat);
-        CG_NTT_Kernel<false>(flat, flat_out, MODULUS[l], S[l], M[l], INTTTwiddleFactor[l]);
-        reshape_1d_to_2d(flat_out, poly_buffer[l]);
-    }
-}
-
-
-// Copy between existing scratch buffers without another AXI transfer.
-static void Copy_HKS_Tower(
-    const uint64_t src[MAX_LIMBS][SQRT][SQRT],
-    uint64_t dst[MAX_LIMBS][SQRT][SQRT], int src_limb, int dst_limb
-) {
-    #pragma HLS INLINE off
-    HKS_COPY_ROW: for (int i = 0; i < SQRT; ++i) {
-        HKS_COPY_COL: for (int j = 0; j < SQRT; ++j) {
-            #pragma HLS PIPELINE II=1
-            dst[dst_limb][i][j] = src[src_limb][i][j];
+    uint64_t bank_a[RING_DIM], bank_b[RING_DIM];
+    #pragma HLS ARRAY_PARTITION variable=bank_a cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS ARRAY_PARTITION variable=bank_b cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS BIND_STORAGE variable=bank_a type=ram_t2p impl=bram
+    #pragma HLS BIND_STORAGE variable=bank_b type=ram_t2p impl=bram
+    TRANSFORM_LOAD: for (int i = 0; i < RING_DIM / PE_PARALLEL; ++i) {
+        #pragma HLS PIPELINE II=1
+        for (int lane = 0; lane < PE_PARALLEL; ++lane) {
+            #pragma HLS UNROLL
+            const int k = i * PE_PARALLEL + lane;
+            bank_a[k] = complement ? poly_buffer_1[source_limb][k / SQRT][k % SQRT]
+                                   : poly_buffer_2[source_limb][k / SQRT][k % SQRT];
         }
+    }
+    CG_Transform_Banks(bank_a, bank_b, MODULUS[limb], S[limb], M[limb],
+                       NTTTwiddleFactor[limb], INTTTwiddleFactor[limb], is_ntt);
+    TRANSFORM_STORE: for (int i = 0; i < RING_DIM / PE_PARALLEL; ++i) {
+        #pragma HLS PIPELINE II=1
+        for (int lane = 0; lane < PE_PARALLEL; ++lane) {
+            #pragma HLS UNROLL
+            const int k = i * PE_PARALLEL + lane;
+            const uint64_t value = (STAGE & 1) ? bank_b[k] : bank_a[k];
+            if (store_coeff) poly_buffer_2[limb][k / SQRT][k % SQRT] = value;
+            else result_buffer[limb][k / SQRT][k % SQRT] = value;
+        }
+    }
+}
+
+
+// Preserve EVAL bypass values during the original AXI load, not in another pass.
+static void Load_Transform_Tower(const uint64_t* input, int src, int dst,
+                                 bool preserve_eval) {
+    #pragma HLS INLINE off
+    LOAD_TRANSFORM_WORD: for (int k = 0; k < RING_DIM; ++k) {
+        #pragma HLS PIPELINE II=1
+        #pragma HLS UNROLL factor=PE_PARALLEL
+        const uint64_t value = input[src * RING_DIM + k];
+        poly_buffer_2[dst][k / SQRT][k % SQRT] = value;
+        if (preserve_eval) result_buffer[dst][k / SQRT][k % SQRT] = value;
+    }
+}
+
+static void Load_Transform_Input(const uint64_t* input, int count, int start,
+                                  bool preserve_eval) {
+    #pragma HLS INLINE off
+    LOAD_TRANSFORM_LIMB: for (int l = 0; l < count; ++l) {
+        Load_Transform_Tower(input, l, start + l, preserve_eval);
     }
 }
 
@@ -265,17 +263,27 @@ static void Prepare_HKS_BConv_Input(
     }
 }
 
-static void Execute_HKS_Digit(
+static void Execute_Transform_Operation(
     const uint64_t* mem_in1, const uint64_t* mem_in2, uint64_t* mem_out,
-    int alpha, int digit_start
+    uint8_t opcode, int alpha, int digit_start
 ) {
     #pragma HLS INLINE off
+#ifdef HKS_DISABLE_FUSED_OPCODE
+    const bool fused = false;
+#else
+    const bool fused = opcode == OP_HKS_DIGIT;
+#endif
     // Reject before any AXI access or state mutation; avoid signed overflow.
-    if (alpha < 1 || alpha > LIMB_Q || digit_start < 0 ||
-        digit_start > LIMB_Q - alpha) return;
-    HKS_VALIDATE_MODULI: for (int l = 0; l < MAX_OUT_COLS; ++l) {
-        if (MODULUS[l] <= 1 || !(MODULUS[l] & 1) ||
-            MODULUS[l] >= (uint64_t(1) << 62)) return;
+    if (fused) {
+        if (alpha < 1 || alpha > LIMB_Q || digit_start < 0 ||
+            digit_start > LIMB_Q - alpha) return;
+        HKS_VALIDATE_MODULI: for (int l = 0; l < MAX_OUT_COLS; ++l) {
+            if (MODULUS[l] <= 1 || !(MODULUS[l] & 1) ||
+                MODULUS[l] >= (uint64_t(1) << 62)) return;
+        }
+    } else if (alpha < 1 || alpha > MAX_LIMBS || digit_start < 0 ||
+               digit_start > MAX_LIMBS - alpha) {
+        return;
     }
 
     uint64_t weights[LIMB_Q][MAX_OUT_COLS];
@@ -287,23 +295,36 @@ static void Execute_HKS_Digit(
     #pragma HLS ARRAY_PARTITION variable=out_s complete dim=0
     #pragma HLS ARRAY_PARTITION variable=out_m complete dim=0
 
-    Load_HKS_Params(mem_in2, alpha, digit_start, weights, inv, out_mod, out_s, out_m);
-    Load(mem_in1, poly_buffer_2, alpha, digit_start);
-    HKS_BYPASS: for (int q = 0; q < alpha; ++q) {
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=3
-        Copy_HKS_Tower(poly_buffer_2, result_buffer, digit_start + q, digit_start + q);
+    if (fused)
+        Load_HKS_Params(mem_in2, alpha, digit_start, weights, inv, out_mod, out_s, out_m);
+    Load_Transform_Input(mem_in1, alpha, digit_start, fused);
+
+    // Fused schedule: alpha inverse transforms, BConv, (5-alpha) forward
+    // transforms. No overlap: every step reuses the SAME transform hardware.
+    const int steps = fused ? MAX_OUT_COLS : alpha;
+    TRANSFORM_STEPS: for (int step = 0; step < steps; ++step) {
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=8 avg=5
+        #pragma HLS LOOP_FLATTEN off
+        const bool complement = fused && step >= alpha;
+        const bool is_ntt = fused ? complement : opcode == OP_NTT;
+        int limb = digit_start + step;
+        int source_limb = limb;
+        if (complement) {
+            if (step == alpha) {
+                Prepare_HKS_BConv_Input(poly_buffer_2, poly_buffer_1, inv, alpha, digit_start);
+                Compute_BConv_Systolic(poly_buffer_1, weights, out_mod, out_s, out_m,
+                                      MAX_OUT_COLS - alpha);
+            }
+            const int p = step - alpha;
+            limb = p < digit_start ? p : p + alpha;
+            source_limb = LIMB_Q + p;
+        }
+        Execute_Transform(limb, is_ntt, complement, source_limb, fused && !complement);
     }
-    Execute_INTT(poly_buffer_2, alpha, digit_start);
-    Prepare_HKS_BConv_Input(poly_buffer_2, poly_buffer_1, inv, alpha, digit_start);
-    const int count = MAX_OUT_COLS - alpha;
-    Compute_BConv_Systolic(poly_buffer_1, weights, out_mod, out_s, out_m, count);
-    HKS_COMPLEMENT_NTT: for (int p = 0; p < count; ++p) {
-        #pragma HLS LOOP_TRIPCOUNT min=2 max=4
-        const int global_limb = p < digit_start ? p : p + alpha;
-        Copy_HKS_Tower(poly_buffer_1, result_buffer, LIMB_Q + p, global_limb);
-        Execute_NTT(result_buffer, 1, global_limb);
-    }
-    Store(result_buffer, mem_out, MAX_OUT_COLS, 0);
+    if (fused)
+        Store(result_buffer, mem_out, MAX_OUT_COLS, 0);
+    else
+        Store(result_buffer, mem_out, alpha, digit_start);
 }
 
 // =========================================================================
@@ -317,9 +338,9 @@ void Top(
     const int num_active_limbs,
     const int mod_index
 ){
-    #pragma HLS INTERFACE m_axi port=mem_in1  offset=slave bundle=gmem0 depth=196617
-    #pragma HLS INTERFACE m_axi port=mem_in2  offset=slave bundle=gmem1 depth=196614
-    #pragma HLS INTERFACE m_axi port=mem_out  offset=slave bundle=gmem2 depth=32768
+    #pragma HLS INTERFACE m_axi port=mem_in1  offset=slave bundle=gmem0 depth=196617 max_widen_bitwidth=256
+    #pragma HLS INTERFACE m_axi port=mem_in2  offset=slave bundle=gmem1 depth=196614 max_widen_bitwidth=256
+    #pragma HLS INTERFACE m_axi port=mem_out  offset=slave bundle=gmem2 depth=32768 max_widen_bitwidth=256
 
     #pragma HLS INTERFACE s_axilite port=mem_in1          bundle=control
     #pragma HLS INTERFACE s_axilite port=mem_in2          bundle=control
@@ -347,9 +368,12 @@ void Top(
     switch(opcode) {
 #ifndef HKS_DISABLE_FUSED_OPCODE
         case OP_HKS_DIGIT:
-            Execute_HKS_Digit(mem_in1, mem_in2, mem_out, num_active_limbs, mod_index);
-            break;
 #endif
+        case OP_NTT:
+        case OP_INTT:
+            Execute_Transform_Operation(mem_in1, mem_in2, mem_out, opcode,
+                                        num_active_limbs, mod_index);
+            break;
 
         case OP_INIT: {
             std::cout << "[FPGA] Initializing Modulus Parameters..." << std::endl;
@@ -377,20 +401,6 @@ void Top(
             Compute_Mult(poly_buffer_1, poly_buffer_2, result_buffer, MODULUS, S, M, num_active_limbs, mod_index);
             Store(result_buffer, mem_out, num_active_limbs, mod_index);
             break;
-
-        case OP_NTT: {
-            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-            Execute_NTT(poly_buffer_1, num_active_limbs, mod_index);
-            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
-            break;
-        }
-
-        case OP_INTT: {
-            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-            Execute_INTT(poly_buffer_1, num_active_limbs, mod_index);
-            Store(poly_buffer_1, mem_out, num_active_limbs, mod_index);
-            break;
-        }
 
         case OP_BCONV: {
             int sizeP = num_active_limbs;

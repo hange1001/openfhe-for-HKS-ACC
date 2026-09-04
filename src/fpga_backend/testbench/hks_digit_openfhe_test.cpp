@@ -3,9 +3,15 @@
 #include "keyswitch/hks_strategy.h"
 #include <algorithm>
 #include <cmath>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 #include <stdexcept>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // Keep HLS macros/types out of the OpenFHE translation unit.
 extern "C" void Top(const uint64_t*, const uint64_t*, uint64_t*, uint8_t, int, int);
@@ -64,6 +70,103 @@ DCRTPoly Input(const CryptoContext<DCRTPoly>& cc, int pattern) {
 auto Precompute(const CryptoContext<DCRTPoly>& cc, const DCRTPoly& c) {
     return cc->GetScheme()->EvalKeySwitchPrecomputeCore(c, cc->GetCryptoParameters());
 }
+
+struct CapturedCall {
+    uint8_t op;
+    int count, start;
+    std::vector<uint64_t> in1, in2, out;
+};
+std::vector<CapturedCall> captured;
+void CaptureForRTL(const uint64_t* a, const uint64_t* b, uint64_t* c,
+                   uint8_t op, int count, int start) {
+    Require(op == 0 || op == 8, "fixture only supports INIT and fused digits");
+    const size_t aSize = op == 0 ? 196617 : size_t(count) * 4096;
+    const size_t bSize = op == 0 ? 196614 : 18;
+    const size_t cSize = op == 0 ? 0 : 5 * 4096;
+    CapturedCall call{op, count, start, {a, a + aSize}, {b, b + bSize}, {}};
+    Top(a, b, c, op, count, start);
+    if (cSize) call.out.assign(c, c + cSize);
+    captured.push_back(std::move(call));
+}
+
+int BenchmarkAndExport(const std::string& fixturePath, const std::string& metricsPath) {
+    ConfigureHKSDigitBackend(HKSDigitBackend::Off);
+    SetHKSStrategy(HKSStrategy::DC);
+    const auto cc = Context();
+    const auto cp = std::dynamic_pointer_cast<CryptoParametersCKKSRNS>(cc->GetCryptoParameters());
+    Require(cc->GetElementParams()->GetParams().size() == 3 &&
+            cp->GetParamsP()->GetParams().size() == 2 && cp->GetNumPerPartQ() == 2,
+            "benchmark shape N4096/Q3/P2/digits[2,1]");
+    const auto input = Input(cc, 3);
+    const auto golden = Precompute(cc, input);
+    constexpr int warmups = 20, repetitions = 500;
+    volatile uint64_t checksum = 0;
+    auto invoke = [&]() {
+        const auto result = Precompute(cc, input);
+        checksum = checksum ^ (*result)[0].GetElementAtIndex(0)[0].ConvertToInt();
+        // result destruction is inside the measured call scope.
+    };
+    for (int i = 0; i < warmups; ++i) invoke();
+    std::vector<double> samples;
+    for (int i = 0; i < repetitions; ++i) {
+        const auto begin = std::chrono::steady_clock::now();
+        invoke();
+        samples.push_back(std::chrono::duration<double, std::micro>(
+            std::chrono::steady_clock::now() - begin).count());
+    }
+    auto sorted = samples;
+    std::sort(sorted.begin(), sorted.end());
+    const double median = (sorted[249] + sorted[250]) / 2;
+    int threads = 1;
+#ifdef _OPENMP
+    threads = omp_get_max_threads();
+#endif
+
+    captured.clear();
+    ConfigureHKSDigitBackend(HKSDigitBackend::CModel, CaptureForRTL);
+    ResetHKSDigitStats();
+    EqualDigits(*golden, *Precompute(cc, input), "benchmark C-model vs CPU");
+    Require(captured.size() == 3 && captured[0].op == 0 &&
+            captured[1].count == 2 && captured[1].start == 0 &&
+            captured[2].count == 1 && captured[2].start == 2, "INIT and two fixture digits");
+    // Store the CPU oracle explicitly, not just the C-model output.
+    for (size_t d = 0; d < 2; ++d)
+        for (size_t t = 0; t < 5; ++t)
+            for (size_t i = 0; i < 4096; ++i)
+                captured[d + 1].out[t * 4096 + i] = (*golden)[d].GetElementAtIndex(t)[i].ConvertToInt();
+    std::ofstream fixture(fixturePath);
+    if (!fixture) throw std::runtime_error("cannot create RTL fixture");
+    fixture << "HKS_OPENFHE_RTL_V1 " << captured.size() << '\n';
+    for (const auto& call : captured) {
+        fixture << int(call.op) << ' ' << call.count << ' ' << call.start << ' '
+                << call.in1.size() << ' ' << call.in2.size() << ' ' << call.out.size() << '\n';
+        for (const auto* values : {&call.in1, &call.in2, &call.out}) {
+            for (auto value : *values) fixture << value << '\n';
+        }
+    }
+    fixture.close();
+    if (!fixture) throw std::runtime_error("RTL fixture write failed");
+    std::ofstream metrics(metricsPath);
+    if (!metrics) throw std::runtime_error("cannot create CPU metrics");
+    metrics << std::setprecision(10)
+            << "{\n  \"scope\": \"CPU warm ModUp, two digits, allocation and destruction included\",\n"
+            << "  \"ring_dim\": 4096, \"Q\": 3, \"P\": 2, \"digits\": [2, 1],\n"
+            << "  \"warmups\": " << warmups << ", \"repetitions\": " << repetitions
+            << ", \"omp_max_threads\": " << threads << ",\n"
+            << "  \"min_us\": " << sorted.front() << ", \"median_us\": " << median
+            << ", \"p95_us\": " << sorted[474] << ", \"max_us\": " << sorted.back() << ",\n"
+            << "  \"samples_us\": [";
+    for (size_t i = 0; i < samples.size(); ++i) metrics << (i ? ", " : "") << samples[i];
+    metrics << "]\n}\n";
+    metrics.close();
+    if (!metrics) throw std::runtime_error("CPU metrics write failed");
+    ConfigureHKSDigitBackend(HKSDigitBackend::Off);
+    std::cout << "[CPU BENCH] OMP=" << threads << " warmups=" << warmups << " n=" << repetitions
+              << " min_us=" << sorted.front() << " median_us=" << median
+              << " p95_us=" << sorted[474] << " checksum=" << checksum << '\n'
+              << "[FIXTURE PASS] INIT + two digits exported; CPU oracle and C-model agree exactly.\n";
+    return 0;
+}
 void CheckFallback(const CryptoContext<DCRTPoly>& cc, const DCRTPoly& c, HKSStrategy strategy,
                    const std::string& label) {
     SetHKSStrategy(strategy);
@@ -89,7 +192,10 @@ void FailSecondDigit(const uint64_t* a, const uint64_t* b, uint64_t* c, uint8_t 
 std::shared_ptr<DCRTPoly::Params> transformBasis;
 void ProbeTransforms(const uint64_t* a, const uint64_t* b, uint64_t* c, uint8_t op, int n, int start) {
     Top(a, b, c, op, n, start);
-    if (op != 0) return;
+    // Clobber shared scratch with standalone transforms after INIT AND every
+    // completed fused digit. The next digit must not depend on stale workspace
+    // or direction state, and these calls must not change the context cache.
+    if (op != 0 && op != 8) return;
     std::mt19937_64 rng(91);
     for (size_t t = 0; t < 5; ++t) {
         NativePoly ref(transformBasis->GetParams()[t], Format::COEFFICIENT, true);
@@ -104,7 +210,30 @@ void ProbeTransforms(const uint64_t* a, const uint64_t* b, uint64_t* c, uint8_t 
         Require(coeff == inverse, "OpenFHE inverse normalization, tower=" + std::to_string(t));
         compared += 2 * 4096;
     }
-    std::cout << "[PASS] NTT and INTT vs OpenFHE independently, all five moduli\n";
+    const int ranges[][2] = {{0, 5}, {1, 3}, {4, 1}};
+    for (const auto& range : ranges) {
+        const int first = range[0], count = range[1];
+        const size_t words = size_t(count) * 4096;
+        std::vector<uint64_t> coeff(words), eval(words), actual(words), inverse(words);
+        for (int t = 0; t < count; ++t) {
+            NativePoly ref(transformBasis->GetParams()[first + t], Format::COEFFICIENT, true);
+            const auto q = ref.GetModulus().ConvertToInt();
+            for (size_t i = 0; i < 4096; ++i) {
+                coeff[t * 4096 + i] = rng() % q;
+                ref[i] = coeff[t * 4096 + i];
+            }
+            ref.SetFormat(Format::EVALUATION);
+            for (size_t i = 0; i < 4096; ++i) eval[t * 4096 + i] = ref[i].ConvertToInt();
+        }
+        // Inverse first, then forward: check both transition directions.
+        Top(eval.data(), eval.data(), inverse.data(), 5, count, first);
+        Top(coeff.data(), coeff.data(), actual.data(), 4, count, first);
+        Require(coeff == inverse, "batched inverse with nonzero offsets");
+        Require(eval == actual, "batched forward with nonzero offsets");
+        compared += 2 * words;
+    }
+    std::cout << "[PASS] independent/batched NTT and INTT vs OpenFHE, interleaved after opcode "
+              << int(op) << '\n';
 }
 void CheckDecrypt(const CryptoContext<DCRTPoly>& cc, const PrivateKey<DCRTPoly>& key,
                   const Ciphertext<DCRTPoly>& c, const std::vector<double>& expected, const std::string& label) {
@@ -122,8 +251,11 @@ void CheckDecrypt(const CryptoContext<DCRTPoly>& cc, const PrivateKey<DCRTPoly>&
 }
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string(argv[1]) == "--benchmark-export")
+            return BenchmarkAndExport(argv[2], argv[3]);
+        if (argc != 1) throw std::invalid_argument("usage: hks-digit-openfhe-test [--benchmark-export fixture.txt cpu.json]");
         ConfigureHKSDigitBackend(HKSDigitBackend::Off);
         SetHKSStrategy(HKSStrategy::DC);
         const auto cc = Context();

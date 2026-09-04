@@ -8,7 +8,7 @@
 //   ① 每层 PE 永远读取相距 N/2 的两个数：Read(i) 和 Read(i + N/2)
 //   ② 蝶形运算完成后，按"完美洗牌"规则写回：Write(2i) 和 Write(2i+1)
 //   ③ 由于上层已经洗过牌，下一层 PE 依然只需读固定位置的数
-//   → MUX/交叉开关彻底消灭，变为固定物理硬连线
+//   → 固定几何简化寻址；运行时方向与 bank 选择仍有 MUX，并非无选择网络
 //
 // 存储架构：
 //   - buf_A[RING_DIM] / buf_B[RING_DIM]：1D 乒乓缓冲
@@ -87,44 +87,25 @@ static void CG_PE(
     const bool &is_ntt
 ) {
     #pragma HLS INLINE
-    uint64_t temp, temp1;
-    uint64_t input1_temp = input1;
-    uint64_t input2_temp = input2;
-    uint64_t res1_temp, res2_temp;
+    uint64_t inv_sum = input1, inv_diff = input1;
+    AddMod(inv_sum, input2, modulus, true);
+    AddMod(inv_diff, input2, modulus, false);
 
-    if (is_ntt) {
-        MultMod(input2_temp, twiddle_factor, modulus, M, S, temp);
+    // Exactly ONE MultMod call per lane for both directions. Selecting its
+    // operand before the call avoids two direction-specialized multipliers.
+    uint64_t mult_in = (is_ntt ? input2 : inv_diff) + 0;
+    #pragma HLS BIND_OP variable=mult_in op=add impl=fabric latency=1
+    uint64_t product;
+    MultMod(mult_in, twiddle_factor, modulus, M, S, product);
 
-        AddMod(input1_temp, temp, modulus, true);
-        res1_temp = input1_temp;
-
-        input1_temp = input1;
-        AddMod(input1_temp, temp, modulus, false);
-        res2_temp = input1_temp;
-
-        res1 = res1_temp;
-        res2 = res2_temp;
-    } else {
-        AddMod(input1_temp, input2_temp, modulus, true);
-        temp1 = input1_temp;
-
-        input1_temp = input1;
-        AddMod(input1_temp, input2_temp, modulus, false);
-        res2_temp = input1_temp;
-
-        res1 = (temp1 >> 1) + ((temp1 & 1) ? ((modulus + 1) >> 1) : 0);
-
-        // --- 强制打拍：虚拟加法器方案 ---
-        // 我们做一个 +0 的操作，并强制要求这个操作 latency=1
-        // 这会迫使 HLS 在 mult_in_reg 处插入真实的物理寄存器，切断 AddMod 的路径
-        uint64_t mult_in = res2_temp + 0;
-        #pragma HLS BIND_OP variable=mult_in op=add impl=fabric latency=1
-
-        MultMod(mult_in, twiddle_factor, modulus, M, S, temp);
-
-        // INTT 结果除以 2（乘以 2 的逆元），同时处理奇数情况（模加上半模）
-        res2 = (temp >> 1) + ((temp & 1) ? ((modulus + 1) >> 1) : 0);
-    }
+    uint64_t fwd_sum = input1, fwd_diff = input1;
+    AddMod(fwd_sum, product, modulus, true);
+    AddMod(fwd_diff, product, modulus, false);
+    const uint64_t half_mod = (modulus + 1) >> 1;
+    res1 = is_ntt ? fwd_sum
+                 : (inv_sum >> 1) + ((inv_sum & 1) ? half_mod : 0);
+    res2 = is_ntt ? fwd_diff
+                 : (product >> 1) + ((product & 1) ? half_mod : 0);
 }
 
 // ============================================================
@@ -167,28 +148,27 @@ void cg_ntt_reorder(uint64_t data[RING_DIM]) {
 }
 
 // ============================================================
-// CG_NTT_Kernel：单 limb CG-NTT / INTT 核心
-// IS_NTT 为编译期常量，HLS 在每个实例中消除 NTT/INTT 死分支；
+// CG_Transform_Kernel: one runtime-configurable CG-NTT / INTT engine.
+// Direction controls butterfly operands, addressing and twiddle selection.
 // STAGE_LOOP 按 2 展开后，偶/奇 stage 的 ping-pong 方向也成为编译期常量。
 // ============================================================
 
-template <bool IS_NTT>
-void CG_NTT_Kernel(
-    const uint64_t in_data[RING_DIM],
-    uint64_t out_data[RING_DIM],
+void CG_Transform_Banks(
+    uint64_t buf_A[RING_DIM],
+    uint64_t buf_B[RING_DIM],
     const uint64_t modulus,
     const uint64_t S,
     const uint64_t M_barrett,
-    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N],
+    bool is_ntt
 ) {
+    #pragma HLS INLINE off
     // ============================================================
     // 乒乓缓冲：消除 RAW 依赖
     // NTT 方向：读 [i, i+N/2]，写 [2i, 2i+1]（perfect shuffle）
     // INTT 方向：读 [2i, 2i+1]，写 [i, i+N/2]（perfect unshuffle）
     // ============================================================
-    uint64_t buf_A[RING_DIM];
-    uint64_t buf_B[RING_DIM];
-
     #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=CG_BUF_PARTITION dim=1
     #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=CG_BUF_PARTITION dim=1
     #pragma HLS BIND_STORAGE variable=buf_A type=ram_t2p impl=bram
@@ -198,21 +178,12 @@ void CG_NTT_Kernel(
     // cg_twiddle[s][i*CG_PE_NUM + 0 .. CG_PE_NUM-1] 时各自落在不同 bank。
     // （stage 维的 complete 切分不在这里，而在调用侧 top.cpp 的
     //   NTTTwiddleFactor / INTTTwiddleFactor 上，见 top.cpp 的 ARRAY_PARTITION dim=2）
-    #pragma HLS ARRAY_PARTITION variable=cg_twiddle cyclic factor=CG_PE_NUM dim=2
+    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle cyclic factor=CG_PE_NUM dim=2
+    #pragma HLS ARRAY_PARTITION variable=intt_twiddle cyclic factor=CG_PE_NUM dim=2
 
     // ============================================================
     // 初始化：in_data → buf_A
     // ============================================================
-    INIT_LOOP:
-    for (int i = 0; i < RING_DIM / CG_PE_NUM; i++) {
-        #pragma HLS PIPELINE II=1
-        CG_INIT_PE:
-        for (int p = 0; p < CG_PE_NUM; p++) {
-            #pragma HLS UNROLL
-            buf_A[i * CG_PE_NUM + p] = in_data[i * CG_PE_NUM + p];
-        }
-    }
-
     // ============================================================
     // 主循环：STAGE 层 × (CG_HALF_N / CG_PE_NUM) 次迭代
     // 乒乓协议：偶数 stage 读 A 写 B，奇数 stage 读 B 写 A
@@ -231,7 +202,7 @@ void CG_NTT_Kernel(
         #pragma HLS LOOP_FLATTEN off
 
         // NTT 正序（0,1,...,11），INTT 逆序（11,10,...,0）
-        int actual_stage = IS_NTT ? stage : (STAGE - 1 - stage);
+        int actual_stage = is_ntt ? stage : (STAGE - 1 - stage);
 
         BUTTERFLY_LOOP:
         for (int i = 0; i < CG_HALF_N / CG_PE_NUM; i++) {
@@ -254,7 +225,7 @@ void CG_NTT_Kernel(
                 int global_i = i * CG_PE_NUM + p;  // 0 ~ CG_HALF_N-1
 
                 uint64_t u, v;
-                if (IS_NTT) {
+                if (is_ntt) {
                     // NTT 读：固定跨度 [global_i, global_i + N/2]
                     if ((stage & 1) == 0) {
                         u = buf_A[global_i];
@@ -274,17 +245,14 @@ void CG_NTT_Kernel(
                     }
                 }
 
-                // 这将彻底斩断 16x16 交叉开关 到 DSP 乘法器 之间的致命走线约束。
-                #pragma HLS LATENCY min=1 max=1
-
-                // ② 顺序读取旋转因子（无运行时索引计算！）
-                uint64_t tf = cg_twiddle[actual_stage][global_i];
+                uint64_t tf = is_ntt ? ntt_twiddle[actual_stage][global_i]
+                                     : intt_twiddle[actual_stage][global_i];
 
                 // ③ 蝶形运算（CG-NTT 专用 PE，与 NTT_Kernel 完全独立）
                 uint64_t out_u, out_v;
-                CG_PE(u, v, tf, out_u, out_v, modulus, S, M_barrett, IS_NTT);
+                CG_PE(u, v, tf, out_u, out_v, modulus, S, M_barrett, is_ntt);
 
-                if (IS_NTT) {
+                if (is_ntt) {
                     // NTT 写：完美洗牌 [2*global_i, 2*global_i + 1]
                     if ((stage & 1) == 0) {
                         buf_B[2 * global_i]     = out_u;
@@ -307,6 +275,31 @@ void CG_NTT_Kernel(
         }
     }
 
+}
+
+// Legacy flat-array API, retained for standalone CG tests and callers.
+// Top calls CG_Transform_Banks directly, so these adapter loops are not in Top RTL.
+void CG_Transform_Kernel(
+    const uint64_t in_data[RING_DIM], uint64_t out_data[RING_DIM],
+    uint64_t modulus, uint64_t S, uint64_t M_barrett,
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+) {
+    #pragma HLS INLINE off
+    uint64_t buf_A[RING_DIM], buf_B[RING_DIM];
+    #pragma HLS ARRAY_PARTITION variable=buf_A cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS ARRAY_PARTITION variable=buf_B cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS BIND_STORAGE variable=buf_A type=ram_t2p impl=bram
+    #pragma HLS BIND_STORAGE variable=buf_B type=ram_t2p impl=bram
+    INIT_LOOP: for (int i = 0; i < RING_DIM / CG_PE_NUM; ++i) {
+        #pragma HLS PIPELINE II=1
+        for (int p = 0; p < CG_PE_NUM; ++p) {
+            #pragma HLS UNROLL
+            buf_A[i * CG_PE_NUM + p] = in_data[i * CG_PE_NUM + p];
+        }
+    }
+    CG_Transform_Banks(buf_A, buf_B, modulus, S, M_barrett,
+                       ntt_twiddle, intt_twiddle, is_ntt);
     // ============================================================
     // 回写到 out_data
     // STAGE=12（偶数）→ 最后写的 stage=11（奇）→ 写入 buf_A → 结果在 buf_A
@@ -419,25 +412,8 @@ void Compute_CG_NTT(
         }
 
         // 计算（全部在片上 BRAM 完成）
-        if (is_ntt) {
-            CG_NTT_Kernel<true>(
-                local_in_data,
-                local_out_data,
-                modulus[l],
-                S[l],
-                M_barrett[l],
-                local_twiddle
-            );
-        } else {
-            CG_NTT_Kernel<false>(
-                local_in_data,
-                local_out_data,
-                modulus[l],
-                S[l],
-                M_barrett[l],
-                local_twiddle
-            );
-        }
+        CG_Transform_Kernel(local_in_data, local_out_data, modulus[l], S[l],
+                            M_barrett[l], local_twiddle, local_twiddle, is_ntt);
 
         // 512-bit burst 写回 local_out_data → in_data
         STORE_OUT:
@@ -454,9 +430,19 @@ void Compute_CG_NTT(
 }
 
 // ============================================================
-// 显式实例化：强制编译器生成两个独立 RTL 模块
-// 必须在 .cpp 末尾声明，否则 top.cpp 链接时报 undefined reference
+// Compatibility wrappers for existing direct-kernel testbenches. They are not
+// reachable from Top; the synthesized Top has one runtime call site only.
 // ============================================================
+template <bool IS_NTT>
+void CG_NTT_Kernel(
+    const uint64_t in_data[RING_DIM], uint64_t out_data[RING_DIM],
+    const uint64_t modulus, const uint64_t S, const uint64_t M_barrett,
+    const uint64_t cg_twiddle[STAGE][CG_HALF_N]
+) {
+    CG_Transform_Kernel(in_data, out_data, modulus, S, M_barrett,
+                        cg_twiddle, cg_twiddle, IS_NTT);
+}
+
 template void CG_NTT_Kernel<true>(
     const uint64_t in_data[RING_DIM],
     uint64_t out_data[RING_DIM],

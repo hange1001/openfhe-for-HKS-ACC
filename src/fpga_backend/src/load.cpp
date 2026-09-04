@@ -1,6 +1,27 @@
 #include "define.h"
 #include "../include/load.h"
 
+// Fixed-length burst boundary: do not merge this loop with a runtime limb loop.
+static void Load_Tower(const uint64_t* mem_in,
+                       uint64_t buffer[MAX_LIMBS][SQRT][SQRT], int src, int dst) {
+    #pragma HLS INLINE off
+    LOAD_COEFF: for (int k = 0; k < RING_DIM; ++k) {
+        #pragma HLS PIPELINE II=1
+        #pragma HLS UNROLL factor=PE_PARALLEL
+        buffer[dst][k / SQRT][k % SQRT] = mem_in[src * RING_DIM + k];
+    }
+}
+
+static void Store_Tower(uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
+                        uint64_t* mem_out, int src, int dst) {
+    #pragma HLS INLINE off
+    STORE_COEFF: for (int k = 0; k < RING_DIM; ++k) {
+        #pragma HLS PIPELINE II=1
+        #pragma HLS UNROLL factor=PE_PARALLEL
+        mem_out[dst * RING_DIM + k] = buffer[src][k / SQRT][k % SQRT];
+    }
+}
+
 void Load(
     const uint64_t *mem_in,
     uint64_t buffer[MAX_LIMBS][SQRT][SQRT],
@@ -9,15 +30,7 @@ void Load(
 ) {
     #pragma HLS INLINE off
     for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
-        LOAD_ROW: 
-        for (int i = 0; i < SQRT; i++) {
-            LOAD_COL: 
-            for (int j = 0; j < SQRT; j++) {
-                #pragma HLS PIPELINE II=1
-        
-                buffer[l][i][j] = mem_in[ (l - mod_index) * RING_DIM + i * SQRT + j];
-            }
-        }
+        Load_Tower(mem_in, buffer, l - mod_index, l);
     }
 }
 
@@ -30,13 +43,6 @@ void Store(
     #pragma HLS INLINE off
 
     for (int l = mod_index; l < mod_index + num_active_limbs; l++) {
-        STORE_ROW:
-        for (int i = 0; i < SQRT; i++) {
-            STORE_COL:
-            for (int j = 0; j < SQRT; j++) {
-                #pragma HLS PIPELINE II=1
-                mem_out[ (l - mod_index) * RING_DIM + i * SQRT + j] = buffer[l][i][j];
-            }
-        }
+        Store_Tower(buffer, mem_out, l, l - mod_index);
     }
 }

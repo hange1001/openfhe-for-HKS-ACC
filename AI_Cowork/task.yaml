@@ -8,15 +8,20 @@
 # ============================================================
 
 active_implementation:
-  id: hks-digit-openfhe-integration
+  id: hks-wide256-direct-banks
   requested: 2026-09-04
-  status: done
-  scope: "复合算子接入 OpenFHE HYBRID；真实 HLS C-model 验证，XRT 传输入口；不含 KeyMult 融合"
+  status: completed_with_timing_limits
+  checkpoint: c073b11
+  scope: "保持PE=4，拓宽三个AXI接口到256位，优化整塔拷贝并完成软硬件验证；ABI不变；用户要求写日志"
   contract: src/fpga_backend/HKS_DIGIT.md
-  validation: "OpenFHE 逐系数对拍、旋转解密、参数回退、失败不发布半成品；无板卡"
-  results: "集成及全库 ASan 均 400 checks / 991232 residues 通过；Top 18/18、HKS 22 cases 回归通过；XRT 宏语法编译通过"
-  report: docs/reports/hls/hks_digit_openfhe_20260904/README.md
-  limits: "仅 CKKS/DC/N4096/当前Q3/P2；EvalMult 降层回退CPU；未做 XRT运行/RTL co-sim/P&R/上板；旧综合 slack -0.331ns"
+  validation: "Top/OpenFHE/ASan/CG回归、真实OpenFHE fixture RTL、扩展RTL smoke、单引擎/4路/256位结构审计、OOC P&R；无板卡"
+  results: "native Top18/18、HKS22、CG11/11；Vitis C-sim0errors；OpenFHE/ASan470checks/1523712residues；OpenFHE RTL40960residues PASS；RTL smoke35transactions/4cases PASS；两digit139734cycles；HLS BRAM708/DSP1160/FF78528/LUT169991/URAM96；OOC 239992条网络全部布通；6ns+0.75ns WNS=-0.779ns；同布线7ns+0.75ns WNS=+0.221ns，暖态换算0.978138ms"
+  report: docs/reports/hls/hks_wide256_direct_20260904/README.md
+  report_language: "中文正文；代码标识、命令及工具原始报告保留原文（用户明确要求）"
+  limits: "仅CKKS/DC/N4096/当前Q3/P2；未做XRT/上板/平台shell链接/布线后门级仿真；6ns目标未闭合；7ns仅OOC内部时序情景，外部I/O与平台时钟未签核；INIT退化295063cycles须单列；仍慢于CPU暖态基线；未提交"
+  previous_shared_report: docs/reports/hls/hks_shared_transform_20260904/README.md
+  previous_performance_report: docs/reports/hls/hks_performance_20260904/README.md
+  previous_integration_report: docs/reports/hls/hks_digit_openfhe_20260904/README.md
   previous_poc_report: docs/reports/hls/hks_digit_poc_20260904/README.md
   note: "按本轮明确实现请求执行，保留已有暂存改动和学习路线，不修改个人学习笔记"
 

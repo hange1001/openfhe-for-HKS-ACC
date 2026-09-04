@@ -7,16 +7,33 @@
 
 ## §1 你在这里（2026-09-04）
 
-**本轮工程进展**：按用户要求实现 `OP_HKS_DIGIT` 无板卡 PoC：
+**最新工程更新（宽接口 / 去拷贝，验证完成但6ns未闭合）**：计算仍为4路，三个AXI实际256位；
+移除17次独立整塔拷贝与flat中转。OpenFHE/ASan各470checks通过，真实OpenFHE RTL
+40960元素通过；两digit 268170→139734周期（6ns假设下0.838404ms，非上板测量）。
+综合BRAM708/DSP1160/FF78528/LUT169991/URAM96。INIT退化为295063周期须单列。
+扩展RTL smoke通过（35次调用、4种digit及端口回归）；OOC 239992条网络全部布通。
+6ns加0.75ns裕量WNS=-0.779ns；同布线7ns情景WNS=+0.221ns，暖态换算0.978138ms。
+最差路径在AUTO的BRAM选通/取负/写回，约73%延迟来自布线；外部I/O和平台时钟未签核；未提交。
+本轮细节与试错已写[日志](log.md)，证据见[宽接口报告](../docs/reports/hls/hks_wide256_direct_20260904/README.md)。
+报告正文已按要求改为中文；§六澄清 AUTO 是独立旋转算子，不在 OP_HKS_DIGIT 内部，
+但仍参与通用 Top 的时序检查。原始工具证据保持原文，本次没有改动硬件。
+下段为此前共享版里程碑；以下学习路线保持原样。
+
+**本轮工程进展**：已按用户要求先保存 Git 检查点 `c073b11`，再把独立 NTT/INTT
+与 HKS 统一为一套双向引擎（RTL 确认 4 路模乘共享）。综合 DSP 2088→1392、
+BRAM 896→704、LUT 278242→175140；URAM 96 不变。共享版暂未提交。
+`OP_HKS_DIGIT` 无板卡 PoC：
 INTT → QHatInv 预缩放 → BConv → NTT，保留原 EVAL digit，结果一次回写。
 native / ASan / Vitis C-sim 通过（Top 18/18、HKS 22 cases）；已完成同源码基线与融合综合。
-已接入 OpenFHE HYBRID：C-model 集成 400 项检查 / 991232 个模数元素精确对比通过，
+已接入 OpenFHE HYBRID：共享版 C-model 集成 470 项检查 / 1523712 个模数元素精确对比通过，
 EvalRotate 两 digit 融合且解密正确；EvalMult 降为 Q=2 时正确回退 CPU。XRT 入口仅编译检查。
 全库 AddressSanitizer（含泄漏检查）通过；旧全量 PKE 测试用例加载抛出 stoul 异常，未计入通过项。
-时序未闭合（旧综合估计 slack -0.331ns），XRT 运行、RTL co-sim 和上板未做。
+共享版 Vitis C-sim、CG 11/11 和 RTL smoke co-sim（24 次调用、3 种 digit）通过。
+时序未闭合（新综合估计 slack -0.291ns）；XRT 运行、P&R 和上板未做。
 接口见 [HKS_DIGIT](../src/fpga_backend/HKS_DIGIT.md)，证据见
 [综合报告](../docs/reports/hls/hks_digit_poc_20260904/README.md) 与
-[OpenFHE 接入报告](../docs/reports/hls/hks_digit_openfhe_20260904/README.md)。以下学习主线保留，未代用户完成练习。
+[OpenFHE 接入报告](../docs/reports/hls/hks_digit_openfhe_20260904/README.md)、
+[共享引擎报告](../docs/reports/hls/hks_shared_transform_20260904/README.md)。以下学习主线保留，未代用户完成练习。
 
 ```
 phase1 ██████░░░░  step 1.1 ✅ → 【step 1.3 进行中】 → 1.5/1.6 → 1.2 → 1.4
@@ -42,8 +59,13 @@ phase1 ██████░░░░  step 1.1 ✅ → 【step 1.3 进行中】
 
 ## §2 下一步（线性队列，从上往下照做）
 
-**复合算子工程后续（待选）**：看新增实例/局部缓冲的资源代价、
-RTL co-sim 和 Q=2 降层支持。OpenFHE negacyclic 语义已用其真实单位根和变换结果验证。
+**工程验证已收尾**：功能/RTL通过，OOC已布通，原6ns目标未闭合；日志和报告已回填。
+下一轮若继续保持并行度，优先检查AUTO关键路径的流水边界/共享缓存扇出，并优化INIT退化。
+7ns加0.75ns裕量只通过了内部时序情景；板级端到端性能仍需实体设备。
+
+**复合算子工程后续（待选）**：共享 NTT 已完成；剩余 BConv 占 870 DSP 且两份
+局部缓冲尚未合并。真实OpenFHE RTL对拍已完成；后续可选：审阅提交优化版、时序闭合、Q=2降层支持。
+OpenFHE negacyclic 语义已用其真实单位根和变换结果验证。
 已有学习队列如下，状态未改。
 
 1. [x] ~~闭卷热身推导~~ **08-14 完成，A 3/5 / B 2/8**（题在 task.yaml 步 1.4 `warmup_exercise`）

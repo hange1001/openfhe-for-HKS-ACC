@@ -37,7 +37,11 @@ create_clock -period 6ns
 set_clock_uncertainty 0.75ns
 
 # 开启全局 AXI 位宽自动拓宽，上限 512 bit（Alveo U55C 原生宽度）
-config_interface -m_axi_max_widen_bitwidth 512
+if {$top_func eq "Top"} {
+    config_interface -m_axi_max_widen_bitwidth 256 -m_axi_alignment_byte_size 32
+} else {
+    config_interface -m_axi_max_widen_bitwidth 512
+}
 
 csynth_design
 

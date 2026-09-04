@@ -273,7 +273,23 @@ report_all:
 HLS_ROOT ?= /tools/Xilinx/Vitis_HLS/2023.2
 HKS_TEST_BIN := ./build/hks_digit/hks_digit_tb
 HKS_TB := ./testbench/top_tb.cpp ./testbench/hks_digit_tb.cpp
-.PHONY: test-hks-digit hks-csim hks-csynth hks-cosim hks-baseline
+.PHONY: test-hks-digit hks-csim hks-csynth hks-cosim hks-cosim-smoke hks-cosim-perf hks-baseline
+.PHONY: hks-impl hks-postroute
+
+# HKS_IMPL_PROJECT must name an existing synthesized HLS project. Separate cwd
+# prevents implementation logs from colliding with another verification run.
+hks-impl:
+	@test -n "$(HKS_IMPL_PROJECT)" || (echo "Set HKS_IMPL_PROJECT to an existing project"; exit 1)
+	@mkdir -p build/hks_impl
+	cd build/hks_impl && HKS_IMPL_PROJECT="$(abspath $(HKS_IMPL_PROJECT))" \
+		$(HLS_ROOT)/bin/vitis_hls -f ../../hks_impl.tcl
+
+VIVADO ?= /tools/Xilinx/Vivado/2023.2/bin/vivado
+hks-postroute:
+	@test -n "$(HKS_IMPL_PROJECT)" || (echo "Set HKS_IMPL_PROJECT to a routed project"; exit 1)
+	@mkdir -p build/hks_postroute
+	cd build/hks_postroute && HKS_IMPL_PROJECT="$(abspath $(HKS_IMPL_PROJECT))" \
+		$(VIVADO) -mode batch -source ../../hks_postroute.tcl
 
 $(HKS_TEST_BIN): $(KERNEL_SRC) $(HKS_TB) $(wildcard $(INC_DIR)/*.h)
 	@mkdir -p $(@D)
@@ -283,7 +299,7 @@ $(HKS_TEST_BIN): $(KERNEL_SRC) $(HKS_TB) $(wildcard $(INC_DIR)/*.h)
 test-hks-digit: $(HKS_TEST_BIN)
 	$(HKS_TEST_BIN)
 
-hks-csim hks-csynth hks-cosim hks-baseline:
+hks-csim hks-csynth hks-cosim hks-cosim-smoke hks-cosim-perf hks-baseline:
 	HKS_MODE=$(patsubst hks-%,%,$@) HLS_SRC_FILES="$(KERNEL_SRC)" \
 		$(HLS_ROOT)/bin/vitis_hls -f hks_digit.tcl
 
