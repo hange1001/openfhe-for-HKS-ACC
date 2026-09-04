@@ -982,3 +982,50 @@ in_x[q][(t-q)>>6][(t-q)&63]，Collect 写 in_x[LIMB_Q+p][(t-3-p)>>6][(t-3-p)&63]
   复制存储；降并行度也是一种省 BRAM 手段
 - 报告延迟与实际周期分离：csynth 里 BConv 显示 4145（恒定），tripcount 类
   保守估计只影响报告，实测以 RTL co-sim 为准
+
+### [2026-09-04] P2 后大参数扩展与单 digit 并行分析
+
+**Agent**: Codex。按用户提问复核当前代码和已有报告，基线为 32c04b5；未修改硬件源码或重跑综合。
+
+- P1/P2 已实现，RTL 暖态 120822 周期；P3 的 transform 本地 A/B 与 load/store、跨数组预乘仍保留。
+- 10 次变换含适配搬运约占 70.57%；两次 BConv 以 HLS wrapper 周期归因约占 6.86%，但其模乘占整核 DSP 的 75%。
+- 区分逻辑 alpha×beta 与物理 LIMB_Q×MAX_OUT_COLS 全展开；建议固定阵列分块，资源不随塔数乘积增长。
+- alpha=8/beta=24 全展开仅 BConv 约 11136 DSP，超过整器件 9024；固定 4×8 约 1856 DSP，均按当前 58 DSP/模乘估计。
+- 大参数 twiddle 容量风险：示例 N=65536/Q24/P8 按当前布局为 448 MiB，真实 32 模数仍为 256 MiB，需要缓存/压缩/生成策略。
+- 单 digit 内分析独立塔变换并行、BConv 下一输出 tile 与 NTT 上一输出 tile 重叠，明确完整塔 ready、物理 bank 所有权与背压。
+- P2 的 5.250 ns 仅 HLS 估计，新版物理时序未签核；大参数及并行收益均为分析，非综合或上板实测。
+- 中文文件：`doc/HKS_大参数扩展与单digit并行分析.md`。未改变 P3/P4 计划或创建 Git 提交。
+
+### [2026-09-04] Digit 间并行澄清与 BConv 资源逐项复核
+
+**Agent**: Codex。用户澄清要讨论不同 digit 并行；本次仅分析与记录，硬件源码未修改。
+
+- 工作区 PE_PARALLEL 已被改为 32，予以保留；本次综合数字均注明对应 P2/PE=4，不能沿用为新配置结果。
+- 各 digit 的 ModUp 独立；完整 HKS 的 KeyMult 贡献需归并。当前 Host 循环、状态锁、同步等待与核内共享存储不会因增加线程而自动并行。
+- 两个完整执行器的理想暖态 ModUp 上限约 1.918×；优先比较多 digit 上下文共用 BConv、将新增资源投入变换，而非复制整个 870-DSP BConv。
+- 单 MultMod 的 58 DSP=16(x×w)+16(高半乘m)+16(低半乘m)+10(商乘mod低位)。BConv 870 DSP 中约减占 630，即 72.41%。
+- 模乘池 49035 LUT/25380 FF；两份真实可达包装层合计 10777 LUT/7891 FF，共享该 15 路池，不能算成 30 路。
+- 纠正旧报告 BRAM 归因：P1 两份 wrapper 各 128 BRAM_18K，P2 均删除；poly_buffer_1 从120增至128；688-256+8=440。旧“单wrapper128+工作区省120”解释不成立。
+- 详细证据、并行取舍及列末约减研究边界写入 `doc/HKS_digit间并行与BConv资源拆解.md`。旧报告保留，新增勘误说明。
+
+### [2026-09-04] 聚焦 BConv 约减替换：Shoup 可行性
+
+**Agent**: Codex。用户说明正在扫参，本次不改并行度或硬件，只评估约减结构。
+
+- 首选固定权重预计算的 Shoup：Host 生成 floor(w×2^64/p)，FPGA 一次高半乘法、两次低半乘法及一次条件减。
+- 已核对 Harvey 原文与本地 OpenFHE ModMulFastConst；证明 x 属于源模数、即使 x>=目标p，也满足 x<2^64、w<p、p<2^62 的适用条件。
+- BigInt 数学抽查 100288 组全部通过，其中 87485 组 x>=目标p；不是 HLS/RTL 测试。
+- 沿用现有 DSP 映射估算 58→约36 DSP/PE，15路870→约540；高/低半乘法实际映射和时序尚未综合验证。
+- 明确当前 II=1，资源节省不等于主体周期同比下降；可能收益是 latency、流水排空和时钟，需分别测量。
+- 分析追加到 `doc/HKS_digit间并行与BConv资源拆解.md` 第6节，包括元数据成本、Montgomery 对照、宽累加路线与验收边界。
+
+### [2026-09-04] Shoup 的 OpenFHE 接入方式及实施顺序
+
+**Agent**: Codex。只读核对当前接口并记录建议，未改扫参或硬件代码。
+
+- OpenFHE 数学/余数格式保持不变，在 TryHKSDigitOffload 取现有权重与每列目标模数，调用 PrepModMulConst 生成并缓存预计算值。
+- HKS payload 可从18字扩到33字（额外15个权重precon）；需统一Host/HLS协议常量、版本/长度检查、fixture和字节统计，不能只改一端。
+- 现有独立 OP_BCONV 的30字参数协议也需同步迁移，让两入口共用同组 Shoup 单元；避免保留新旧两组BConv算术。NTT/预乘仍保留Barrett。
+- 推荐整核顺序 P3→P4→BConv Shoup；独立Shoup算术验证可先做。P3为P4提供原位存储契约，BConv Shoup与P4无硬性前置依赖。
+- 后续若拓展Shoup到NTT/预乘，再重新审视P4；本轮不作该扩展。验收需保持OpenFHE逐residue一致及RTL实例共享。
+- 具体文件、缓存键、协议风险与验收步骤写入 `doc/HKS_digit间并行与BConv资源拆解.md` 第7节。

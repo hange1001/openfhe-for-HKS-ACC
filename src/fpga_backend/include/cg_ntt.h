@@ -78,6 +78,17 @@ void CG_Transform_Banks(
     const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
 );
 
+// Top's shared work memory is the A bank. tower is a physical slot, independent
+// of the global modulus/twiddle index selected by the caller. Even STAGE leaves
+// the final result in work[tower]; scratch is reused by every direction/tower.
+void CG_Transform_Work(
+    uint64_t work[MAX_LIMBS][SQRT][SQRT], int tower,
+    uint64_t scratch[RING_DIM],
+    uint64_t modulus, uint64_t S, uint64_t M_barrett,
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+);
+
 // =========================================================
 // 多 limb 包装器
 // =========================================================

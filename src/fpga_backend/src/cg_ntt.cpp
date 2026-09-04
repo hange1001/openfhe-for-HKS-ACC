@@ -277,8 +277,81 @@ void CG_Transform_Banks(
 
 }
 
+// Direct shared-memory engine. No tower adapters or local A bank are present.
+void CG_Transform_Work(
+    uint64_t work[MAX_LIMBS][SQRT][SQRT], int tower,
+    uint64_t scratch[RING_DIM],
+    uint64_t modulus, uint64_t S, uint64_t M_barrett,
+    const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+) {
+    #pragma HLS INLINE off
+    static_assert((STAGE & 1) == 0, "Direct work output requires even STAGE");
+    static_assert(SQRT % CG_BUF_PARTITION == 0, "Banks must divide a work row");
+    #pragma HLS ARRAY_PARTITION variable=work complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=work cyclic factor=CG_BUF_PARTITION dim=3
+    #pragma HLS BIND_STORAGE variable=work type=ram_t2p impl=bram
+    #pragma HLS ARRAY_PARTITION variable=scratch cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS BIND_STORAGE variable=scratch type=ram_t2p impl=bram
+    #pragma HLS ARRAY_PARTITION variable=ntt_twiddle cyclic factor=CG_PE_NUM dim=2
+    #pragma HLS ARRAY_PARTITION variable=intt_twiddle cyclic factor=CG_PE_NUM dim=2
+
+    WORK_STAGE_LOOP: for (int stage = 0; stage < STAGE; ++stage) {
+        #pragma HLS UNROLL factor=2
+        #pragma HLS LOOP_FLATTEN off
+        const int actual_stage = is_ntt ? stage : STAGE - 1 - stage;
+        WORK_BUTTERFLY_LOOP: for (int i = 0; i < CG_HALF_N / CG_PE_NUM; ++i) {
+            #pragma HLS PIPELINE II=1
+            // Each unrolled stage reads one memory and writes the other.
+            // Vitis conservatively aliases runtime-direction write addresses
+            // across iterations (P3 r1: false WAW, II=5). For each fixed mode,
+            // both write maps are bijections of [0,N), exhaustively checked by
+            // check_transform_work_banks.py. Override ONLY inter-iteration WAW;
+            // stage boundaries still drain, and RAW/intra dependencies remain.
+            #pragma HLS DEPENDENCE variable=work type=inter direction=WAW dependent=false
+            #pragma HLS DEPENDENCE variable=scratch type=inter direction=WAW dependent=false
+            for (int lane = 0; lane < CG_PE_NUM; ++lane) {
+                #pragma HLS UNROLL
+                const int k = i * CG_PE_NUM + lane;
+                uint64_t u, v;
+                // Keep each direction's bank index visible to HLS. Selecting
+                // the address before the access hides mutually exclusive banks
+                // and falsely demands ports for both mappings (P3 r2: II=3).
+                if ((stage & 1) == 0) {
+                    if (is_ntt) {
+                        u = work[tower][k >> LOG_SQRT][k & (SQRT - 1)];
+                        v = work[tower][(k + CG_HALF_N) >> LOG_SQRT][(k + CG_HALF_N) & (SQRT - 1)];
+                    } else {
+                        u = work[tower][(2*k) >> LOG_SQRT][(2*k) & (SQRT - 1)];
+                        v = work[tower][(2*k+1) >> LOG_SQRT][(2*k+1) & (SQRT - 1)];
+                    }
+                } else {
+                    if (is_ntt) { u = scratch[k]; v = scratch[k + CG_HALF_N]; }
+                    else { u = scratch[2*k]; v = scratch[2*k+1]; }
+                }
+                const uint64_t tf = is_ntt ? ntt_twiddle[actual_stage][k]
+                                           : intt_twiddle[actual_stage][k];
+                uint64_t out_u, out_v;
+                CG_PE(u, v, tf, out_u, out_v, modulus, S, M_barrett, is_ntt);
+                if ((stage & 1) == 0) {
+                    if (is_ntt) { scratch[2*k] = out_u; scratch[2*k+1] = out_v; }
+                    else { scratch[k] = out_u; scratch[k + CG_HALF_N] = out_v; }
+                } else {
+                    if (is_ntt) {
+                        work[tower][(2*k) >> LOG_SQRT][(2*k) & (SQRT - 1)] = out_u;
+                        work[tower][(2*k+1) >> LOG_SQRT][(2*k+1) & (SQRT - 1)] = out_v;
+                    } else {
+                        work[tower][k >> LOG_SQRT][k & (SQRT - 1)] = out_u;
+                        work[tower][(k + CG_HALF_N) >> LOG_SQRT][(k + CG_HALF_N) & (SQRT - 1)] = out_v;
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Legacy flat-array API, retained for standalone CG tests and callers.
-// Top calls CG_Transform_Banks directly, so these adapter loops are not in Top RTL.
+// Top uses CG_Transform_Work, so these adapter loops are not in Top RTL.
 void CG_Transform_Kernel(
     const uint64_t in_data[RING_DIM], uint64_t out_data[RING_DIM],
     uint64_t modulus, uint64_t S, uint64_t M_barrett,

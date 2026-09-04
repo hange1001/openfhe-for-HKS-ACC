@@ -1,0 +1,3 @@
+PASS: 8 slots x 2 directions x 12 stages; 8 T2P banks, <=2 accesses/bank/cycle
+PASS: all 4096 coefficients covered once per stage; SCALE one read + one write/bank
+Scope: algorithmic port budget only; actual HLS II, enables and RAM binding require separate audit

@@ -22,9 +22,10 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
             modules[declaration[1]] = source
     if "Top" not in modules:
         raise ValueError("No generated Top module in " + str(rtl))
-    # Vitis emits the relevant function instances without parameter overrides.
+    # Include parameterized RAM instances as well as function modules.
     # Filter by declared module names to exclude ports, tasks and expressions.
-    edges = {name: [m[1] for m in re.finditer(r"^\s*(\w+)\s+(\w+)\s*\(", src, re.M)
+    instance_pattern = r"^\s*(\w+)\s*(?:#\s*\((?:[^()]|\([^()]*\))*\)\s*)?(\w+)\s*\("
+    edges = {name: [m[1] for m in re.finditer(instance_pattern, src, re.M)
                     if m[1] in modules]
              for name, src in modules.items()}
 
@@ -41,7 +42,8 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
                       if re.search(r"Compute_Auto|Load_Auto_Meta|^Top_Auto(?:_|$)", name)}
     if no_auto and auto_instances:
         raise ValueError("Retired automorphism hardware remains reachable: " + str(auto_instances))
-    core = "CG_Transform_Banks" if counts["Top_CG_Transform_Banks"] else "CG_Transform_Kernel"
+    core = ("CG_Transform_Work" if counts["Top_CG_Transform_Work"] else
+            "CG_Transform_Banks" if counts["Top_CG_Transform_Banks"] else "CG_Transform_Kernel")
     chain = ["Top_Execute_Transform_Operation", "Top_Execute_Transform", "Top_" + core]
     for name in chain:
         if counts[name] != 1:
@@ -72,7 +74,7 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
     if multipliers != lanes:
         raise ValueError(f"Expected {lanes} shared lane multipliers, found {multipliers}")
     transforms = {name: n for name, n in counts.items()
-                  if re.fullmatch(r"Top_CG_Transform_(?:Banks|Kernel)(?:_\d+)?", name)}
+                  if re.fullmatch(r"Top_CG_Transform_(?:Work|Banks|Kernel)(?:_\d+)?", name)}
     if transforms != {chain[-1]: 1}:
         raise ValueError("Additional transform engines/adapters reachable: " + str(transforms))
     total_multipliers = sum(n for name, n in counts.items()
@@ -96,13 +98,39 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
     _, wrapper_resources, wrapper_latency = report("Execute_Transform")
     _, core_resources, core_latency = report(core)
     butterfly_ii = {}
-    for path in (solution / "syn" / "report").glob(core + "_Pipeline_BUTTERFLY_LOOP*_csynth.xml"):
+    loop_prefix = "WORK_BUTTERFLY_LOOP" if core == "CG_Transform_Work" else "BUTTERFLY_LOOP"
+    for path in (solution / "syn" / "report").glob(core + "_Pipeline_" + loop_prefix + "*_csynth.xml"):
         loops = ET.parse(path).getroot().find("PerformanceEstimates/SummaryOfLoopLatency")
         if loops is not None:
             for loop in loops:
                 butterfly_ii[path.stem + ":" + loop.tag] = int(loop.findtext("PipelineII"))
     if len(butterfly_ii) != 2 or any(ii != 1 for ii in butterfly_ii.values()):
         raise ValueError("Expected both butterfly parity loops at II=1: " + str(butterfly_ii))
+    work_memory = None
+    if core == "CG_Transform_Work":
+        copies = {name: n for name, n in counts.items()
+                  if re.search(r"TRANSFORM_(LOAD|STORE)|bank_[ab](?:_|$)|Copy_HKS_Tower", name)}
+        if copies:
+            raise ValueError("Direct-work design retained transform copies/local banks: " + str(copies))
+        work_rams = {name: n for name, n in counts.items()
+                     if "poly_buffer_1" in name and "RAM_T2P_BRAM" in name}
+        scratch_rams = {name: n for name, n in counts.items()
+                        if "scratch_RAM_T2P_BRAM" in name}
+        if sum(work_rams.values()) != 8 * 2 * lanes or sum(scratch_rams.values()) != 2 * lanes:
+            raise ValueError("Unexpected physical work/scratch bank count: " + str((work_rams, scratch_rams)))
+        for name in list(work_rams) + list(scratch_rams):
+            source = modules[name]
+            for port in (0, 1):
+                if not re.search(rf"if\s*\(we{port}\)\s*ram\[address{port}\]\s*<=\s*d{port}", source):
+                    raise ValueError("RAM lacks a true writable port: " + name)
+        work_we = re.findall(r"^output\s+(p_ZL13poly_buffer_1_\d+_\d+)_we([01]);",
+                             modules[chain[-1]], re.M)
+        if len(set(work_we)) != 8 * 2 * lanes * 2:
+            raise ValueError("Transform does not expose both write enables for every work bank")
+        work_memory = {"work_T2P_banks": sum(work_rams.values()),
+                       "scratch_T2P_banks": sum(scratch_rams.values()),
+                       "work_write_enable_ports": len(set(work_we)),
+                       "scope": "Physical RAM instances/dual write ports; functional schedules checked by RTL cosim"}
     target = float(top.findtext("UserAssignments/TargetClockPeriod"))
     uncertainty = float(top.findtext("UserAssignments/ClockUncertainty"))
     estimated = float(top.findtext("PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod"))
@@ -110,6 +138,7 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
         "status": "PASS", "scope": "Vitis generated RTL structural audit only",
         "chain_instances": {name: counts[name] for name in chain},
         "auto_instances": auto_instances,
+        "direct_work_memory": work_memory,
         "core_shared_MultMod_instances": multipliers,
         "multiplier_location": multiplier_location,
         "total_MultMod_instances": total_multipliers,

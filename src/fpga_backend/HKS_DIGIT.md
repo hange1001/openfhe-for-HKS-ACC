@@ -35,33 +35,26 @@ or throughput claim is included. Modulus/twiddle initialization is cached.
 - Invalid digit ranges or uninitialized/unsupported modulus slots produce
   no output write. There is no new status port; validate descriptors on Host.
 
-## Device sequence
+## 当前设备序列（P3）
 
-1. Load into poly_buffer_2 and broadcast original EVAL into result_buffer in
-   the same pass (no separate bypass copy).
-2. INTT with each source tower's global modulus/twiddle index.
-3. Multiply by QHatInv modulo the source qi; compact into poly_buffer_1,
-   explicitly zeroing inactive BConv rows.
-4. BConv into poly_buffer_1 rows LIMB_Q..LIMB_Q+complement_count-1.
-5. Load each complement directly from poly_buffer_1 into the shared transform
-   banks; NTT, then write directly to its global result_buffer slot.
-6. Store the complete result once.
+1. AXI 首次装载直接写 `poly_buffer_1[q]`，同拍将原始 EVAL 保存到 `result_buffer[digit_start+q]`。
+2. INTT 直接使用该工作塔与一条共享 scratch；全局模数/旋转因子索引是 `digit_start+q`。
+3. 在工作塔原位乘 QHatInv。无效输入行不装载、不清零，由 BConv 注入零。
+4. BConv 从工作区有效输入行读取，直接写补基行 `LIMB_Q+p`。
+5. 补基 NTT 继续使用该工作塔与同一条 scratch；目标模数映射为 `p<digit_start?p:p+alpha`。
+6. 在 AXI 写回边界选择原始 EVAL 或补基工作塔，每个输出塔写一次；所有输入已装载完毕。
 
-Reuses all three existing Top polynomial buffers. No additional persistent
-ring-sized array. Internal BConv/NTT scratch and bank overhead still count
-toward area. AXI loops remain in non-inlined helpers. This is sequential
-fusion, not DATAFLOW or cross-digit output-stationary scheduling.
+三套原有多项式数组继续承担实际用途：工作区、通用第二操作数、通用结果/EVAL旁路。
+没有新增整套 A_work。旧变换的 bank_a/bank_b 及 TRANSFORM_LOAD/STORE 已被删除，
+现在仅有一条4096系数scratch（8个T2P bank），工作区每塔也是8个T2P bank。
+固定偶数12级使最终结果回到工作塔；改变N/STAGE时必须重新处理输出归属，静态断言阻止误用。
 
-Since the `c073b11` checkpoint, OP_NTT, OP_INTT and OP_HKS_DIGIT all enter
-`Execute_Transform_Operation`. Its single transform call uses runtime direction,
-one four-lane CG engine and one set of ping-pong buffers. No flat/flat_out
-intermediate arrays or Copy_HKS_Tower passes remain in Top. A template
-wrapper is retained for direct-kernel tests, but is not reachable from Top.
-Forward/inverse twiddle memories and the two BConv scratch allocations remain.
-The standalone transform wrapper remains compatible. The optimized generated
-RTL hoists four shared MultMod units to Top and also uses that pool for OP_MULT;
-zero DSP in the CG submodule report therefore does NOT mean zero multipliers.
-All opcodes are still sequential; PE_PARALLEL=4 and the BConv array are unchanged.
+OP_NTT、OP_INTT、OP_HKS_DIGIT 仍经单一运行时调用入口共用一套4路CG引擎。
+独立变换接口仍兼容；兼容flat-array测试包装器不在Top可达RTL内。
+4路模乘在RTL中上提至Top并与OP_MULT共享，CG子模块显示0 DSP不代表没有乘法器。
+BConv的两个调用包装器共用15路模乘，P2已移除二者整塔local_in/out；不能再称其各自保留scratch。
+本阶段预乘仍有1路独立模乘（P4再复用），整机共20路。保留正反向twiddle存储。
+全部阶段仍顺序执行；没有 DATAFLOW 或 digit 间并行。AXI访问保留非内联单塔burst helper。
 
 Fixed-length, non-inlined single-tower transfer helpers are intentional. Keeping
 the runtime limb loop outside this boundary lets Vitis infer 256-bit bursts;

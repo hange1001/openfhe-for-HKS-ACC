@@ -42,6 +42,9 @@ set_part $hls_part
 create_clock -period 6ns
 set_clock_uncertainty 0.75ns
 config_interface -m_axi_max_widen_bitwidth 256 -m_axi_alignment_byte_size 32
+if {[info exists ::env(HKS_RANDOM_STALL)] && $::env(HKS_RANDOM_STALL) eq "1"} {
+    config_cosim -random_stall
+}
 if {$mode eq "csim"} {
     csim_design
 } else {

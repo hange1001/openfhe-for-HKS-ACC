@@ -143,47 +143,21 @@ static void Load_BConv_Params(
 }
 
 // =========================================================================
-// One runtime call site and fixed bank pair: no direction/caller specialization.
-// Only two source/destination choices, local to the load/store boundary.
+// One runtime call site, shared work A bank and exactly one scratch tower.
+// Physical slot and modulus index are distinct (compact digit vs global basis).
 // =========================================================================
-static void Execute_Transform(int limb, bool is_ntt, bool complement,
-                              int source_limb, bool store_coeff) {
+static void Execute_Transform(int limb, bool is_ntt, int source_limb) {
     #pragma HLS INLINE off
-    uint64_t bank_a[RING_DIM], bank_b[RING_DIM];
-    #pragma HLS ARRAY_PARTITION variable=bank_a cyclic factor=CG_BUF_PARTITION dim=1
-    #pragma HLS ARRAY_PARTITION variable=bank_b cyclic factor=CG_BUF_PARTITION dim=1
-    #pragma HLS BIND_STORAGE variable=bank_a type=ram_t2p impl=bram
-    #pragma HLS BIND_STORAGE variable=bank_b type=ram_t2p impl=bram
-    TRANSFORM_LOAD: for (int i = 0; i < RING_DIM / PE_PARALLEL; ++i) {
-        #pragma HLS PIPELINE II=1
-        for (int lane = 0; lane < PE_PARALLEL; ++lane) {
-            #pragma HLS UNROLL
-            const int k = i * PE_PARALLEL + lane;
-            const int row = k >> LOG_SQRT;
-            const int col = k & (SQRT - 1);
-            bank_a[k] = complement ? poly_buffer_1[source_limb][row][col]
-                                   : poly_buffer_2[source_limb][row][col];
-        }
-    }
-    CG_Transform_Banks(bank_a, bank_b, MODULUS[limb], S[limb], M[limb],
-                       NTTTwiddleFactor[limb], INTTTwiddleFactor[limb], is_ntt);
-    TRANSFORM_STORE: for (int i = 0; i < RING_DIM / PE_PARALLEL; ++i) {
-        #pragma HLS PIPELINE II=1
-        for (int lane = 0; lane < PE_PARALLEL; ++lane) {
-            #pragma HLS UNROLL
-            const int k = i * PE_PARALLEL + lane;
-            const int row = k >> LOG_SQRT;
-            const int col = k & (SQRT - 1);
-            const uint64_t value = (STAGE & 1) ? bank_b[k] : bank_a[k];
-            if (store_coeff) poly_buffer_2[limb][row][col] = value;
-            else result_buffer[limb][row][col] = value;
-        }
-    }
+    uint64_t scratch[RING_DIM];
+    #pragma HLS ARRAY_PARTITION variable=scratch cyclic factor=CG_BUF_PARTITION dim=1
+    #pragma HLS BIND_STORAGE variable=scratch type=ram_t2p impl=bram
+    CG_Transform_Work(poly_buffer_1, source_limb, scratch, MODULUS[limb], S[limb], M[limb],
+                     NTTTwiddleFactor[limb], INTTTwiddleFactor[limb], is_ntt);
 }
 
 
 // Preserve EVAL bypass values during the original AXI load, not in another pass.
-static void Load_Transform_Tower(const uint64_t* input, int src, int dst,
+static void Load_Transform_Tower(const uint64_t* input, int src, int global_limb,
                                  bool preserve_eval) {
     #pragma HLS INLINE off
     LOAD_TRANSFORM_WORD: for (int k = 0; k < RING_DIM; ++k) {
@@ -192,8 +166,8 @@ static void Load_Transform_Tower(const uint64_t* input, int src, int dst,
         const uint64_t value = input[src * RING_DIM + k];
         const int row = k >> LOG_SQRT;
         const int col = k & (SQRT - 1);
-        poly_buffer_2[dst][row][col] = value;
-        if (preserve_eval) result_buffer[dst][row][col] = value;
+        poly_buffer_1[src][row][col] = value;
+        if (preserve_eval) result_buffer[global_limb][row][col] = value;
     }
 }
 
@@ -202,6 +176,32 @@ static void Load_Transform_Input(const uint64_t* input, int count, int start,
     #pragma HLS INLINE off
     LOAD_TRANSFORM_LIMB: for (int l = 0; l < count; ++l) {
         Load_Transform_Tower(input, l, start + l, preserve_eval);
+    }
+}
+
+// Scatter directly from physical work slots to the requested output basis.
+// Both input towers and bypass copies are already resident before any AXI write,
+// preserving the existing input/output alias contract.
+static void Store_Transform_Tower(uint64_t* output, int dst, int slot, bool bypass) {
+    #pragma HLS INLINE off
+    STORE_TRANSFORM_WORD: for (int k = 0; k < RING_DIM; ++k) {
+        #pragma HLS PIPELINE II=1
+        #pragma HLS UNROLL factor=PE_PARALLEL
+        const int row = k >> LOG_SQRT;
+        const int col = k & (SQRT - 1);
+        output[dst * RING_DIM + k] = bypass ? result_buffer[dst][row][col]
+                                            : poly_buffer_1[slot][row][col];
+    }
+}
+
+static void Store_Transform_Output(uint64_t* output, bool fused, int alpha, int start) {
+    #pragma HLS INLINE off
+    const int count = fused ? MAX_OUT_COLS : alpha;
+    STORE_TRANSFORM_LIMB: for (int l = 0; l < count; ++l) {
+        const bool bypass = fused && l >= start && l < start + alpha;
+        const int p = l < start ? l : l - alpha;
+        const int slot = fused ? (bypass ? 0 : LIMB_Q + p) : l;
+        Store_Transform_Tower(output, l, slot, bypass);
     }
 }
 
@@ -241,10 +241,9 @@ static void Load_HKS_Params(
 }
 
 // ApproxSwitchCRTBasis applies QHatInv before the BConv matrix product.
-// Compact global input slots into digit-local BConv rows and clear stale rows.
+// Input is already digit-local; read and write the SAME coefficient in place.
 static void Prepare_HKS_BConv_Input(
-    const uint64_t coeff[MAX_LIMBS][SQRT][SQRT],
-    uint64_t compact[MAX_LIMBS][SQRT][SQRT],
+    uint64_t work[MAX_LIMBS][SQRT][SQRT],
     const uint64_t inv[LIMB_Q], int alpha, int digit_start
 ) {
     #pragma HLS INLINE off
@@ -256,8 +255,8 @@ static void Prepare_HKS_BConv_Input(
                 #pragma HLS PIPELINE II=1
                 const int l = digit_start + q;
                 uint64_t scaled;
-                MultMod(coeff[l][i][j], inv[q], MODULUS[l], M[l], S[l], scaled);
-                compact[q][i][j] = scaled;
+                MultMod(work[q][i][j], inv[q], MODULUS[l], M[l], S[l], scaled);
+                work[q][i][j] = scaled;
             }
         }
     }
@@ -308,10 +307,10 @@ static void Execute_Transform_Operation(
         const bool complement = fused && step >= alpha;
         const bool is_ntt = fused ? complement : opcode == OP_NTT;
         int limb = digit_start + step;
-        int source_limb = limb;
+        int source_limb = step;
         if (complement) {
             if (step == alpha) {
-                Prepare_HKS_BConv_Input(poly_buffer_2, poly_buffer_1, inv, alpha, digit_start);
+                Prepare_HKS_BConv_Input(poly_buffer_1, inv, alpha, digit_start);
                 Compute_BConv_Systolic(poly_buffer_1, weights, out_mod, out_s, out_m,
                                       MAX_OUT_COLS - alpha, alpha);
             }
@@ -319,12 +318,9 @@ static void Execute_Transform_Operation(
             limb = p < digit_start ? p : p + alpha;
             source_limb = LIMB_Q + p;
         }
-        Execute_Transform(limb, is_ntt, complement, source_limb, fused && !complement);
+        Execute_Transform(limb, is_ntt, source_limb);
     }
-    if (fused)
-        Store(result_buffer, mem_out, MAX_OUT_COLS, 0);
-    else
-        Store(result_buffer, mem_out, alpha, digit_start);
+    Store_Transform_Output(mem_out, fused, alpha, digit_start);
 }
 
 // =========================================================================
@@ -350,11 +346,12 @@ void Top(
     #pragma HLS INTERFACE s_axilite port=mod_index        bundle=control
     #pragma HLS INTERFACE s_axilite port=return           bundle=control
 
-    #pragma HLS ARRAY_PARTITION variable=poly_buffer_1 cyclic factor=PE_PARALLEL dim=3
+    #pragma HLS ARRAY_PARTITION variable=poly_buffer_1 complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=poly_buffer_1 cyclic factor=CG_BUF_PARTITION dim=3
     #pragma HLS ARRAY_PARTITION variable=poly_buffer_2 cyclic factor=PE_PARALLEL dim=3
     #pragma HLS ARRAY_PARTITION variable=result_buffer cyclic factor=PE_PARALLEL dim=3
 
-    #pragma HLS BIND_STORAGE variable=poly_buffer_1 type=ram_2p impl=bram
+    #pragma HLS BIND_STORAGE variable=poly_buffer_1 type=ram_t2p impl=bram
     #pragma HLS BIND_STORAGE variable=poly_buffer_2 type=ram_2p impl=bram
     #pragma HLS BIND_STORAGE variable=result_buffer type=ram_2p impl=bram
 

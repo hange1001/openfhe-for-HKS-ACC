@@ -243,6 +243,26 @@ void run_case(int alpha, int start, unsigned seed, int pattern) {
     std::vector<uint64_t> fused = call(OP_HKS_DIGIT, alpha, start, input, meta, MAX_OUT_COLS * RING_DIM);
     expect(same(fused, expected, label + " golden"), label + " scalar CRT/NTT reference");
     expect(same(fused, separated, label + " split"), label + " separate opcode reference");
+#ifndef HKS_RTL_SMOKE
+    // Native/ASan only: separate AXI masters in HLS cosim do not model aliasing.
+    // Exercise exact and partial overlap; the original EVAL bypass must survive.
+    if (alpha == 2 && start == 1) {
+        for (int offset : {0, 4, RING_DIM}) {
+            std::vector<uint64_t> alias(IN1_DEPTH, CANARY);
+            std::copy(input.begin(), input.end(), alias.begin());
+            const auto before_alias = alias;
+            const auto before_meta = meta;
+            Top(alias.data(), meta.data(), alias.data() + offset, OP_HKS_DIGIT, alpha, start);
+            expect(std::equal(expected.begin(), expected.end(), alias.begin() + offset),
+                   label + " overlapping input/output " + std::to_string(offset));
+            expect(std::equal(alias.begin(), alias.begin() + offset, before_alias.begin()),
+                   "alias prefix guard");
+            expect(std::equal(alias.begin() + offset + expected.size(), alias.end(),
+                              before_alias.begin() + offset + expected.size()), "alias suffix guard");
+            expect(meta == before_meta, "alias metadata unchanged");
+        }
+    }
+#endif
     std::cout << "[HKS " << (before == failures ? "PASS" : "FAIL") << "] " << label << '\n';
 }
 
