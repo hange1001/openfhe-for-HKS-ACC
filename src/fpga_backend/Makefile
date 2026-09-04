@@ -34,7 +34,6 @@ KERNEL_SRC += $(SRC_DIR)/ntt_kernel.cpp
 KERNEL_SRC += $(SRC_DIR)/arithmetic.cpp
 KERNEL_SRC += $(SRC_DIR)/bconv.cpp
 KERNEL_SRC += $(SRC_DIR)/interleave.cpp
-KERNEL_SRC += $(SRC_DIR)/auto.cpp
 KERNEL_SRC += $(SRC_DIR)/cg_ntt.cpp
 KERNEL_SRC += $(SRC_DIR)/bconv_naive.cpp
 KERNEL_SRC += $(SRC_DIR)/bconv_systolic.cpp
@@ -79,7 +78,7 @@ REPORTS_OUT := ../../docs/reports/hls
 # 所有模块的顶层数字汇总成一张表（一模块一行），跨 commit 看 delta 只需 diff 这个文件
 SUMMARY_CSV := ../../docs/reports/summary.csv
 
-.PHONY: all clean clean_all emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module test_auto report report_all
+.PHONY: all clean clean_all emconfig xclbin sw_emu hw_emu hw csim csynth cosim check_module report report_all
 
 all: $(BUILD_DIR) $(HOST_LIB) $(XCLBIN) emconfig
 

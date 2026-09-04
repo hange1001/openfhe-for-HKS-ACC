@@ -14,7 +14,7 @@
 
 ## 两个研究轴
 
-1. **FPGA 微架构**（[src/fpga_backend/](../src/fpga_backend/)）— BConv 脉动阵列 + CG-NTT 常几何蝶形 + Barrett 模乘 + 512-bit AXI 突发
+1. **FPGA 微架构**（[src/fpga_backend/](../src/fpga_backend/)）— BConv 脉动阵列 + 单套双向 CG 变换 + Barrett 模乘；当前 Top 为三个 256-bit AXI，历史独立 CG 微基准曾为 512-bit
 2. **Host 调度**（[src/pke/lib/keyswitch/keyswitch-hybrid.cpp](../src/pke/lib/keyswitch/keyswitch-hybrid.cpp) + [src/pke/include/keyswitch/hks_strategy.h](../src/pke/include/keyswitch/hks_strategy.h)）— 三种 HKS 数据流策略（DC / MP / OC）+ MemoryTracker + HKSStats
 
 ## 代码目录结构
@@ -43,15 +43,16 @@ openfhe-for-HKS-ACC/
 
 - **CG-NTT 取代标准 NTT**：固定几何消除变 stride MUX，单 limb 延迟 7.17× 加速
 - **Barrett 模约减取代硬件除法器**：消除 BConv 30 个 urem，释放 ~198K LUT
-- **opcode-RPC 调度而非 FPGA 内部 FSM**：粗粒度 FHE 算子计算量远大于 CPU 调度开销（详见 [../docs/papers/fsm_vs_cpu_scheduling.md](../docs/papers/fsm_vs_cpu_scheduling.md)）
-- **512-bit AXI 总线**：L1 优化已完成，I/O 8× 缩减
+- **主机 opcode 调度 + 核内复合算子**：OP_HKS_DIGIT 内部由 HLS 状态机调度 ModUp；并非 FPGA 没有 FSM，端到端收益需测量
+- **当前 Top 为 256-bit AXI**：历史独立 512-bit CG 微基准的 I/O 8× 结论不能套用当前整核
+- **FPGA AUTO 已移除**：检查点 `480dc91` 保留旧版；CPU 自同构和旋转不删，最新验证见 MAP 与中文报告
 
 ## 关键约定
 
 - **FPGA 参数**（[src/fpga_backend/include/define.h](../src/fpga_backend/include/define.h)）：
-  - `RING_DIM = 1 << 12` (4096)、`SQRT = 1 << 6` (64)、`STAGE = 12`、`PE_PARALLEL = 4`（⚠️ cg_ntt.cpp:191 的 pragma 仍硬编码 8，见 task.yaml q7）
+  - `RING_DIM = 1 << 12` (4096)、`SQRT = 1 << 6` (64)、`STAGE = 12`、`PE_PARALLEL = 4`（当前 Top 可达 RTL 已核验为四路共享变换）
   - `LIMB_Q = 3`、`LIMB_P = 2`、`MAX_LIMBS = 8`
-- **opcode**：`OP_INIT=0 / OP_ADD=1 / OP_SUB=2 / OP_MULT=3 / OP_NTT=4 / OP_INTT=5 / OP_BCONV=6 / OP_AUTO=7`
+- **opcode**：`OP_INIT=0 / OP_ADD=1 / OP_SUB=2 / OP_MULT=3 / OP_NTT=4 / OP_INTT=5 / OP_BCONV=6 / OP_HKS_DIGIT=8`；7 已退役，不重排编号
 - **Host 端 HKS 策略**：`HKSStrategy::{DC, MP, OC}` 枚举 + `SetHKSStrategy()`
 - **不做的事**：不修改 OpenFHE 第三方依赖、不在 Top 顶层裸写 AXI for 循环（必须封装到 `INLINE off` 子函数）
 - **协作角色**：详见 [../docs/notes/role.md](../docs/notes/role.md)（数字 IC 架构师 / 苏格拉底导师）
@@ -62,7 +63,7 @@ openfhe-for-HKS-ACC/
 |------|------|
 | CG-NTT 迁移 + bit-reverse 修复 | ✅ |
 | BConv Systolic（6.5× 加速） | ✅ |
-| 512-bit AXI L1 优化 | ✅ |
+| Top 256-bit AXI / 去整塔拷贝 / 删除 FPGA AUTO | ✅ 功能、RTL 与 P&R 完成；严格裕量按7ns通过，见 MAP |
 | HKS 三策略 Host 端 | ✅ 实测：DC 4.47ms / MP 5.17ms / OC 5.99ms |
 | OC 策略对齐 CiFlow 论文 | ⚠️ 当前实现是"DC+sizeP 冗余"，详见 [../docs/notes/OC_strategy_gap_analysis.md](../docs/notes/OC_strategy_gap_analysis.md) |
 | L1 算子划分 + L2 三性能模型 | ✅ 推导 v1 完成：[../docs/notes/L1L2_推导v1.md](../docs/notes/L1L2_推导v1.md)（算子账 / 三模型实例化 / F2 口径对账），方法论见[指南](../docs/notes/L1L2_算子划分与性能模型指南.md) |

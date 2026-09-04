@@ -17,7 +17,6 @@
     - NTT Forward  (OP_NTT)
     - NTT Inverse  (OP_INTT)
     - NTT Round-trip (NTT -> INTT == identity)
-    - Automorphism (OP_AUTO)
     - BConv (OP_BCONV)
     - ModOpBatch (批量 ADD / SUB / MULT)
  */
@@ -256,43 +255,6 @@ static bool TestNttRoundTrip(uint64_t modulus, size_t N) {
     std::cout << std::endl;
 
     return ok;
-}
-
-// =============================================================================
-// 测试：Automorphism (OP_AUTO)
-// 验证：Auto(x, k=1) 等价于将多项式系数循环位移 1 位（在 NTT 域外则为置换）
-// 最简单的正确性验证：Auto(x, k) 之后再 Auto(x, k_inv) 应当还原
-// =============================================================================
-static bool TestAuto(uint64_t modulus, size_t N) {
-    PrintSection("TEST: Automorphism (OP_AUTO)");
-
-    // 使用 galois element k=5, kinv = ModInverse(5, 2*N)
-    // 对于 N=4096，2N=8192，此处演示 k=3
-    uint32_t k    = 3;
-    // kinv = k^{-1} mod 2N  (使用扩展 Euclidean)
-    // 简单枚举求 k_inv
-    uint32_t twoN = (uint32_t)(2 * N);
-    uint32_t kinv = 0;
-    for (uint32_t t = 1; t < twoN; ++t) {
-        if ((uint64_t)k * t % twoN == 1) { kinv = t; break; }
-    }
-    if (kinv == 0) {
-        std::cerr << "  [SKIP] Could not find inverse of k=" << k << " mod 2N=" << twoN << std::endl;
-        return true;
-    }
-    std::cout << "  Using k=" << k << ", kinv=" << kinv << " (mod 2N=" << twoN << ")" << std::endl;
-
-    std::vector<uint64_t> poly_in(N), after_auto(N, 0), restored(N, 0);
-    for (size_t i = 0; i < N; ++i)
-        poly_in[i] = (i * 11 + 7) % modulus;
-
-    // Auto(x, k)
-    FpgaManager::GetInstance().AutoOffload(poly_in.data(), after_auto.data(), k, kinv, modulus, N);
-
-    // Auto(Auto(x,k), kinv) 应当还原为 poly_in
-    FpgaManager::GetInstance().AutoOffload(after_auto.data(), restored.data(), kinv, k, modulus, N);
-
-    return CheckEqual("Auto round-trip (Auto(Auto(x,k),kinv)==x)", restored, poly_in);
 }
 
 // =============================================================================
@@ -636,9 +598,6 @@ int main() {
         // ----- NTT -----
         run("NTT Forward", TestNttForward(cc, test_mod, N));  // 简单跳过，由 round-trip 覆盖
         run("NTT Round-trip", TestNttRoundTrip(test_mod, N));
-
-        // ----- Automorphism -----
-        run("Automorphism", TestAuto(test_mod, N));
 
         // ----- 批量算术 -----
         int numLimbs = (int)std::min(q_mods.size(), (size_t)MAX_LIMBS);

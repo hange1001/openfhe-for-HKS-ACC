@@ -1,5 +1,9 @@
 # OP_HKS_DIGIT prototype
 
+当前版本已移除 FPGA AUTO：编号 7 退役，其他指令编号与 256 位接口不变。
+OpenFHE CPU 自同构仍保留。删除前检查点为 `480dc91`，本轮结果以
+[移除 AUTO 报告](../../docs/reports/hls/hks_no_auto_20260904/README.md) 为准；下文旧资源/时序章节保留其历史口径。
+
 Scope: one digit of ModUp, not a complete key switch. OpenFHE integration now
 exists with an opt-in HLS C-model / XRT transport. The C-model is verified;
 XRT is compile-checked only. No KeyMult fusion, cross-call polynomial cache,

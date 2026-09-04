@@ -12,7 +12,7 @@ import re
 import xml.etree.ElementTree as ET
 
 
-def audit(solution, lanes, axi_width=None):
+def audit(solution, lanes, axi_width=None, no_auto=False):
     rtl = solution / "syn" / "verilog"
     modules = {}
     for path in rtl.glob("*.v"):
@@ -37,6 +37,10 @@ def audit(solution, lanes, axi_width=None):
         return counts
 
     counts = hierarchy("Top")
+    auto_instances = {name: n for name, n in counts.items()
+                      if re.search(r"Compute_Auto|Load_Auto_Meta|^Top_Auto(?:_|$)", name)}
+    if no_auto and auto_instances:
+        raise ValueError("Retired automorphism hardware remains reachable: " + str(auto_instances))
     core = "CG_Transform_Banks" if counts["Top_CG_Transform_Banks"] else "CG_Transform_Kernel"
     chain = ["Top_Execute_Transform_Operation", "Top_Execute_Transform", "Top_" + core]
     for name in chain:
@@ -105,6 +109,7 @@ def audit(solution, lanes, axi_width=None):
     return {
         "status": "PASS", "scope": "Vitis generated RTL structural audit only",
         "chain_instances": {name: counts[name] for name in chain},
+        "auto_instances": auto_instances,
         "core_shared_MultMod_instances": multipliers,
         "multiplier_location": multiplier_location,
         "total_MultMod_instances": total_multipliers,
@@ -127,9 +132,10 @@ if __name__ == "__main__":
     parser.add_argument("--axi-width", type=int, help="Require all actual AXI data widths and no tower-copy modules")
     parser.add_argument("--total-multipliers", type=int, help="Require unchanged/reduced whole-Top compute capacity")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--no-auto", action="store_true", help="Reject reachable retired automorphism hardware")
     args = parser.parse_args()
     try:
-        result = audit(args.solution, args.lanes, args.axi_width)
+        result = audit(args.solution, args.lanes, args.axi_width, args.no_auto)
         if args.total_multipliers is not None and result["total_MultMod_instances"] != args.total_multipliers:
             raise ValueError("Unexpected whole-Top multiplier count")
     except (ValueError, OSError, ET.ParseError) as exc:

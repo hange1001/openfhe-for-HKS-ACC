@@ -1,6 +1,7 @@
 #include "openfhe.h"
 #include "keyswitch/hks_digit_offload.h"
 #include "keyswitch/hks_strategy.h"
+#include "FpgaManager.h"
 #include <algorithm>
 #include <cmath>
 #include <chrono>
@@ -256,6 +257,12 @@ int main(int argc, char** argv) {
         if (argc == 4 && std::string(argv[1]) == "--benchmark-export")
             return BenchmarkAndExport(argv[2], argv[3]);
         if (argc != 1) throw std::invalid_argument("usage: hks-digit-openfhe-test [--benchmark-export fixture.txt cpu.json]");
+        uint64_t retiredOutput = 0xDEADBEEFULL;
+        bool retiredRejected = false;
+        try { FpgaManager::GetInstance().Execute(uint8_t(7), nullptr, nullptr, &retiredOutput, 1, 0); }
+        catch (const std::invalid_argument&) { retiredRejected = true; }
+        Require(retiredRejected, "retired opcode 7 rejected before device access");
+        Require(retiredOutput == 0xDEADBEEFULL, "retired opcode leaves host output unchanged");
         ConfigureHKSDigitBackend(HKSDigitBackend::Off);
         SetHKSStrategy(HKSStrategy::DC);
         const auto cc = Context();

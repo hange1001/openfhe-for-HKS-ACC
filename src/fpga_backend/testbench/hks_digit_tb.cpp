@@ -151,6 +151,9 @@ void run_port_regression() {
             b[l * RING_DIM + k] = (uint64_t(k) * 43 + l + 1) % q;
         }
     }
+    // A valid old identity request must now leave the entire output untouched.
+    // Subsequent arithmetic and HKS cases verify cached context still works.
+    call(uint8_t(7), count, start, a, {1, 1}, 0);
     for (uint8_t op : {OP_ADD, OP_SUB, OP_MULT}) {
         for (size_t k = 0; k < a.size(); ++k) {
             const uint64_t q = primes[start + k / RING_DIM];
@@ -161,9 +164,7 @@ void run_port_regression() {
         expect(same(out, expected, "wide-port opcode=" + std::to_string(op)),
                "wide-port lane order / nonzero tower offset");
     }
-    const auto identity = call(OP_AUTO, count, start, a, {1, 1}, a.size());
-    expect(same(identity, a, "wide-port identity automorphism"), "AUTO metadata / lane order");
-    std::cout << "[PORT REGRESSION] ADD/SUB/MULT/AUTO, two towers at start=1, guards checked\n";
+    std::cout << "[PORT REGRESSION] retired opcode 7 + ADD/SUB/MULT, start=1, guards checked\n";
 }
 
 void run_case(int alpha, int start, unsigned seed, int pattern) {
@@ -295,6 +296,7 @@ int run_hks_digit_tests() {
     std::copy(small, small + MAX_OUT_COLS, primes);
     if (!set_roots()) return failures - before;
     initialize();
+    run_port_regression();
     for (int a = 1; a <= LIMB_Q; ++a)
         for (int s = 0; s <= LIMB_Q - a; ++s) run_case(a, s, 0x7101U + a + s, 0);
     for (unsigned seed : {0x8102U, 0x9103U, 0xA104U}) {
@@ -308,7 +310,6 @@ int run_hks_digit_tests() {
     const int invalid[][2] = {{0, 0}, {-1, 0}, {4, 0}, {2, -1}, {2, 2},
                               {1, 3}, {1, 2147483647}, {2147483647, 0}};
     for (const auto& d : invalid) call(OP_HKS_DIGIT, d[0], d[1], {}, {}, 0);
-    run_port_regression();
     initialize(true);
     call(OP_HKS_DIGIT, 1, 2, {}, {}, 0);
 
@@ -343,11 +344,11 @@ int main() {
     std::copy(moduli, moduli + MAX_OUT_COLS, primes);
     if (!set_roots()) return 1;
     initialize();
+    run_port_regression();
     run_case(2, 0, 0xD107U, 0);
     run_case(1, 2, 0xD108U, 0);
     run_case(3, 0, 0xD109U, 2);
     run_case(2, 1, 0xD10AU, 0);
-    run_port_regression();
     call(OP_HKS_DIGIT, 2, 2, {}, {}, 0);
     std::cout << "[HKS RTL SMOKE] " << cases << " valid cases, " << failures << " failures\n";
     return failures ? 1 : 0;

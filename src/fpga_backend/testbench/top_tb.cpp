@@ -8,18 +8,19 @@
 //   Test 3 - OP_SUB：多 limb 逐元素模减
 //   Test 4 - OP_MULT：多 limb 逐元素 Barrett 模乘
 //   Test 5 - OP_NTT → OP_INTT 往返恢复（单 limb + 多 limb）
-//   Test 6 - OP_AUTO：k 与 kinv 两次 automorphism 还原
+//   Test 6 - 退役 opcode 7：不读写外部缓冲区
 //   Test 7 - OP_BCONV：BConv Q→P（sizeP=LIMB_P 与 sizeP=MAX_OUT_COLS）
 //
 // 说明：
 //   - Top 函数内部维护 static MODULUS/S/M/NTTTwiddleFactor 等全局表，
-//     故一次 OP_INIT 后，后续 ADD/SUB/MULT/NTT/INTT/AUTO 共用该状态。
+//     故一次 OP_INIT 后，后续 ADD/SUB/MULT/NTT/INTT 共用该状态。
 //   - 为简化测试，所有 limb 使用同一 NTT-friendly 素数 3221225473 (≡1 mod 2N)。
 //
 // 编译：make csim MODULE=Top（需要先在 Makefile 中为 Top 绑定 TB_Top := ./testbench/top_tb.cpp）
 //============================================================================
 
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
 #include <cstdint>
 #include <cstring>
@@ -318,50 +319,22 @@ static void test_ntt_intt_roundtrip(uint64_t MOD, int num_limbs, int mod_index) 
 }
 
 // ------------------------------------------------------------
-// Test 6 — OP_AUTO：k=5, kinv = 5^{-1} mod 2N，两次调用应恒等
+// Test 6 — retired opcode 7 must not write output or alter input buffers.
 // ------------------------------------------------------------
-static uint32_t inv_mod_2N(uint32_t k, uint32_t two_N) {
-    // 扩展欧几里得（两个都是正整数，k 与 2N=8192 互素）
-    int64_t old_r = k,     r  = two_N;
-    int64_t old_s = 1,     s  = 0;
-    while (r != 0) {
-        int64_t q = old_r / r;
-        int64_t tr = old_r - q * r; old_r = r; r = tr;
-        int64_t ts = old_s - q * s; old_s = s; s = ts;
-    }
-    int64_t inv = old_s % (int64_t)two_N;
-    if (inv < 0) inv += two_N;
-    return (uint32_t)inv;
-}
-
-static void test_auto_roundtrip(uint64_t MOD, int num_limbs, int mod_index) {
-    std::cout << "\n[Test 6] OP_AUTO 往返 (num_limbs=" << num_limbs
-              << ", mod_index=" << mod_index << ")\n";
-    const int N = num_limbs * RING_DIM;
-    const uint32_t two_N = 2 * RING_DIM;
-    const uint32_t k     = 5;
-    const uint32_t kinv  = inv_mod_2N(k, two_N);
-
-    std::vector<uint64_t> in(N), mid(N), back(N);
-    random_fill(in.data(), N, MOD, 0xAEF0);
-
-    // mem_in2 = [k, kinv]
-    std::vector<uint64_t> params_fwd = { k, kinv };
-    std::vector<uint64_t> params_inv = { kinv, k };
-
-    TopSim(in.data(),  N, params_fwd.data(), (int)params_fwd.size(), mid.data(),  N, OP_AUTO, num_limbs, mod_index);
-    TopSim(mid.data(), N, params_inv.data(), (int)params_inv.size(), back.data(), N, OP_AUTO, num_limbs, mod_index);
-
-    bool ok = true;
-    int bad = 0;
-    for (int i = 0; i < N && bad < 3; i++) {
-        if (back[i] != in[i]) {
-            ok = false; bad++;
-            std::cout << "  mismatch@" << i << " got=" << back[i]
-                      << " want=" << in[i] << "\n";
-        }
-    }
-    check(ok, "OP_AUTO(kinv, OP_AUTO(k, x)) == x");
+static void test_retired_opcode() {
+    std::fill(g_buf_in1, g_buf_in1 + COSIM_D_IN1, 17);
+    std::fill(g_buf_in2, g_buf_in2 + COSIM_D_IN2, 23);
+    std::fill(g_buf_out, g_buf_out + COSIM_D_OUT, 0xDEADBEEFULL);
+    g_buf_in2[0] = g_buf_in2[1] = 1;  // valid metadata for the OLD identity opcode
+    Top(g_buf_in1, g_buf_in2, g_buf_out, uint8_t(7), LIMB_Q, 0);
+    const bool ok = std::all_of(g_buf_out, g_buf_out + COSIM_D_OUT,
+                               [](uint64_t x) { return x == 0xDEADBEEFULL; }) &&
+                    std::all_of(g_buf_in1, g_buf_in1 + COSIM_D_IN1,
+                                [](uint64_t x) { return x == 17; }) &&
+                    g_buf_in2[0] == 1 && g_buf_in2[1] == 1 &&
+                    std::all_of(g_buf_in2 + 2, g_buf_in2 + COSIM_D_IN2,
+                                [](uint64_t x) { return x == 23; });
+    check(ok, "retired opcode 7 leaves all external buffers unchanged");
 }
 
 // ------------------------------------------------------------
@@ -477,7 +450,7 @@ int main() {
     test_ntt_intt_roundtrip(MOD, /*num_limbs=*/1,      /*mod_index=*/0);
     test_ntt_intt_roundtrip(MOD, /*num_limbs=*/LIMB_Q, /*mod_index=*/0);
 
-    test_auto_roundtrip(MOD, /*num_limbs=*/LIMB_Q, /*mod_index=*/0);
+    test_retired_opcode();
 
     // 偏移测试：num=2, mod_index=1 → 写入 buffer[1..2]
     test_add(MOD, /*num_limbs=*/2, /*mod_index=*/1);

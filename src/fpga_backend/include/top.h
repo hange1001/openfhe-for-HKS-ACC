@@ -13,7 +13,8 @@
 
 extern "C" {
     // Device addresses must be at least 32-byte aligned for the 256-bit AXI
-    // implementation. uint64_t layout, sizes, opcodes and C-model ABI are unchanged.
+    // implementation. uint64_t layout and retained opcode IDs are unchanged.
+    // Opcode 7 is retired: no memory access or output write. No status return ABI.
     void Top(
         const uint64_t *mem_in1,
         const uint64_t *mem_in2,

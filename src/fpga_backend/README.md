@@ -4,7 +4,7 @@
 kernel、C 仿真 testbench、以及驱动 HLS/Vitis 两条流程的 Makefile 与 tcl 脚本。
 
 - **目标板卡**：Xilinx Alveo U55C（`xcu55c-fsvh2892-2L-e`）
-- **时钟**：6 ns（166 MHz），`set_clock_uncertainty 0.75ns`
+- **目标时钟**：6 ns（约 166.7 MHz），`set_clock_uncertainty 0.75ns`；是否达成须看对应版本 P&R
 - **工具链**：Vitis HLS **2023.2** + XRT 2.16（WSL `/tools/Xilinx/Vitis_HLS/2023.2`）
 - **HLS 顶层函数**：`Top`（[src/top.cpp](src/top.cpp)）
 
@@ -16,38 +16,25 @@ kernel、C 仿真 testbench、以及驱动 HLS/Vitis 两条流程的 Makefile �
 ## 1. 数据流：Host 怎么调到 Kernel
 
 软硬件边界是一个**极薄的 opcode-RPC**：Host 传一个 opcode + 两块输入缓冲，
-FPGA 侧 `Top` 用一个 `switch` 分发。FPGA 内部没有 FSM 调度器 —— 这是有意的选择，
-理由见 [docs/papers/fsm_vs_cpu_scheduling.md](../../docs/papers/fsm_vs_cpu_scheduling.md)。
+FPGA 侧 `Top` 用一个 `switch` 分发；函数内仍有 HLS 生成的控制状态机。
+当前以 HKS 为目标，已移除 FPGA AUTO，自同构保留在 OpenFHE CPU 路径。
 
-```
-OpenFHE 算子                        Host 桥接层                     FPGA
-─────────────────────────────────────────────────────────────────────────────────
-DCRTPoly / Poly 的
-  SwitchFormat / Automorphism  ─┐
-  ApproxSwitchCRTBasis         ─┤
-                                │
-  [OPENFHE_FPGA_ENABLE hook]    │   FpgaManager (单例, XRT 封装)
-  poly-impl.h                   ├──▶  NttForwardOffload   ─┐
-  dcrtpoly-impl.h               │     NttInverseOffload    │
-                                │     AutoOffload          ├─▶ Execute(opcode,…)
-                                │     BConvOffload         ─┘        │
-                                                                     │  m_axi
-                                                                     ▼
-                                                          ┌──────────────────────┐
-                                                          │  Top()  switch(op)   │
-                                                          ├──────────────────────┤
-                                                    OP_INIT│ Load_Init_Params    │
-                                                    OP_ADD │ Compute_Add         │
-                                                    OP_SUB │ Compute_Sub         │
-                                                   OP_MULT │ Compute_Mult        │
-                                                    OP_NTT │ Execute_NTT   ─┐    │
-                                                   OP_INTT │ Execute_INTT  ─┼─▶ CG_NTT_Kernel<T>
-                                                  OP_BCONV │ Compute_BConv_Systolic
-                                                   OP_AUTO │ Compute_Auto        │
-                                                          └──────────────────────┘
-```
+融合入口为 `EvalKeySwitchPrecomputeCore` → `TryHKSDigitOffload` → C-model 或
+`HksDigitTransfer` → `Top(OP_HKS_DIGIT)`。目前融合的是单 digit ModUp，不是完整 HKS。
 
-**AXI 端口**（[top.cpp:206](src/top.cpp#L206)）：`mem_in1`→gmem0、`mem_in2`→gmem1、`mem_out`→gmem2，
+| 保留指令 | 用途 |
+|---|---|
+| OP_INIT=0 | 初始化模数、Barrett 参数与双方向 twiddle |
+| OP_ADD=1 / OP_SUB=2 / OP_MULT=3 | HKS 相关模运算基础模块与回归入口 |
+| OP_NTT=4 / OP_INTT=5 | 共用一套双向 CG_Transform_Banks 引擎 |
+| OP_BCONV=6 | 脉动阵列基转换 |
+| 编号 7 | 退役保留，不映射到其他指令；Top 不读写外部内存，主机 Execute 抛出异常 |
+| OP_HKS_DIGIT=8 | INTT、预缩放、BConv、NTT 融合与原 EVAL digit 旁路 |
+
+删除前的完整版本已保存为 `480dc91`。源码没有 FPGA AUTO 的实现、元数据加载或卸载 API；
+历史报告不改写，最新验证见 [移除 AUTO 报告](../../docs/reports/hls/hks_no_auto_20260904/README.md)。
+
+**AXI 端口**（[top.cpp](src/top.cpp)）：`mem_in1`→gmem0、`mem_in2`→gmem1、`mem_out`→gmem2，数据端口均为 256 位；
 标量参数走 s_axilite。约定：**顶层不得裸写 AXI 循环**，所有 AXI 访问必须封装进
 `#pragma HLS INLINE off` 的子函数，否则 HLS 会在顶层生成巨型 MUX 导致时序崩溃
 （这是 [decisions.md](../../AI_Cowork/decisions.md) ADR-007 的结论）。
@@ -62,12 +49,11 @@ DCRTPoly / Poly 的
 | 文件 | 角色 | 说明 |
 |---|---|---|
 | [src/top.cpp](src/top.cpp) | 🟢 **产线** | HLS 顶层，opcode 分发 + 片上 buffer / 模数 / 旋转因子的静态存储 |
-| [src/cg_ntt.cpp](src/cg_ntt.cpp) | 🟢 **产线** | `CG_NTT_Kernel<IS_NTT>` — 部署的 NTT/INTT（恒定几何蝶形） |
+| [src/cg_ntt.cpp](src/cg_ntt.cpp) | 🟢 **产线** | `CG_Transform_Banks` — 一套运行时双向 NTT/INTT（恒定几何蝶形） |
 | [src/bconv_systolic.cpp](src/bconv_systolic.cpp) | 🟢 **产线** | `Compute_BConv_Systolic` — 部署的 BConv（3×5 脉动阵列） |
 | [src/arithmetic.cpp](src/arithmetic.cpp) | 🟢 **产线** | `MultMod`（Barrett）/ `AddMod` / `Karatsuba`，被所有 kernel 复用 |
 | [src/load.cpp](src/load.cpp) | 🟢 **产线** | `Load` / `Store` — DDR ↔ 片上 `[MAX_LIMBS][SQRT][SQRT]` 搬运 |
 | [src/mod_{add,sub,mult}_kernel.cpp](src/) | 🟢 **产线** | 逐元素模加/减/乘 |
-| [src/auto.cpp](src/auto.cpp) | 🟢 **产线** | `Compute_Auto` — 自同态（槽位旋转） |
 | [src/ntt_kernel.cpp](src/ntt_kernel.cpp) | ⚪ **基线** | 标准 NTT。CG-NTT 7.17× 加速比的对照组，**不在 `Top` 路径** |
 | [src/bconv_naive.cpp](src/bconv_naive.cpp) | ⚪ **基线** | 朴素 BConv。Systolic 6.5× 加速比的对照组 |
 | [src/bconv.cpp](src/bconv.cpp) | ⚪ **中间版本** | 向量内积阵列（**不是**脉动阵列），介于 naive 与 systolic 之间 |
@@ -101,7 +87,7 @@ DCRTPoly / Poly 的
 | `CG_BUF_PARTITION` | cg_ntt.h | `= 2 * PE_PARALLEL`，由**写端口**决定（每 PE 写 2 个连续地址），推导见该处注释 |
 
 > 注意 [bconv_systolic.cpp](src/bconv_systolic.cpp) 的 `LOAD_PAR = 8` 是**独立于 `PE_PARALLEL`** 的量：
-> 它对应 512-bit AXI 的 8×64-bit/拍，是 I/O 位宽而非计算并行度，不要跟着 `PE_PARALLEL` 一起改。
+> 它表示局部缓存搬运的 8×64-bit 并行量，不代表 Top 外部 AXI 位宽，不要跟着 `PE_PARALLEL` 一起改。
 
 ---
 

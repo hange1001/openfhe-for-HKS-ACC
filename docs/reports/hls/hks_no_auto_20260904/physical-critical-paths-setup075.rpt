@@ -1,0 +1,567 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version      : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
+| Date              : Fri Sep  4 16:50:33 2026
+| Host              : LAPTOP-PERMR8RO running 64-bit Ubuntu 22.04.5 LTS
+| Command           : report_timing -max_paths 10 -file /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/hks_digit_cosim-perf_no_auto_r1/solution1/impl/verilog/report/postroute_margin/paths_setup075.rpt
+| Design            : bd_0_wrapper
+| Device            : xcu55c-fsvh2892
+| Speed File        : -2L  PRODUCTION 1.30 05-01-2022
+| Design State      : Routed
+| Temperature Grade : E
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (VIOLATED) :        -0.672ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_6/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ram_reg/DINBDIN[25]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.618ns  (logic 0.907ns (16.143%)  route 4.711ns (83.857%))
+  Logic Levels:           0  
+  Clock Path Skew:        -0.036ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.040ns = ( 6.040 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ap_clk
+    RAMB36_X5Y7          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_6/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X5Y7          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_DOUTBDOUT[7])
+                                                      0.907     0.983 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_6/DOUTBDOUT[7]
+                         net (fo=11, routed)          4.711     5.694    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ram_reg_0[61]
+    RAMB36_X5Y41         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ram_reg/DINBDIN[25]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.040     6.040    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ap_clk
+    RAMB36_X5Y41         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ram_reg/CLKBWRCLK
+                         clock pessimism              0.000     6.040    
+                         clock uncertainty           -0.785     5.255    
+    RAMB36_X5Y41         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKBWRCLK_DINBDIN[25])
+                                                     -0.232     5.023    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_38_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          5.023    
+                         arrival time                          -5.694    
+  -------------------------------------------------------------------
+                         slack                                 -0.672    
+
+Slack (VIOLATED) :        -0.659ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ram_reg/DINADIN[13]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.592ns  (logic 1.574ns (28.146%)  route 4.018ns (71.854%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y8          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y8          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[13])
+                                                      1.037     1.113 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CASDOUTB[13]
+                         net (fo=1, routed)           0.025     1.138    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0_n_59
+    RAMB36_X7Y9          RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[13]_CASDOUTB[13])
+                                                      0.210     1.348 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1/CASDOUTB[13]
+                         net (fo=1, routed)           0.025     1.373    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1_n_59
+    RAMB36_X7Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[13]_CASDOUTB[13])
+                                                      0.210     1.583 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2/CASDOUTB[13]
+                         net (fo=1, routed)           0.025     1.608    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2_n_59
+    RAMB36_X7Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[13]_DOUTBDOUT[13])
+                                                      0.117     1.725 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_3/DOUTBDOUT[13]
+                         net (fo=13, routed)          3.943     5.668    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ram_reg_1[13]
+    RAMB36_X6Y33         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ram_reg/DINADIN[13]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ap_clk
+    RAMB36_X6Y33         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X6Y33         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[13])
+                                                     -0.244     5.010    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_72_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          5.010    
+                         arrival time                          -5.668    
+  -------------------------------------------------------------------
+                         slack                                 -0.659    
+
+Slack (VIOLATED) :        -0.657ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ram_reg/DINADIN[27]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.574ns  (logic 1.571ns (28.185%)  route 4.003ns (71.815%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ap_clk
+    RAMB36_X5Y10         RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X5Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[27])
+                                                      1.034     1.110 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CASDOUTB[27]
+                         net (fo=1, routed)           0.029     1.139    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0_n_45
+    RAMB36_X5Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[27]_CASDOUTB[27])
+                                                      0.210     1.349 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_1/CASDOUTB[27]
+                         net (fo=1, routed)           0.029     1.378    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_1_n_45
+    RAMB36_X5Y12         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[27]_CASDOUTB[27])
+                                                      0.210     1.588 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_2/CASDOUTB[27]
+                         net (fo=1, routed)           0.029     1.617    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_2_n_45
+    RAMB36_X5Y13         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[27]_DOUTBDOUT[27])
+                                                      0.117     1.734 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_3/DOUTBDOUT[27]
+                         net (fo=13, routed)          3.916     5.650    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ram_reg_1[27]
+    RAMB36_X6Y42         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ram_reg/DINADIN[27]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ap_clk
+    RAMB36_X6Y42         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X6Y42         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[27])
+                                                     -0.261     4.993    bd_0_i/hls_inst/inst/grp_Compute_BConv_Systolic_fu_721/local_in_x_78_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.993    
+                         arrival time                          -5.650    
+  -------------------------------------------------------------------
+                         slack                                 -0.657    
+
+Slack (VIOLATED) :        -0.650ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_4/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ram_reg/DINBDIN[5]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.579ns  (logic 1.182ns (21.187%)  route 4.397ns (78.813%))
+  Logic Levels:           1  (RAMB36E2=1)
+  Clock Path Skew:        -0.036ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.040ns = ( 6.040 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ap_clk
+    RAMB36_X6Y10         RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_4/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X6Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[5])
+                                                      1.065     1.141 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_4/CASDOUTB[5]
+                         net (fo=1, routed)           0.025     1.166    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_4_n_67
+    RAMB36_X6Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[5]_DOUTBDOUT[5])
+                                                      0.117     1.283 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_7_U/ram_reg_bram_5/DOUTBDOUT[5]
+                         net (fo=11, routed)          4.372     5.655    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ram_reg_0[41]
+    RAMB36_X5Y38         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ram_reg/DINBDIN[5]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.040     6.040    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ap_clk
+    RAMB36_X5Y38         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ram_reg/CLKBWRCLK
+                         clock pessimism              0.000     6.040    
+                         clock uncertainty           -0.785     5.255    
+    RAMB36_X5Y38         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKBWRCLK_DINBDIN[5])
+                                                     -0.250     5.005    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_30_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          5.005    
+                         arrival time                          -5.655    
+  -------------------------------------------------------------------
+                         slack                                 -0.650    
+
+Slack (VIOLATED) :        -0.648ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_4/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ram_reg/DINBDIN[15]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.559ns  (logic 1.152ns (20.723%)  route 4.407ns (79.277%))
+  Logic Levels:           1  (RAMB36E2=1)
+  Clock Path Skew:        -0.036ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.040ns = ( 6.040 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y12         RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_4/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y12         RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[15])
+                                                      1.035     1.111 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_4/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.140    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_4_n_57
+    RAMB36_X7Y13         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_DOUTBDOUT[15])
+                                                      0.117     1.257 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_5/DOUTBDOUT[15]
+                         net (fo=11, routed)          4.378     5.635    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ram_reg_0[51]
+    RAMB36_X5Y40         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ram_reg/DINBDIN[15]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.040     6.040    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ap_clk
+    RAMB36_X5Y40         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ram_reg/CLKBWRCLK
+                         clock pessimism              0.000     6.040    
+                         clock uncertainty           -0.785     5.255    
+    RAMB36_X5Y40         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKBWRCLK_DINBDIN[15])
+                                                     -0.267     4.988    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_34_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.988    
+                         arrival time                          -5.635    
+  -------------------------------------------------------------------
+                         slack                                 -0.648    
+
+Slack (VIOLATED) :        -0.638ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[31]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.548ns  (logic 1.550ns (27.937%)  route 3.998ns (72.063%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y8          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y8          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[31])
+                                                      1.013     1.089 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CASDOUTB[31]
+                         net (fo=1, routed)           0.028     1.117    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0_n_41
+    RAMB36_X7Y9          RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[31]_CASDOUTB[31])
+                                                      0.210     1.327 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1/CASDOUTB[31]
+                         net (fo=1, routed)           0.028     1.355    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1_n_41
+    RAMB36_X7Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[31]_CASDOUTB[31])
+                                                      0.210     1.565 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2/CASDOUTB[31]
+                         net (fo=1, routed)           0.028     1.593    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2_n_41
+    RAMB36_X7Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[31]_DOUTBDOUT[31])
+                                                      0.117     1.710 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_3/DOUTBDOUT[31]
+                         net (fo=13, routed)          3.914     5.624    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg_0[31]
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[31]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ap_clk
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X5Y37         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[31])
+                                                     -0.267     4.987    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.987    
+                         arrival time                          -5.624    
+  -------------------------------------------------------------------
+                         slack                                 -0.638    
+
+Slack (VIOLATED) :        -0.631ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ram_reg/DINPADINP[3]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.586ns  (logic 1.552ns (27.783%)  route 4.034ns (72.217%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y8          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y8          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTPB[3])
+                                                      1.015     1.091 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CASDOUTPB[3]
+                         net (fo=1, routed)           0.025     1.116    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0_n_141
+    RAMB36_X7Y9          RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINPB[3]_CASDOUTPB[3])
+                                                      0.210     1.326 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1/CASDOUTPB[3]
+                         net (fo=1, routed)           0.025     1.351    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1_n_141
+    RAMB36_X7Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINPB[3]_CASDOUTPB[3])
+                                                      0.210     1.561 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2/CASDOUTPB[3]
+                         net (fo=1, routed)           0.025     1.586    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2_n_141
+    RAMB36_X7Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINPB[3]_DOUTPBDOUTP[3])
+                                                      0.117     1.703 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_3/DOUTPBDOUTP[3]
+                         net (fo=11, routed)          3.959     5.662    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ram_reg_0[35]
+    RAMB36_X5Y29         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ram_reg/DINPADINP[3]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ap_clk
+    RAMB36_X5Y29         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X5Y29         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINPADINP[3])
+                                                     -0.222     5.032    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_42_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          5.032    
+                         arrival time                          -5.662    
+  -------------------------------------------------------------------
+                         slack                                 -0.631    
+
+Slack (VIOLATED) :        -0.629ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ram_reg/DINADIN[15]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.550ns  (logic 1.572ns (28.324%)  route 3.978ns (71.676%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ap_clk
+    RAMB36_X5Y10         RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X5Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[15])
+                                                      1.035     1.111 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.140    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_0_n_57
+    RAMB36_X5Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_CASDOUTB[15])
+                                                      0.210     1.350 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_1/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.379    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_1_n_57
+    RAMB36_X5Y12         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_CASDOUTB[15])
+                                                      0.210     1.589 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_2/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.618    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_2_n_57
+    RAMB36_X5Y13         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_DOUTBDOUT[15])
+                                                      0.117     1.735 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_1_U/ram_reg_bram_3/DOUTBDOUT[15]
+                         net (fo=13, routed)          3.891     5.626    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ram_reg_0[15]
+    RAMB36_X5Y42         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ram_reg/DINADIN[15]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ap_clk
+    RAMB36_X5Y42         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X5Y42         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[15])
+                                                     -0.257     4.997    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_32_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.997    
+                         arrival time                          -5.626    
+  -------------------------------------------------------------------
+                         slack                                 -0.629    
+
+Slack (VIOLATED) :        -0.627ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[15]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.548ns  (logic 1.572ns (28.335%)  route 3.976ns (71.665%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y8          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y8          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[15])
+                                                      1.035     1.111 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.140    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0_n_57
+    RAMB36_X7Y9          RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_CASDOUTB[15])
+                                                      0.210     1.350 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.379    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1_n_57
+    RAMB36_X7Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_CASDOUTB[15])
+                                                      0.210     1.589 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2/CASDOUTB[15]
+                         net (fo=1, routed)           0.029     1.618    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2_n_57
+    RAMB36_X7Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[15]_DOUTBDOUT[15])
+                                                      0.117     1.735 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_3/DOUTBDOUT[15]
+                         net (fo=13, routed)          3.889     5.624    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg_0[15]
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[15]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ap_clk
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X5Y37         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[15])
+                                                     -0.257     4.997    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.997    
+                         arrival time                          -5.624    
+  -------------------------------------------------------------------
+                         slack                                 -0.627    
+
+Slack (VIOLATED) :        -0.627ns  (required time - arrival time)
+  Source:                 bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Destination:            bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[2]
+                            (rising edge-triggered cell RAMB36E2 clocked by ap_clk  {rise@0.000ns fall@3.000ns period=6.000ns})
+  Path Group:             ap_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            6.000ns  (ap_clk rise@6.000ns - ap_clk rise@0.000ns)
+  Data Path Delay:        5.529ns  (logic 1.612ns (29.157%)  route 3.917ns (70.843%))
+  Logic Levels:           3  (RAMB36E2=3)
+  Clock Path Skew:        -0.037ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.039ns = ( 6.039 - 6.000 ) 
+    Source Clock Delay      (SCD):    0.076ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.785ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE + UU
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+    User Uncertainty         (UU):    0.750ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock ap_clk rise edge)     0.000     0.000 r  
+                                                      0.000     0.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.076     0.076    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ap_clk
+    RAMB36_X7Y8          RAMB36E2                                     r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CLKBWRCLK
+  -------------------------------------------------------------------    -------------------
+    RAMB36_X7Y8          RAMB36E2 (Prop_RAMB36E2_RAMB36_CLKBWRCLK_CASDOUTB[2])
+                                                      1.075     1.151 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0/CASDOUTB[2]
+                         net (fo=1, routed)           0.022     1.173    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_0_n_70
+    RAMB36_X7Y9          RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[2]_CASDOUTB[2])
+                                                      0.210     1.383 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1/CASDOUTB[2]
+                         net (fo=1, routed)           0.022     1.405    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_1_n_70
+    RAMB36_X7Y10         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[2]_CASDOUTB[2])
+                                                      0.210     1.615 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2/CASDOUTB[2]
+                         net (fo=1, routed)           0.022     1.637    bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_2_n_70
+    RAMB36_X7Y11         RAMB36E2 (Prop_RAMB36E2_RAMB36_CASDINB[2]_DOUTBDOUT[2])
+                                                      0.117     1.754 r  bd_0_i/hls_inst/inst/p_ZL13poly_buffer_1_3_U/ram_reg_bram_3/DOUTBDOUT[2]
+                         net (fo=13, routed)          3.851     5.605    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg_0[2]
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/DINADIN[2]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock ap_clk rise edge)     6.000     6.000 r  
+                                                      0.000     6.000 r  ap_clk (IN)
+                         net (fo=75549, unset)        0.039     6.039    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ap_clk
+    RAMB36_X5Y37         RAMB36E2                                     r  bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg/CLKARDCLK
+                         clock pessimism              0.000     6.039    
+                         clock uncertainty           -0.785     5.254    
+    RAMB36_X5Y37         RAMB36E2 (Setup_RAMB36E2_RAMB36_CLKARDCLK_DINADIN[2])
+                                                     -0.276     4.978    bd_0_i/hls_inst/inst/grp_Execute_Transform_Operation_fu_470/grp_Compute_BConv_Systolic_32_33_fu_674/local_in_x_26_U/ram_reg
+  -------------------------------------------------------------------
+                         required time                          4.978    
+                         arrival time                          -5.605    
+  -------------------------------------------------------------------
+                         slack                                 -0.627    
+
+
+
+

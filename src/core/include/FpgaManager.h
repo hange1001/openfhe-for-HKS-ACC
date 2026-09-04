@@ -45,7 +45,7 @@
 #define OP_NTT    4
 #define OP_INTT   5
 #define OP_BCONV  6
-#define OP_AUTO   7
+// 7 is retired/reserved. Do not renumber subsequent opcodes.
 #define OP_HKS_DIGIT 8
 
 // ---- 必须与 FPGA 端 define.h 保持一致 ----
@@ -496,6 +496,9 @@ public:
         int num_limbs,
         int mod_idx
     ) {
+        // Fail before any buffer access or device launch, including board-free builds.
+        if (opcode == 7)
+            throw std::invalid_argument("FPGA opcode 7 is retired; automorphism runs on CPU");
     #ifdef OPENFHE_FPGA_ENABLE
         if (!m_is_ready) return;
         try {
@@ -627,23 +630,6 @@ public:
             std::cerr << "  in :"; for (size_t i = 0; i < dumpLen; ++i) std::cerr << " " << in[i]; std::cerr << std::endl;
             std::cerr << "  out:"; for (size_t i = 0; i < dumpLen; ++i) std::cerr << " " << out[i]; std::cerr << std::endl;
         }
-    }
-
-    void AutoOffload(
-        const uint64_t* in,
-        uint64_t* out,
-        uint32_t k,
-        uint32_t kinv,
-        uint64_t modulus,
-        size_t n
-    ) {
-        std::cout << "=== [FPGA] Execute Auto (k=" << k << ", kinv=" << kinv << ") ===" << std::endl;
-        int mod_idx = GetModIndex(modulus);
-        size_t meta_size = FPGA_RING_DIM;  // Execute expects in2 same size as poly
-        std::vector<uint64_t> meta(meta_size, 0);
-        meta[0] = (uint64_t)k;
-        meta[1] = (uint64_t)kinv;
-        Execute(OP_AUTO, in, meta.data(), out, 1, mod_idx);
     }
 
     // ============================================================

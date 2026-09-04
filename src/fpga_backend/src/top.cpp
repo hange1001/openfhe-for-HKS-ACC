@@ -9,7 +9,6 @@
 #include "../include/mod_sub_kernel.h"
 #include "../include/bconv.h"
 #include "../include/bconv_systolic.h"
-#include "../include/auto.h"
 #include "../include/hks_digit.h"
 
 
@@ -19,6 +18,10 @@
 static uint64_t poly_buffer_1[MAX_LIMBS][SQRT][SQRT];
 static uint64_t poly_buffer_2[MAX_LIMBS][SQRT][SQRT];
 static uint64_t result_buffer[MAX_LIMBS][SQRT][SQRT];
+
+// Flattened coefficient indices are decoded as wiring, not integer division.
+static_assert(SQRT == (1 << LOG_SQRT),
+              "SQRT must match the power-of-two address width");
 
 
 // -------------------------
@@ -140,15 +143,6 @@ static void Load_BConv_Params(
 }
 
 // =========================================================================
-// 将 OP_AUTO 的 meta 读取提取成独立子函数，消除 gmem1 的残余直接访问点。
-// =========================================================================
-static void Load_Auto_Meta(const uint64_t *mem_in2, uint32_t &k, uint32_t &kinv) {
-    #pragma HLS INLINE off
-    k    = (uint32_t)mem_in2[0];
-    kinv = (uint32_t)mem_in2[1];
-}
-
-// =========================================================================
 // One runtime call site and fixed bank pair: no direction/caller specialization.
 // Only two source/destination choices, local to the load/store boundary.
 // =========================================================================
@@ -165,8 +159,10 @@ static void Execute_Transform(int limb, bool is_ntt, bool complement,
         for (int lane = 0; lane < PE_PARALLEL; ++lane) {
             #pragma HLS UNROLL
             const int k = i * PE_PARALLEL + lane;
-            bank_a[k] = complement ? poly_buffer_1[source_limb][k / SQRT][k % SQRT]
-                                   : poly_buffer_2[source_limb][k / SQRT][k % SQRT];
+            const int row = k >> LOG_SQRT;
+            const int col = k & (SQRT - 1);
+            bank_a[k] = complement ? poly_buffer_1[source_limb][row][col]
+                                   : poly_buffer_2[source_limb][row][col];
         }
     }
     CG_Transform_Banks(bank_a, bank_b, MODULUS[limb], S[limb], M[limb],
@@ -176,9 +172,11 @@ static void Execute_Transform(int limb, bool is_ntt, bool complement,
         for (int lane = 0; lane < PE_PARALLEL; ++lane) {
             #pragma HLS UNROLL
             const int k = i * PE_PARALLEL + lane;
+            const int row = k >> LOG_SQRT;
+            const int col = k & (SQRT - 1);
             const uint64_t value = (STAGE & 1) ? bank_b[k] : bank_a[k];
-            if (store_coeff) poly_buffer_2[limb][k / SQRT][k % SQRT] = value;
-            else result_buffer[limb][k / SQRT][k % SQRT] = value;
+            if (store_coeff) poly_buffer_2[limb][row][col] = value;
+            else result_buffer[limb][row][col] = value;
         }
     }
 }
@@ -192,8 +190,10 @@ static void Load_Transform_Tower(const uint64_t* input, int src, int dst,
         #pragma HLS PIPELINE II=1
         #pragma HLS UNROLL factor=PE_PARALLEL
         const uint64_t value = input[src * RING_DIM + k];
-        poly_buffer_2[dst][k / SQRT][k % SQRT] = value;
-        if (preserve_eval) result_buffer[dst][k / SQRT][k % SQRT] = value;
+        const int row = k >> LOG_SQRT;
+        const int col = k & (SQRT - 1);
+        poly_buffer_2[dst][row][col] = value;
+        if (preserve_eval) result_buffer[dst][row][col] = value;
     }
 }
 
@@ -426,17 +426,9 @@ void Top(
             break;
         }
 
-        case OP_AUTO: {
-            Load(mem_in1, poly_buffer_1, num_active_limbs, mod_index);
-            uint32_t k, kinv;
-            Load_Auto_Meta(mem_in2, k, kinv);
-            Compute_Auto(poly_buffer_1, k, kinv, result_buffer, MODULUS, num_active_limbs, mod_index);
-            Store(result_buffer, mem_out, num_active_limbs, mod_index);
-            break;
-        }
-
         default:
-            std::cout << "[FPGA] Unknown opcode: " << opcode << std::endl;
+            // Reserved/unknown opcodes, including retired value 7, access no memory.
+            std::cout << "[FPGA] Unknown opcode: " << unsigned(opcode) << std::endl;
             break;
     }
 }

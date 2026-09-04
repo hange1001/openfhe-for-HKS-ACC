@@ -400,27 +400,13 @@ PolyImpl<VecType> PolyImpl<VecType>::AutomorphismTransform(uint32_t k, const std
     }
 
     // ==========================================
-    // 2. Execute Automorphism Transform (FPGA Auto 卸载)
+    // 2. CPU automorphism: the HKS accelerator has no permutation opcode.
     // ==========================================
     uint32_t logn = lbcrypto::GetMSB(n) - 1;
     uint32_t mask = (uint32_t(1) << logn) - 1;
     
-#ifdef OPENFHE_FPGA_ENABLE
-    if (FpgaManager::GetInstance().IsReady() && n == FPGA_RING_DIM) {
-        using Integer = typename VecType::Integer;
-        Integer kinvInt = Integer(k).ModInverse(Integer(2 * n));
-        uint32_t kinv = kinvInt.ConvertToInt();
-        std::vector<uint64_t> inBuf(n), outBuf(n);
-        
-        for (uint32_t i = 0; i < n; ++i) inBuf[i] = (*tmp.m_values)[i].ConvertToInt();
-        
-        FpgaManager::GetInstance().AutoOffload(inBuf.data(), outBuf.data(), k, kinv, q.ConvertToInt(), n);
-        
-        for (uint32_t i = 0; i < n; ++i) (*tmp.m_values)[i] = Integer(outBuf[i]);
-    } else
-#endif
     {
-        PolyImpl<VecType> coeffInput = tmp; 
+        PolyImpl<VecType> coeffInput = tmp;
         for (uint32_t j = 0, jk = 0; j < n; ++j, jk += k) {
             (*tmp.m_values)[jk & mask] =
                 ((jk >> logn) & 0x1) ? q - (*coeffInput.m_values)[j] : (*coeffInput.m_values)[j];

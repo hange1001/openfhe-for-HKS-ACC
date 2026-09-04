@@ -15,7 +15,7 @@
 #define OP_NTT  4
 #define OP_INTT 5
 #define OP_BCONV 6
-#define OP_AUTO  7
+// 7 is retired/reserved. Do not renumber subsequent opcodes.
 #define OP_HKS_DIGIT 8
 
 #endif // OPCODE_H

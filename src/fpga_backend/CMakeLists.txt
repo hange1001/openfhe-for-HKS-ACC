@@ -11,7 +11,7 @@ endif()
 set(HKS_KERNEL_SOURCES
     src/top.cpp src/load.cpp src/mod_add_kernel.cpp src/mod_mult_kernel.cpp
     src/mod_sub_kernel.cpp src/ntt_kernel.cpp src/arithmetic.cpp src/bconv.cpp
-    src/interleave.cpp src/auto.cpp src/cg_ntt.cpp src/bconv_naive.cpp src/bconv_systolic.cpp)
+    src/interleave.cpp src/cg_ntt.cpp src/bconv_naive.cpp src/bconv_systolic.cpp)
 add_library(hks_digit_cmodel STATIC ${HKS_KERNEL_SOURCES})
 target_include_directories(hks_digit_cmodel PRIVATE include)
 target_include_directories(hks_digit_cmodel SYSTEM PRIVATE "${HKS_HLS_ROOT}/include")

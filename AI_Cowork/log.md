@@ -36,6 +36,169 @@
 
 <!-- 新会话记录追加在下方 -->
 
+### [2026-09-04] 编写共享工作存储与原位预乘实施计划
+
+**Agent**: Codex。按用户要求在新建的 `doc/` 目录保存中文实施计划，未改动硬件实现。
+澄清预乘是同地址读乘写而非零访存；Q_work既是共享工作区，也直接承担NTT/INTT的A bank。
+计划包含P0基线、P1无效行、P2直接BConv、P3工作bank/原位化、P4模乘复用、P5输出和物理验收，
+明确接口兼容、别名风险、实际流水线bank冲突、周期收益不能重复相加和无板卡边界。
+交付：`doc/HKS_片上存储与数据搬运优化实施计划.md`；本次未运行综合、未提交Git。
+
+### [2026-09-04] 从计算单元访问契约反推 HKS 存储与搬运
+
+**Agent**: Codex。用户指出不能继续按软件函数边界从Top复制到子函数，要求解释现有搬运、
+计算单元需求及可优化空间。本轮只做代码/报告审计和架构推导，不修改硬件源码。
+
+**当前真实链路**:
+- AXI输入同时写 `poly_buffer_2` 与 `result_buffer`；每次变换显式执行
+  `poly_buffer→bank_a→A/B十二级ping-pong→poly/result_buffer`。
+- INTT 后 `Prepare_HKS_BConv_Input` 将全局limb压紧、乘QHatInv并写 `poly_buffer_1`；
+  每digit固定扫3塔，不足alpha的行也整塔写0。
+- BConv又执行 `poly_buffer_1→local_in_x→systolic→local_out_x→poly_buffer_1`，
+  随后每个补基塔再复制进transform bank做NTT。
+- 两digit可明确归属的纯片上LOAD/STORE为transform 20520cycles、BConv 6664cycles，
+  合计27184cycles（19.45%，6ns为163.104us）；这是优化候选，不等于可直接全额扣除。
+
+**计算访问契约**:
+- NTT/INTT：4蝶形/拍，需8个系数读、8个系数写和4个twiddle读；12级之间必须保留
+  A/B ping-pong或等价双工作区。可删的是外层整塔装入/倒出，不是级间工作集。
+- prescale：当前1系数/拍、1个模乘；两digit固定写6塔但有效仅3塔，另12288次为写0。
+- BConv core：每q行每拍1个输入，共3个；每有效p列每拍1个输出，HKS为3/4个。
+  `LOAD_PAR=8`仅服务额外整塔复制，不是core吞吐需求。
+- AXI：256bit=4系数/拍，与transform内部512bit访问不同；需要bank解耦，但无需每个函数
+  都再拥有一份完整数组。
+
+**资源与物理证据**:
+- 通用OP_BCONV与HKS调用点生成两个BConv wrapper；各自 `local_in_x/local_out_x`
+  占128 BRAM_18K，总计两套256 BRAM_18K。算术被上提共享，不能从wrapper DSP=0误判无计算。
+- 当前最差路径就是 `poly_buffer_1 BRAM→HKS BConv local_in_x BRAM`：5.618ns，
+  route占83.86%。说明为复制而造的512bit片内连接同时损害BRAM与时序。
+
+**建议的数据所有权方向**:
+- 由HKS工作区而非C++函数拥有数据：`Q_work[3][N]` 保存INTT/BConv输入，
+  `P_work[5][N]` 保存BConv/NTT输出，另保留一塔共享transform scratch。
+- transform直接把Q/P work当A bank，scratch当B bank；12级为偶数时结果回到A，
+  从而取消transform外层LOAD/STORE。
+- BConv直接读Q_work、写P_work；先用地址skew证明bank冲突，再由HLS II报告和P&R验收。
+  不能只依靠C++形参或pragma猜端口。
+- 原EVAL旁路是输出语义，不能删值；可在AXI输入时直接写最终输出区域。外部ModUp输出仍
+  必须传输，只有继续融合KeyMult/ModDown并片上驻留才能消掉。
+- 不用浅FIFO替代全部塔：BConv需多Q塔同时存在，单套NTT又依次消费多个P塔；这些生命周期
+  决定至少要保留一份完整Q/P工作集。
+
+**实施顺序建议**: 先去无效行清零/装载并加alpha有效门控；再去BConv local副本；
+再让work bank直接参与NTT；最后处理AXI旁路/更大范围算子融合。每步都检查正确性、
+MultMod实例数、BRAM、周期、II与post-route WNS。
+
+### [2026-09-04] 去 AUTO 物理实现完成，并定位 CPU/FPGA 性能瓶颈
+
+**Agent**: Codex。用户要求列出 CPU/FPGA 运行数据并分析慢点，同时追问“变换”是否仍是 AUTO。
+继续按 mentor 区分实测、RTL 换算和预测；只更新工程记录，不改个人学习笔记。
+
+**执行与结果**:
+- 完成 `hks-impl` 及独立 `hks-postroute`。239992 条网络全部布通，未布线网络为0；
+  物理资源为 CLB LUT 91520、Register 61076、BRAM Tile 348、DSP 1160、URAM 96。
+- 相对含 AUTO 检查点，物理 LUT -15951（-14.84%）、Register -2986（-4.66%）、
+  BRAM Tile -11.5（-3.20%），DSP/URAM 不变。
+- 默认6ns：WNS=+0.078ns、TNS=0；6ns加0.75ns setup uncertainty：
+  WNS=-0.672ns、TNS=-332.331ns、1638个失败端点；7ns加同样裕量：WNS=+0.328ns。
+- 最差 setup 路径为顶层 poly_buffer_1 RAMB36E2 到 BConv local_in_x RAMB36E2，
+  数据路径5.618ns，其中route 4.711ns（83.86%）、logic 0.907ns（16.14%）、0逻辑级。
+  无level>5有效拥塞窗口、无跨SLR网络；256位端口可以布通，但内部BRAM宽搬运仍有走线风险。
+- CPU同工作负载暖态500次：OMP1 median=0.640583ms，OMP2 median=0.463148ms。
+  FPGA两个digit为139734cycles：6ns名义0.838404ms，严格裕量通过的7ns为0.978138ms；
+  均不含主机/PCIe，因此不是已上板端到端加速比。
+- FPGA周期归属：3次INTT+7次NTT共85260（61.02%），QHatInv预缩放24624（17.62%），
+  两次BConv 14924（10.68%），顶层结果写回10370（7.42%），其余输入/参数/控制约3.26%。
+  这里的“变换”不是AUTO；AUTO已删除，原本也不在OP_HKS_DIGIT调用链中。
+- 将 `top.cpp` 的 `/SQRT`、`%SQRT` 显式改为 `>>LOG_SQRT`、`&(SQRT-1)`，增加幂次
+  `static_assert`；原生Top/HKS回归18/18、HKS 22 cases通过。P&R使用改写前但综合语义等价的
+  源码，没有把该文本改写冒充为重新物理实现。
+
+**结论**:
+- 第一瓶颈是10次NTT/INTT及其局部bank加载/写回，第二是预缩放，第三才是BConv。
+  仅变换阶段在6ns下已需0.511560ms，超过CPU两线程整段0.463148ms；只优化BConv不足以反超。
+- 原始物理证据以 `physical-*` 归档到 `docs/reports/hls/hks_no_auto_20260904/`；中文报告已回填。
+- 删除AUTO后的功能改动与本次位寻址可读性修改仍未提交或推送。
+
+### [2026-09-04] 补齐去 AUTO 性能口径，并记录模乘器复用的改动前预测
+
+**Agent**: Codex。用户要求预估复用收益，并追问去 AUTO 的运行时间、加速比和 slack。
+按 mentor 区分测量与预测；按 mindmap-learning 只更新工程报告/日志，不代写学习笔记。
+本轮不实现复用，不改变正在物理实现的源码，不提交或推送。
+
+**核验结果**:
+- 去 AUTO 的真实 OpenFHE RTL 周期仍为139734；6ns条件换算暖态0.838404ms，
+  INIT1.770378ms，INIT+两digit2.608782ms；相对删除前同频1.000x。
+- 旧CPU暖态基线0.4631475ms，CPU/名义RTL时间比0.5524x（FPGA约慢1.81倍）；
+  不是完整HKS/旋转性能，未含PCIe/驱动，不把旧CPU基线称为本轮重测。
+- HLS预算余量为0.000ns；新P&R仍存活并进入Detail Placement，routed DCP尚未生成。
+  新布线WNS/TNS缺项是尚未产出，不能用旧6ns+0.75ns的-0.779ns、旧7ns的+0.221ns替代。
+- 当前预乘模块：12312cycles/digit、DSP58/LUT3948/FF4049；MultMod本体DSP58/LUT3283/FF1757。
+  两digit的预乘占17.622%，每次遍历固定3N含无效行清零。
+
+**改动前预测（不是实现结果）**:
+- 仅共享一路、维持原调度：DSP目标1160→1102；整核周期大致不变，可能略增控制开销。
+- 复用现有四路并合并INTT写回：独立四路遍历模型约121302cycles；融合写回理想模型
+  115110+overhead。工程预测116000～123000cycles，即减少12%～17%、同频1.14～1.20x。
+- 明确DSP目标-58（-5%）；LUT净减1～3k为低置信度预算，可能被新增MUX抵消；
+  BRAM/URAM先按不变，FF与slack不报未经验证的硬指标。模乘器物理数应20→19。
+- 模型要求共享后II=1、四字/拍访存、BConv无效行显式补零；不假设新增算术并行度。
+  当前INTT逐级模二分，不存在可直接免费合并的尾部N逆元模乘。
+- 6ns条件下预测0.696～0.738ms，对旧CPU仍只有0.63～0.67x；不声称单项优化后超过CPU。
+
+**记录位置**: `docs/reports/hls/hks_no_auto_20260904/README.md` 新增完整运行时间/比值/slack表
+及复用模型，归档预乘与变换原始综合报告；仅工程文档更新。
+
+**同轮追加：回应地址除余的硬件代价质疑**:
+- SQRT为编译期64，k范围0～4095；逻辑上`/64`是高位、`%64`是低6位。
+- 实际生成LOAD/STORE RTL经展平、bank映射后使用i[9:1]/i[9:0]/i[0]和limb拼接；
+  核对地址赋值与模块层级，没有该处的除法/取余器。不是仅凭0DSP判断。
+- LOAD=1026cycles/628LUT/24FF，STORE=1026cycles/327LUT/25FF，均0DSP；
+  这里真正的代价是片上搬运和选择逻辑。没有以性能优化名义做等价语法改写。
+- P&R后续已进入Initial Net Routing，尚无最终routed DCP；中间未布通网络数不代表最终失败。
+
+### [2026-09-04] 先保存检查点，再移除 FPGA AUTO（功能验证完成，物理验证运行中）
+
+**Agent**: Codex。按用户明确要求执行；工程报告使用中文，保留个人学习笔记与学习路线，
+不改 OB/inbox、不推送。沿用 ai-cowork 工程记录，遵守 mindmap-learning 的字段边界。
+
+**执行顺序与范围**:
+1. 删除前重新运行 native Top/HKS，通过后提交 `480dc91`：
+   `feat(fpga): checkpoint shared 256-bit HKS before AUTO removal`。
+   含宽接口/共享引擎/去拷贝、中文报告及原始证据；80 个文件，提交后工作区干净。
+2. 删除 `src/fpga_backend/src/auto.cpp`、`include/auto.h`、`testbench/auto_test.cpp`
+   和 `src/pke/examples/test-ckks-auto.cpp`；均可从检查点恢复。
+3. 移除 Top AUTO/元数据分支、构建源项、AutoOffload 和 OpenFHE 卸载分支。
+   保留 CPU 自同构、旋转、HKS 算子；不改 HKS 数据通路、PE=4 和 256 位接口。
+4. 指令 7 退役，其余编号不变。主机在访问设备前拒绝 7；硬件不访问外部内存，
+   保持上下文；旧 AUTO 测试替换为退役保护，然后继续合法算术/HKS 调用。
+5. 新增 `--no-auto` 可达 RTL 审计；同时用旧版作反例，确保不是恒通过检查。
+
+**验证结果（本轮新运行）**:
+- [x] native Top 18/18、HKS 22 合法用例和非法参数/边界检查。
+- [x] OpenFHE Release 与全库 ASan（含泄漏检查）各 472 checks、1,523,712 个元素精确一致；
+  正反向 EvalRotate 解密正确，EvalMult 降层 CPU 回退仍通过。
+- [x] XRT 启用主机分支语法编译通过，未运行 XRT 或连接板卡。
+- [x] 真实 OpenFHE fixture RTL 40,960 个元素精确一致；扩展 smoke 35 次调用、4 种 digit 通过。
+- [x] perf/smoke 的整个生成 Verilog 目录逐文件一致；无 AUTO、一套双向 CG、四路共享模乘、
+  整机 20 个 MultMod、三个 256 位端口、两个蝶形 II=1；旧 RTL 被 `--no-auto` 正确拒绝。
+- [x] HLS BRAM_18K 708→688，DSP 1160 不变，FF 78528→78323，LUT 169991→147680，URAM 96 不变。
+- [x] 同 fixture 周期不变：INIT 295063；digit[2,0] 70131，digit[1,2] 69603，合计 139734。
+- [ ] 新 OOC P&R 已启动：`Solution/hks_digit_cosim-perf_no_auto_r1`，
+  日志 `src/fpga_backend/build/hks_digit/no-auto-implementation.log`。物理结果未计入通过。
+
+**试错与限制**:
+- 首次提交的 whitespace 检查遇原始工具报告行尾空格；仅对源码/手写文档检查，保留原始证据原文。
+- 审计反例最初的 shell 匹配串写成 `Retired AUTO`，实际诊断为 `Retired automorphism hardware`；
+  修正匹配后反例通过，审计自身正确拒绝旧设计。比较脚本最初输出路径多了一层 `..`，随后修正。
+- 删除 AUTO 不会减少 ModUp 的运算周期；资源下降不能直接称为加速。新布局布线完成前，
+  不套用旧 7ns 时序，不声明新版 6ns 闭合。当前融合范围仍只是单 digit ModUp，不是完整 HKS。
+- 没有板卡，未验证 PCIe/HBM/驱动端到端性能。删除后改动尚未再次提交。
+- 最终 `git diff --check` 通过，暂存区为空，`docs/notes` 无本轮改动；已归档软件/RTL
+  完整证据，核实测试程序实际位于 `build/bin/tests/`，不是 examples 目录。
+- 中文报告与原始证据：`docs/reports/hls/hks_no_auto_20260904/README.md`。
+
 ### [2026-09-04] 报告中文化，澄清 AUTO 与 HKS 的边界
 
 **Agent**: Codex。用户要求报告使用中文，并询问 AUTO 在 HKS 中的作用。
