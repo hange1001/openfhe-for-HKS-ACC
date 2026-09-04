@@ -1,0 +1,17 @@
+[PASS] active_q=1 sizeP=1 banks=8
+[PASS] active_q=1 sizeP=2 banks=8
+[PASS] active_q=1 sizeP=3 banks=8
+[PASS] active_q=1 sizeP=4 banks=8
+[PASS] active_q=1 sizeP=5 banks=8
+[PASS] active_q=2 sizeP=1 banks=8
+[PASS] active_q=2 sizeP=2 banks=8
+[PASS] active_q=2 sizeP=3 banks=8
+[PASS] active_q=2 sizeP=4 banks=8
+[PASS] active_q=2 sizeP=5 banks=8
+[PASS] active_q=3 sizeP=1 banks=8
+[PASS] active_q=3 sizeP=2 banks=8
+[PASS] active_q=3 sizeP=3 banks=8
+[PASS] active_q=3 sizeP=4 banks=8
+[PASS] active_q=3 sizeP=5 banks=8
+
+RESULT: PASS (15 combos conflict-free)

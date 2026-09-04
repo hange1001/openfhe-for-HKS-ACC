@@ -948,3 +948,37 @@ HKS 传 alpha、独立 OP_BCONV 传 LIMB_Q；Prepare 只循环 q<alpha，Load_X 
 - 后台任务共用一个 terminal_id 时，第二个任务可能不执行；长链任务用重定向日志 +
   ps 确认进程真实存在，不要只看命令回显
 - 毒化用例若把无效行毒化值与有效值相同，会测不出"读了旧值"；毒化必须改变数值
+
+### [2026-09-04] 片上存储优化 P2：BConv 直接读写工作区
+
+**Agent**: Qoder。按计划 P2 删除 poly_buffer_1→local_in_x→local_out_x→poly_buffer_1
+两次整块复制：systolic 核心直接收工作区 3D 数组，Feed_X 读
+in_x[q][(t-q)>>6][(t-q)&63]，Collect 写 in_x[LIMB_Q+p][(t-3-p)>>6][(t-3-p)&63]，
+删除 local_in/out 与 Load_X/Store_X。
+
+**执行步骤**:
+1. 新建 check_systolic_banks.py：4103 拍 × active_q(1..3)×sizeP(1..5) 逐周期
+   bank 冲突检查，15 组合全无冲突（读写不同 limb 实例、每 limb 至多 1R+1W）
+2. 改 bconv_systolic_core 直接读写 in_x；负地址用 safe_idx 规避、值由 valid 选择
+3. mem_p2_r1 全链验证：native、csim、csynth、审计、smoke、perf、OpenFHE Release/ASan
+
+**修改文件**:
+- `src/fpga_backend/src/bconv_systolic.cpp` - 直接 Feed_X/Collect，删 local 中转
+- `src/fpga_backend/check_systolic_banks.py` - 新增 bank 检查器
+- `docs/reports/hls/hks_mem_p2_20260904/` - P2 报告与证据
+
+**验证结果**:
+- [x] RTL perf：暖态 125910→120822，P2 节省 5088 周期（模型约 5128，偏差 0.8%）
+- [x] BRAM 688→440（-248：local 128 + poly_buffer_1 重映射 120），DSP 1160 不变，
+  Fmax 190.48MHz 不变，Systolic_Loop II=1，BConv 实例 0 BRAM / 8230→4145 周期
+- [x] LUT +6936（直接寻址 MUX 代价，如实报告）；全部功能验证通过
+
+**注意事项 / 踩坑记录**:
+- 直接寻址的 bank 冲突分析关键点是"每 limb 独立 ram_2p 实例"：读写落在不同
+  limb 时即使同 bank 也无冲突；按 (row, bank) 键检查而非只看 bank
+- 负数索引先取模会溢出（-1&63=63 产生负行号）：必须先判 valid 再给 safe_idx，
+  值用 valid 选择，不能只在地址表达式里取模
+- 删掉 8 路 Load/Store 视图后 BRAM 额外降 120：并行访问视图本身会迫使 Vitis
+  复制存储；降并行度也是一种省 BRAM 手段
+- 报告延迟与实际周期分离：csynth 里 BConv 显示 4145（恒定），tripcount 类
+  保守估计只影响报告，实测以 RTL co-sim 为准

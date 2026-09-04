@@ -1,0 +1,13 @@
+-- demoData folder already exists
+[  0%] Built target third-party
+[  1%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/bconv_systolic.cpp.o
+[ 30%] Built target coreobj
+[ 31%] Built target OPENFHEcore
+[ 39%] Built target binfheobj
+[ 39%] Built target OPENFHEbinfhe
+[ 88%] Built target pkeobj
+[ 89%] Built target OPENFHEpke
+[ 89%] Linking CXX static library ../../lib/libhks_digit_cmodel.a
+[ 98%] Built target hks_digit_cmodel
+[100%] Linking CXX executable ../../bin/tests/hks-digit-openfhe-test
+[100%] Built target hks-digit-openfhe-test
