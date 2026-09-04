@@ -32,7 +32,7 @@ static void golden_bconv(
     const uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
     const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
     const uint64_t out_mod[MAX_OUT_COLS],
-    int sizeP,
+    int sizeP, int active_q,
     uint64_t golden[MAX_OUT_COLS][SQRT][SQRT])
 {
     for (int p = 0; p < sizeP; ++p) {
@@ -40,7 +40,7 @@ static void golden_bconv(
         for (int r = 0; r < SQRT; ++r) {
             for (int c = 0; c < SQRT; ++c) {
                 unsigned __int128 sum = 0;
-                for (int q = 0; q < LIMB_Q; ++q) {
+                for (int q = 0; q < active_q; ++q) {
                     sum += (unsigned __int128)in_x[q][r][c] *
                            (unsigned __int128)in_w[q][p];
                     sum %= mod_p;
@@ -122,9 +122,9 @@ struct TestArrays {
         out_m_barrett[p] = barrett_compute(mod, out_S[p]);
     }
 
-    int run_and_compare(int sizeP, const string &name) {
-        golden_bconv(in_x, in_w, out_mod, sizeP, golden);
-        Compute_BConv_Systolic(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP);
+    int run_and_compare(int sizeP, int active_q, const string &name) {
+        golden_bconv(in_x, in_w, out_mod, sizeP, active_q, golden);
+        Compute_BConv_Systolic(in_x, in_w, out_mod, out_S, out_m_barrett, sizeP, active_q);
         return compare_results(in_x, golden, sizeP, name);
     }
 };
@@ -148,7 +148,7 @@ static int tc0_smoke() {
                 t.in_x[q][r][c] = 5;
     // 期望：(5*3 + 5*1 + 5*1) % 17 = 25 % 17 = 8
 
-    int err = t.run_and_compare(1, "TC-0");
+    int err = t.run_and_compare(1, LIMB_Q, "TC-0");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -171,7 +171,7 @@ static int tc1_typical_qp(unsigned seed) {
             for (int c = 0; c < SQRT; ++c)
                 t.in_x[q][r][c] = rand() % mods[q % MAX_OUT_COLS];
 
-    int err = t.run_and_compare(LIMB_P, "TC-1");
+    int err = t.run_and_compare(LIMB_P, LIMB_Q, "TC-1");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -195,7 +195,7 @@ static int tc2_full_cols(unsigned seed) {
             for (int c = 0; c < SQRT; ++c)
                 t.in_x[q][r][c] = (uint64_t)rand() % min_mod;
 
-    int err = t.run_and_compare(MAX_OUT_COLS, "TC-2");
+    int err = t.run_and_compare(MAX_OUT_COLS, LIMB_Q, "TC-2");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -210,7 +210,7 @@ static int tc3_zero_input() {
         for (int p = 0; p < MAX_OUT_COLS; ++p)
             t.in_w[q][p] = 123456;
 
-    int err = t.run_and_compare(2, "TC-3");
+    int err = t.run_and_compare(2, LIMB_Q, "TC-3");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -227,7 +227,7 @@ static int tc4_zero_weights(unsigned seed) {
             for (int c = 0; c < SQRT; ++c)
                 t.in_x[q][r][c] = (uint64_t)rand() % 786433ULL;
 
-    int err = t.run_and_compare(2, "TC-4");
+    int err = t.run_and_compare(2, LIMB_Q, "TC-4");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -248,7 +248,7 @@ static int tc5_max_values() {
             for (int c = 0; c < SQRT; ++c)
                 t.in_x[q][r][c] = (mods[0] - 1) % mods[1];
 
-    int err = t.run_and_compare(2, "TC-5");
+    int err = t.run_and_compare(2, LIMB_Q, "TC-5");
     cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
     return err;
 }
@@ -283,11 +283,66 @@ static int tc6_random_stress(int rounds = 4) {
                 for (int c = 0; c < SQRT; ++c)
                     t.in_x[q][r][c] = (uint64_t)rand() % t.out_mod[q % MAX_OUT_COLS];
 
-        int err = t.run_and_compare(sizeP, "TC-6-r" + to_string(round));
+        int err = t.run_and_compare(sizeP, LIMB_Q, "TC-6-r" + to_string(round));
         cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
         total_errors += err;
     }
     return total_errors;
+}
+
+static int tc7_partial_rows_poisoned(unsigned seed) {
+    // 无效行毒化：in_x[active_q..] 填垃圾，验证 Load_X 跳过且 Feed_X 注入 0。
+    cout << "[TC-7] Partial rows (active_q=2, row2 poisoned)  sizeP=5  seed=" << seed << "\n";
+    TestArrays t;
+    t.clear();
+    srand(seed);
+
+    uint64_t mods[MAX_OUT_COLS] = {
+        998244353ULL, 1004535809ULL, 786433ULL, 469762049ULL, 167772161ULL,
+    };
+    for (int p = 0; p < MAX_OUT_COLS; ++p) t.set_mod(p, mods[p]);
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int p = 0; p < MAX_OUT_COLS; ++p)
+            t.in_w[q][p] = (uint64_t)rand() % mods[p];
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int r = 0; r < SQRT; ++r)
+            for (int c = 0; c < SQRT; ++c)
+                t.in_x[q][r][c] = (uint64_t)rand() % mods[q % MAX_OUT_COLS];
+    // 行 2 无效：换一个与有效数据不同的毒化值（否则只能测出“错得一样”）。
+    for (int r = 0; r < SQRT; ++r)
+        for (int c = 0; c < SQRT; ++c)
+            t.in_x[2][r][c] = (t.in_x[2][r][c] + 0x5A5A) % mods[2 % MAX_OUT_COLS];
+
+    int err = t.run_and_compare(MAX_OUT_COLS, 2, "TC-7");
+    cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
+    return err;
+}
+
+static int tc8_single_row_poisoned(unsigned seed) {
+    cout << "[TC-8] Partial rows (active_q=1, rows1-2 poisoned)  sizeP=2  seed=" << seed << "\n";
+    TestArrays t;
+    t.clear();
+    srand(seed);
+
+    uint64_t mods[MAX_OUT_COLS] = {
+        998244353ULL, 786433ULL, 131071ULL, 262139ULL, 524287ULL,
+    };
+    for (int p = 0; p < MAX_OUT_COLS; ++p) t.set_mod(p, mods[p]);
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int p = 0; p < MAX_OUT_COLS; ++p)
+            t.in_w[q][p] = (uint64_t)rand() % mods[p];
+    for (int q = 0; q < LIMB_Q; ++q)
+        for (int r = 0; r < SQRT; ++r)
+            for (int c = 0; c < SQRT; ++c)
+                t.in_x[q][r][c] = (uint64_t)rand() % mods[q % MAX_OUT_COLS];
+    for (int q = 1; q < LIMB_Q; ++q)
+        for (int r = 0; r < SQRT; ++r)
+            for (int c = 0; c < SQRT; ++c)
+                t.in_x[q][r][c] = (t.in_x[q][r][c] + 0x3C3C) % mods[q % MAX_OUT_COLS];
+
+    int err = t.run_and_compare(2, 1, "TC-8");
+    cout << (err == 0 ? "  PASS\n" : "  FAIL  errors=" + to_string(err) + "\n");
+    return err;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,10 +364,12 @@ int main() {
     total_errors += tc4_zero_weights(0xCAFEBABEU);
     total_errors += tc5_max_values();
     total_errors += tc6_random_stress(4);
+    total_errors += tc7_partial_rows_poisoned(0x5EED5EEDU);
+    total_errors += tc8_single_row_poisoned(0x77AA77AAU);
 
     cout << "\n============================================================\n";
     if (total_errors == 0)
-        cout << "  [ALL PASS]  7 test cases passed, 0 errors.\n";
+        cout << "  [ALL PASS]  9 test cases passed, 0 errors.\n";
     else
         cout << "  [FAILED]  total mismatches = " << total_errors << "\n";
     cout << "============================================================\n";

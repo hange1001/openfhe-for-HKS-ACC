@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "scope": "Vitis generated RTL structural audit only",
+  "chain_instances": {
+    "Top_Execute_Transform_Operation": 1,
+    "Top_Execute_Transform": 1,
+    "Top_CG_Transform_Banks": 1
+  },
+  "auto_instances": {},
+  "core_shared_MultMod_instances": 4,
+  "multiplier_location": "Top: hoisted physical pool, external transform lane interfaces checked",
+  "total_MultMod_instances": 20,
+  "axi_data_width_bits": {
+    "GMEM0": 256,
+    "GMEM1": 256,
+    "GMEM2": 256
+  },
+  "butterfly_loop_ii": {
+    "CG_Transform_Banks_Pipeline_BUTTERFLY_LOOP_csynth:BUTTERFLY_LOOP": 1,
+    "CG_Transform_Banks_Pipeline_BUTTERFLY_LOOP3_csynth:BUTTERFLY_LOOP": 1
+  },
+  "top_resources": {
+    "BRAM_18K": 688,
+    "DSP": 1160,
+    "FF": 78323,
+    "LUT": 147680,
+    "URAM": 96
+  },
+  "transform_including_adapters_resources": {
+    "BRAM_18K": 32,
+    "FF": 10505,
+    "LUT": 23909,
+    "DSP": 0,
+    "URAM": 0
+  },
+  "core_resources": {
+    "FF": 10255,
+    "LUT": 22121,
+    "BRAM_18K": 0,
+    "DSP": 0,
+    "URAM": 0
+  },
+  "core_latency_cycles": "6469",
+  "transform_including_adapters_latency_cycles": "8526",
+  "top_latency_cycles": "undef",
+  "target_period_ns": 6.0,
+  "uncertainty_ns": 0.75,
+  "estimated_period_ns": 5.25,
+  "estimated_budget_slack_ns": 0.0
+}

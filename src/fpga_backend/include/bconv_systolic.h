@@ -15,13 +15,15 @@ extern "C" {
     // out_S      : Barrett 移位量，per 列
     // out_m_barrett: Barrett 乘法常数，per 列
     // sizeP      : 有效输出列数（1 ~ MAX_OUT_COLS）
+    // active_q   : 有效输入行数（1 ~ LIMB_Q）；q>=active_q 的行不装载、由 Feed_X 注入 0
     void Compute_BConv_Systolic(
         uint64_t in_x[MAX_LIMBS][SQRT][SQRT],
         const uint64_t in_w[LIMB_Q][MAX_OUT_COLS],
         const uint64_t out_mod[MAX_OUT_COLS],
         const uint64_t out_S[MAX_OUT_COLS],
         const uint64_t out_m_barrett[MAX_OUT_COLS],
-        int sizeP
+        int sizeP,
+        int active_q
     );
 }
 

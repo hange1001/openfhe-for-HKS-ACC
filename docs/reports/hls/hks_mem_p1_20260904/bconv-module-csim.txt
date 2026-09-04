@@ -1,0 +1,95 @@
+-> HLS MODULE     : Compute_BConv_Systolic
+-> HLS SRC FILES  : ./src/arithmetic.cpp ./src/bconv_systolic.cpp
+-> HLS TB  FILES  : ./testbench/bconv_systolic_tb.cpp
+-> Running HLS C Simulation using csim.tcl...
+/tools/Xilinx/Vitis_HLS/2023.2/bin/vitis_hls -f csim.tcl
+
+****** Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2023.2 (64-bit)
+  **** SW Build 4023990 on Oct 11 2023
+  **** IP Build 4028589 on Sat Oct 14 00:45:43 MDT 2023
+  **** SharedData Build 4025554 on Tue Oct 10 17:18:54 MDT 2023
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source /tools/Xilinx/Vitis_HLS/2023.2/scripts/vitis_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running '/tools/Xilinx/Vitis_HLS/2023.2/bin/unwrapped/lnx64.o/vitis_hls'
+INFO: [HLS 200-10] For user 'timhan' on host 'LAPTOP-PERMR8RO.localdomain' (Linux_x86_64 version 6.18.33.2-microsoft-standard-WSL2) on Fri Sep 04 20:45:16 CST 2026
+INFO: [HLS 200-10] On os Ubuntu 22.04.5 LTS
+INFO: [HLS 200-10] In directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend'
+INFO: [HLS 200-2053] The vitis_hls executable is being deprecated. Consider using vitis-run --mode hls --tcl
+Sourcing Tcl script 'csim.tcl'
+=======================================
+INFO: Running C Simulation for: Compute_BConv_Systolic
+INFO: Source files : ./src/arithmetic.cpp ./src/bconv_systolic.cpp
+INFO: Testbench    : ./testbench/bconv_systolic_tb.cpp
+INFO: Extra cflags : 
+=======================================
+INFO: [HLS 200-1510] Running: open_project Solution/Compute_BConv_Systolic 
+INFO: [HLS 200-10] Opening project '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/Compute_BConv_Systolic'.
+INFO: [HLS 200-1510] Running: set_top Compute_BConv_Systolic 
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/arithmetic.cpp -cflags -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I/opt/xilinx/xrt/include  
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/arithmetic.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_systolic.cpp -cflags -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I/opt/xilinx/xrt/include  
+INFO: [HLS 200-10] Adding design file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_systolic.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files /home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/bconv_systolic_tb.cpp -cflags -I/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/include -I/opt/xilinx/xrt/include  -tb 
+INFO: [HLS 200-10] Adding test bench file '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/testbench/bconv_systolic_tb.cpp' to the project
+INFO: [HLS 200-1510] Running: open_solution solution1 
+INFO: [HLS 200-10] Opening solution '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/Compute_BConv_Systolic/solution1'.
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 6ns.
+INFO: [SYN 201-201] Setting up clock 'default' with an uncertainty of 0.75ns.
+INFO: [HLS 200-1611] Setting target device to 'xcu55c-fsvh2892-2L-e'
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2023.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+INFO: [HLS 200-435] Setting 'open_solution -flow_target vivado' configuration: config_interface -m_axi_max_widen_bitwidth=0
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_max_widen_bitwidth=512
+INFO: [HLS 200-1510] Running: set_part xcu55c-fsvh2892-2L-e 
+INFO: [HLS 200-1510] Running: create_clock -period 6ns 
+INFO: [HLS 200-1510] Running: csim_design 
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+INFO: [HLS 200-2036] Building debug C Simulation binaries
+make[1]: Entering directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/Compute_BConv_Systolic/solution1/csim/build'
+   Compiling ../../../../../testbench/bconv_systolic_tb.cpp in debug mode
+   Compiling ../../../../../src/bconv_systolic.cpp in debug mode
+   Compiling ../../../../../src/arithmetic.cpp in debug mode
+   Generating csim.exe
+make[1]: Leaving directory '/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/Solution/Compute_BConv_Systolic/solution1/csim/build'
+============================================================
+   BConv Systolic Testbench
+   RING_DIM=4096  LIMB_Q=3  MAX_OUT_COLS=5
+============================================================
+
+[TC-0] Smoke test  sizeP=1, mod=17
+  PASS
+[TC-1] Typical Q->P  sizeP=2  seed=2882343476
+  PASS
+[TC-2] Full columns  sizeP=5  seed=3735928559
+  PASS
+[TC-3] Zero input  sizeP=2
+  PASS
+[TC-4] Zero weights  sizeP=2  seed=3405691582
+  PASS
+[TC-5] Max values (mod-1 inputs & weights)  sizeP=2
+  PASS
+[TC-6] Random stress  rounds=4
+  round=0 sizeP=5 seed=0x1000
+  PASS
+  round=1 sizeP=1 seed=0x13f7
+  PASS
+  round=2 sizeP=1 seed=0x17ee
+  PASS
+  round=3 sizeP=3 seed=0x1be5
+  PASS
+[TC-7] Partial rows (active_q=2, row2 poisoned)  sizeP=5  seed=1592614637
+  PASS
+[TC-8] Partial rows (active_q=1, rows1-2 poisoned)  sizeP=2  seed=2007660458
+  PASS
+
+============================================================
+  [ALL PASS]  9 test cases passed, 0 errors.
+============================================================
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [HLS 200-111] Finished Command csim_design CPU user time: 3.62 seconds. CPU system time: 0.39 seconds. Elapsed time: 4.05 seconds; current allocated memory: 0.000 MB.
+INFO: [HLS 200-112] Total CPU user time: 4.6 seconds. Total CPU system time: 0.6 seconds. Total elapsed time: 5.34 seconds; peak allocated memory: 266.738 MB.
+INFO: [Common 17-206] Exiting vitis_hls at Fri Sep  4 20:45:21 2026...

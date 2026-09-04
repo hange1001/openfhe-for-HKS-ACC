@@ -248,15 +248,15 @@ static void Prepare_HKS_BConv_Input(
     const uint64_t inv[LIMB_Q], int alpha, int digit_start
 ) {
     #pragma HLS INLINE off
-    HKS_SCALE_LIMB: for (int q = 0; q < LIMB_Q; ++q) {
+    // 只处理有效行；无效行保持旧值，由 BConv Feed_X 显式注入 0，不整塔清零。
+    HKS_SCALE_LIMB: for (int q = 0; q < alpha; ++q) {
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=LIMB_Q avg=2
         HKS_SCALE_ROW: for (int i = 0; i < SQRT; ++i) {
             HKS_SCALE_COL: for (int j = 0; j < SQRT; ++j) {
                 #pragma HLS PIPELINE II=1
-                uint64_t scaled = 0;
-                if (q < alpha) {
-                    const int l = digit_start + q;
-                    MultMod(coeff[l][i][j], inv[q], MODULUS[l], M[l], S[l], scaled);
-                }
+                const int l = digit_start + q;
+                uint64_t scaled;
+                MultMod(coeff[l][i][j], inv[q], MODULUS[l], M[l], S[l], scaled);
                 compact[q][i][j] = scaled;
             }
         }
@@ -313,7 +313,7 @@ static void Execute_Transform_Operation(
             if (step == alpha) {
                 Prepare_HKS_BConv_Input(poly_buffer_2, poly_buffer_1, inv, alpha, digit_start);
                 Compute_BConv_Systolic(poly_buffer_1, weights, out_mod, out_s, out_m,
-                                      MAX_OUT_COLS - alpha);
+                                      MAX_OUT_COLS - alpha, alpha);
             }
             const int p = step - alpha;
             limb = p < digit_start ? p : p + alpha;
@@ -421,7 +421,7 @@ void Top(
             }
             #endif
 
-            Compute_BConv_Systolic(poly_buffer_1, in_w, out_mod, out_S, out_m_barrett, sizeP);
+            Compute_BConv_Systolic(poly_buffer_1, in_w, out_mod, out_S, out_m_barrett, sizeP, LIMB_Q);
             Store(poly_buffer_1, mem_out, sizeP, LIMB_Q);
             break;
         }

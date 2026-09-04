@@ -1,0 +1,19 @@
+-- demoData folder already exists
+[  0%] Built target third-party
+[ 10%] Built target hks_digit_cmodel
+[ 40%] Built target coreobj
+[ 40%] Built target OPENFHEcore
+[ 46%] Built target binfheobj
+[ 46%] Built target OPENFHEbinfhe
+[ 93%] Built target pkeobj
+[ 96%] Built target OPENFHEpke
+[100%] Built target hks-digit-openfhe-test
+-- demoData folder already exists
+[  0%] Built target third-party
+[ 33%] Built target coreobj
+[ 33%] Built target OPENFHEcore
+[ 40%] Built target binfheobj
+[ 40%] Built target OPENFHEbinfhe
+[ 92%] Built target pkeobj
+[ 96%] Built target OPENFHEpke
+[100%] Built target test-fpga-modules

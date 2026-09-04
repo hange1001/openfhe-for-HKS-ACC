@@ -881,3 +881,70 @@ tiling / reduction·同步·负载均衡 / Amdahl·Roofline，然后「从系统
 **注意事项 / 踩坑记录**:
 - README.md 没用空 placeholder，直接复用 PROJECT_STATUS.md 的项目背景，让 AI 接手时无需再读 git 历史
 - decisions.md 保持空模板（按 skill 文档意图，让用户主动积累，不预先填充）
+
+### [2026-09-04] 片上存储优化 P0：基线冻结与同源码重跑
+
+**Agent**: Qoder。用户先要求阅读 `doc/HKS_片上存储与数据搬运优化实施计划.md` 并提问，
+经 4 项决策确认（锚点历史 139734、期限约两天只做 P0-P2、通用 BCONV 也迁 A_work、
+8 塔跨度预留）后启动 P0。
+
+**执行步骤**:
+1. 取证发现工作树被 `git stash -u`（stash@{0}）打包重置到含 AUTO 的 480dc91，
+   计划文档与 no_auto 报告目录一并被 stash，工作树与文档描述不符 → 询问用户后 pop 恢复
+2. 从 stash 第三提交恢复 `docs/reports/hls/hks_no_auto_20260904/`（29 个证据文件）
+   与原始计划文档；重建的文档与原版逐行比对，仅含已确认的决策性修改
+3. 经用户授权提交基线检查点 `4b7eabf`（无 AUTO 源码 + 位选择改写 + 证据报告）
+4. 以 `mem_p0_r1` 标签重跑：native 18/18+HKS22、csim、csynth、结构审计、smoke、
+   perf co-sim（真实 fixture）、OpenFHE Release/ASan/XRT 语法检查
+
+**修改文件**:
+- `doc/HKS_片上存储与数据搬运优化实施计划.md` - 写入 4 项决策、基线提交哈希、BConv 单实例修正
+- `docs/reports/hls/hks_mem_p0_20260904/` - 新增 P0 报告与全部证据
+- Git 提交 `4b7eabf` - 基线检查点（20 M + 4 D + 28 A 报告文件）
+
+**验证结果**:
+- [x] 全部重跑结果与历史基线逐项一致：资源 688/1160/78323/147680/96、估算 5.250ns、
+  结构审计 JSON 逐字段一致、OpenFHE 472/1523712、ASan 零泄漏
+- [x] perf 周期零差异：INIT 295063、digit 70131/69603、暖态 139734、总 434797
+- [x] 修正计划文档事实错误：BConv 为单实例 wrapper 128 BRAM_18K（local_in_x 48 +
+  local_out_x 80），OP_BCONV 与 HKS 两个调用点共用，不是“两套各 128”
+
+**注意事项 / 踩坑记录**:
+- `git stash -u` 会把未跟踪的计划/证据文件一起打包移出工作树，恢复时若同名文件已存在
+  会报 “already exists” 且 stash 保留；应从 stash 第三提交（stash@{0}^3）单独核对/恢复
+- 计划文档此前由 Write 工具重建为 CRLF，与原版 LF 不一致；内容经 tr -d '\\r' 归一后
+  diff 确认只差 6 处决策性修改
+- 预乘 13824 周期预测与历史 README 数据自洽：12288 写零 + 1536 装载（LOAD_PAR=8）
+- P1 阶段应避免重蹈：先跑 native，再 csim/csynth，再 cosim；BConv active_q 接口
+  需同时更新 OP_BCONV 调用点与全部测试
+
+### [2026-09-04] 片上存储优化 P1：消除无效塔清零与装载
+
+**Agent**: Qoder。按计划 P1 实施 `active_q`：BConv 接口新增有效行数，
+HKS 传 alpha、独立 OP_BCONV 传 LIMB_Q；Prepare 只循环 q<alpha，Load_X 只装载
+有效行，Feed_X 对无效行显式注入 0（不读未装载的旧缓存）。
+
+**执行步骤**:
+1. 修改 bconv_systolic.h/cpp：签名加 active_q，Feed_X 注入 0，Load_X 按 active_q 装载
+2. 修改 top.cpp：Prepare 循环界 q<alpha（去写零分支），两个调用点分别传 alpha/LIMB_Q
+3. 测试台新增 TC-7/8 毒化用例：无效行填垃圾，验证不读旧值；golden 模型支持 active_q
+4. mem_p1_r1 全链重跑：native、csim、csynth、结构审计、smoke、perf、OpenFHE Release/ASan
+
+**修改文件**:
+- `src/fpga_backend/include/bconv_systolic.h` / `src/bconv_systolic.cpp` - active_q 接口与注入 0
+- `src/fpga_backend/src/top.cpp` - Prepare 只处理有效行，调用点传 alpha/LIMB_Q
+- `src/fpga_backend/testbench/bconv_systolic_tb.cpp` - active_q golden 与毒化用例
+- `docs/reports/hls/hks_mem_p1_20260904/` - P1 报告与证据
+
+**验证结果**:
+- [x] RTL perf：暖态 139734→125910，节省 13824 周期（9.89%），与模型偏差 0%；INIT 不变
+- [x] 资源 BRAM 688/DSP 1160/URAM 96 不变，FF -1339、LUT +236，Fmax 190.48MHz 不变
+- [x] native 18/18+HKS22、BConv 9/9（含毒化）、smoke 35/35、perf 40960 residues、
+  OpenFHE 472/1523712、ASan 零泄漏、结构审计 PASS（20 MultMod、II=1）
+
+**注意事项 / 踩坑记录**:
+- Prepare 的 HLS 报告延迟仍是 12312：这是 tripcount max=3 的保守估计，实际按 alpha
+  缩短；不能拿报告延迟当实测周期
+- 后台任务共用一个 terminal_id 时，第二个任务可能不执行；长链任务用重定向日志 +
+  ps 确认进程真实存在，不要只看命令回显
+- 毒化用例若把无效行毒化值与有效值相同，会测不出"读了旧值"；毒化必须改变数值

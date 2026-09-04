@@ -1,0 +1,72 @@
+-- Building in Release mode
+-- BUILD_UNITTESTS:    OFF
+-- BUILD_EXAMPLES:     OFF
+-- BUILD_BENCHMARKS:   OFF
+-- BUILD_EXTRAS:       OFF
+-- BUILD_STATIC:       OFF
+-- BUILD_SHARED:       ON
+-- GIT_SUBMOD_AUTO:    OFF
+-- WITH_BE2:           OFF
+-- WITH_BE4:           OFF
+-- WITH_NTL:           OFF
+-- WITH_TCM:           OFF
+-- WITH_OPENMP:        ON
+-- NATIVE_SIZE:        64
+-- CKKS_M_FACTOR:      1
+-- WITH_NATIVEOPT:     OFF
+-- WITH_COVTEST:       OFF
+-- WITH_NOISE_DEBUG:   OFF
+-- WITH_REDUCED_NOISE: OFF
+-- USE_MACPORTS:       OFF
+-- BUILTIN_INFO_AVAILABLE is defined
+***** INSTALL IS AT /usr/local; to change, run cmake with -DCMAKE_INSTALL_PREFIX=/your/path
+-- Architecture is x86_64
+-- NATIVEINT is set to 64
+-- MATHBACKEND is set to 4
+-- MATHBACKEND set to 4. Setting WITH_BE4 to ON
+-- FPGA acceleration disabled
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/timhan/FHE/openfhe-for-HKS-ACC/build-hks-asan
+-- demoData folder already exists
+[  0%] Built target third-party
+Consolidate compiler generated dependencies of target hks_digit_cmodel
+[  1%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/top.cpp.o
+Consolidate compiler generated dependencies of target coreobj
+[  2%] Building CXX object src/core/CMakeFiles/coreobj.dir/lib/lattice/lattice.cpp.o
+[  3%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/load.cpp.o
+[  4%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/mod_add_kernel.cpp.o
+[  4%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/mod_mult_kernel.cpp.o
+[  5%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/mod_sub_kernel.cpp.o
+[  6%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/ntt_kernel.cpp.o
+[  7%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/arithmetic.cpp.o
+[  8%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/bconv.cpp.o
+[  8%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/interleave.cpp.o
+[  9%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/cg_ntt.cpp.o
+[ 10%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/bconv_naive.cpp.o
+/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_naive.cpp: In function ‘void Compute_BConv_Naive(uint64_t (*)[64][64], const uint64_t (*)[5], const uint64_t*, const uint64_t*, const uint64_t*, int)’:
+/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_naive.cpp:29:14: warning: variable ‘local_S’ set but not used [-Wunused-but-set-variable]
+   29 |     uint64_t local_S[MAX_OUT_COLS];
+      |              ^~~~~~~
+/home/timhan/FHE/openfhe-for-HKS-ACC/src/fpga_backend/src/bconv_naive.cpp:30:14: warning: variable ‘local_m_barrett’ set but not used [-Wunused-but-set-variable]
+   30 |     uint64_t local_m_barrett[MAX_OUT_COLS];
+      |              ^~~~~~~~~~~~~~~
+[ 11%] Building CXX object src/fpga_backend/CMakeFiles/hks_digit_cmodel.dir/src/bconv_systolic.cpp.o
+[ 11%] Linking CXX static library ../../lib/libhks_digit_cmodel.a
+[ 11%] Built target hks_digit_cmodel
+[ 40%] Built target coreobj
+[ 41%] Linking CXX shared library ../../lib/libOPENFHEcore.so
+[ 41%] Built target OPENFHEcore
+Consolidate compiler generated dependencies of target binfheobj
+[ 48%] Built target binfheobj
+[ 48%] Linking CXX shared library ../../lib/libOPENFHEbinfhe.so
+[ 48%] Built target OPENFHEbinfhe
+Consolidate compiler generated dependencies of target pkeobj
+[ 49%] Building CXX object src/pke/CMakeFiles/pkeobj.dir/lib/keyswitch/hks_digit_offload.cpp.o
+[ 97%] Built target pkeobj
+[ 98%] Linking CXX shared library ../../lib/libOPENFHEpke.so
+[ 98%] Built target OPENFHEpke
+Consolidate compiler generated dependencies of target hks-digit-openfhe-test
+[ 98%] Building CXX object src/fpga_backend/CMakeFiles/hks-digit-openfhe-test.dir/testbench/hks_digit_openfhe_test.cpp.o
+[100%] Linking CXX executable ../../bin/tests/hks-digit-openfhe-test
+[100%] Built target hks-digit-openfhe-test
