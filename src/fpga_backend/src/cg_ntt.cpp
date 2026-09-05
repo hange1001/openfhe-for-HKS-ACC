@@ -103,9 +103,9 @@ static void CG_PE(
     AddMod(fwd_diff, product, modulus, false);
     const uint64_t half_mod = (modulus + 1) >> 1;
     res1 = is_ntt ? fwd_sum
-                 : (inv_sum >> 1) + ((inv_sum & 1) ? half_mod : 0);
+                  : (inv_sum >> 1) + ((inv_sum & 1) ? half_mod : 0);
     res2 = is_ntt ? fwd_diff
-                 : (product >> 1) + ((product & 1) ? half_mod : 0);
+                  : (product >> 1) + ((product & 1) ? half_mod : 0);
 }
 
 // ============================================================
@@ -283,9 +283,11 @@ void CG_Transform_Work(
     uint64_t scratch[RING_DIM],
     uint64_t modulus, uint64_t S, uint64_t M_barrett,
     const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
-    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt,
+    bool scale_only, uint64_t scale_factor
 ) {
     #pragma HLS INLINE off
+    #pragma HLS ALLOCATION function instances=MultMod limit=CG_PE_NUM
     static_assert((STAGE & 1) == 0, "Direct work output requires even STAGE");
     static_assert(SQRT % CG_BUF_PARTITION == 0, "Banks must divide a work row");
     #pragma HLS ARRAY_PARTITION variable=work complete dim=1
@@ -296,6 +298,28 @@ void CG_Transform_Work(
     #pragma HLS ARRAY_PARTITION variable=ntt_twiddle cyclic factor=CG_PE_NUM dim=2
     #pragma HLS ARRAY_PARTITION variable=intt_twiddle cyclic factor=CG_PE_NUM dim=2
 
+    if (scale_only) {
+        // Separate the in-place RAM schedule from the butterfly RAM schedule.
+        // They remain mutually exclusive children of this one physical engine;
+        // the ALLOCATION bound above and RTL audit enforce one four-lane pool.
+        WORK_SCALE_LOOP: for (int i = 0; i < RING_DIM / CG_PE_NUM; ++i) {
+            #pragma HLS PIPELINE II=1
+            // Each iteration owns four distinct coefficients. The flat index
+            // is bijective over [0, RING_DIM), so no later iteration reads a
+            // value written by an earlier one. Vitis cannot prove this after
+            // work is partitioned through the parent tower port; the external
+            // bank proof and RTL exact comparison validate this narrow override.
+            #pragma HLS DEPENDENCE variable=work type=inter direction=RAW dependent=false
+            for (int lane = 0; lane < CG_PE_NUM; ++lane) {
+                #pragma HLS UNROLL
+                const int k = i * CG_PE_NUM + lane;
+                const uint64_t value = work[tower][k >> LOG_SQRT][k & (SQRT - 1)];
+                uint64_t scaled;
+                MultMod(value, scale_factor, modulus, M_barrett, S, scaled);
+                work[tower][k >> LOG_SQRT][k & (SQRT - 1)] = scaled;
+            }
+        }
+    } else {
     WORK_STAGE_LOOP: for (int stage = 0; stage < STAGE; ++stage) {
         #pragma HLS UNROLL factor=2
         #pragma HLS LOOP_FLATTEN off
@@ -347,6 +371,7 @@ void CG_Transform_Work(
                 }
             }
         }
+    }
     }
 }
 

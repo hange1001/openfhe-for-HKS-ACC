@@ -1042,3 +1042,31 @@ in_x[q][(t-q)>>6][(t-q)&63]，Collect 写 in_x[LIMB_Q+p][(t-3-p)>>6][(t-3-p)&63]
 - 布线后 CLB LUT 108392、register 64058、BRAM tile 272、DSP 1160、URAM 96。
 - 最差 setup 路径位于 BConv `Load_W`，data path 5.951ns，route 占 91.346%；
   P3 已按保守 7ns 工程情景完成签核，下一节点为 P4 模乘 lane 复用。
+
+### [2026-09-05] P4 预乘复用变换模乘 lane
+
+**Agent**: Codex。保持 PE_PARALLEL=4，将 HKS 的 QHatInv 预乘移入唯一的
+`CG_Transform_Work`，按 `INTT → SCALE` 调度并复用同一组四路 Barrett `MultMod`；
+删除独立 `Prepare_HKS_BConv_Input`，不改变 BConv 数学顺序与 AXI256 接口。
+
+**执行与拒绝实验**:
+- 合并 SCALE/蝶形循环的 r1 退化为 II=2，拒绝；无 RAW 提示的 r4 为 II=22，拒绝；
+  固定 bank 拆环的 r5 为 II=3，拒绝。
+- 最终 r3 将 SCALE 与蝶形保持为同父引擎内的互斥 II=1 循环，只保留有地址证明的窄
+  inter-RAW 指令；独立检查覆盖 4096 个地址，两轮 RTL 各精确通过 40960 个余数。
+
+**验证结果**:
+- native Top 18/18、HKS 22、OpenFHE Release/ASan、HLS C-sim 全部通过；结构审计确认
+  NTT/INTT/SCALE 共用4路，Top共19路 `MultMod`（BConv15+变换4）。
+- 暖态两 digit 从100422降至91242周期，减少9180（9.141%），同频1.1006x；INIT
+  保持295063周期。该时间为不含PCIe/驱动的RTL下界。
+- HLS资源为424 BRAM_18K、1102 DSP、80186 FF、178865 LUT、96 URAM；相对P3删除
+  一套58-DSP Barrett模乘。
+- OOC布线226368/226368 nets全通、routing error=0。默认6ns WNS +0.122ns；
+  6ns+0.75ns WNS -0.628ns；7ns+0.75ns WNS +0.372ns，通过保守验收。
+- 布线后106098 LUT、61700 register、1102 DSP、272 BRAM tile、96 URAM。最差
+  setup路径为 `MultMod` 寄存器到 `poly_buffer_1` BRAM写口，5.622ns中走线占70.667%。
+
+**边界**:
+- 无板卡；只签核OOC kernel内部路径，未约束平台AXI I/O，也没有PCIe或系统加速比。
+- BConv仍使用Barrett；下一独立节点为Shoup ABI/OpenFHE/两入口整机接入。

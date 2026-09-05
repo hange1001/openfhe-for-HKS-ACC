@@ -86,7 +86,8 @@ void CG_Transform_Work(
     uint64_t scratch[RING_DIM],
     uint64_t modulus, uint64_t S, uint64_t M_barrett,
     const uint64_t ntt_twiddle[STAGE][CG_HALF_N],
-    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt
+    const uint64_t intt_twiddle[STAGE][CG_HALF_N], bool is_ntt,
+    bool scale_only, uint64_t scale_factor
 );
 
 // =========================================================

@@ -29,10 +29,17 @@ def check(lanes):
                             ports[(1 - stage % 2, address % banks)] += 1
                     assert max(ports.values()) <= 2
                 assert len(reads) == len(writes) == n
-    # In-place SCALE has one read and one write per bank; addresses never repeat.
+    # P4 in-place SCALE visits each flat coefficient exactly once. Prove full
+    # coverage, disjoint pipeline iterations and <=1R+1W per active bank.
+    scaled = set()
     for base in range(0, n, lanes):
-        banks_used = [i % banks for i in range(base, base + lanes)]
-        assert len(banks_used) == len(set(banks_used))
+        addresses = [base + lane for lane in range(lanes)]
+        bank_counts = Counter(address % banks for address in addresses)
+        assert max(bank_counts.values()) == 1
+        for address in addresses:
+            assert 0 <= address < n and address not in scaled
+            scaled.add(address)
+    assert len(scaled) == n
     print(f"PASS: {slots} slots x 2 directions x {stages} stages; {banks} T2P banks, <=2 accesses/bank/cycle")
     print("PASS: all 4096 coefficients covered once per stage; SCALE one read + one write/bank")
     print("Scope: algorithmic port budget only; actual HLS II, enables and RAM binding require separate audit")

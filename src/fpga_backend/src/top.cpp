@@ -146,13 +146,15 @@ static void Load_BConv_Params(
 // One runtime call site, shared work A bank and exactly one scratch tower.
 // Physical slot and modulus index are distinct (compact digit vs global basis).
 // =========================================================================
-static void Execute_Transform(int limb, bool is_ntt, int source_limb) {
+static void Execute_Transform(int limb, bool is_ntt, int source_limb,
+                              bool scale_only, uint64_t scale_factor) {
     #pragma HLS INLINE off
     uint64_t scratch[RING_DIM];
     #pragma HLS ARRAY_PARTITION variable=scratch cyclic factor=CG_BUF_PARTITION dim=1
     #pragma HLS BIND_STORAGE variable=scratch type=ram_t2p impl=bram
     CG_Transform_Work(poly_buffer_1, source_limb, scratch, MODULUS[limb], S[limb], M[limb],
-                     NTTTwiddleFactor[limb], INTTTwiddleFactor[limb], is_ntt);
+                     NTTTwiddleFactor[limb], INTTTwiddleFactor[limb], is_ntt,
+                     scale_only, scale_factor);
 }
 
 
@@ -240,28 +242,6 @@ static void Load_HKS_Params(
     }
 }
 
-// ApproxSwitchCRTBasis applies QHatInv before the BConv matrix product.
-// Input is already digit-local; read and write the SAME coefficient in place.
-static void Prepare_HKS_BConv_Input(
-    uint64_t work[MAX_LIMBS][SQRT][SQRT],
-    const uint64_t inv[LIMB_Q], int alpha, int digit_start
-) {
-    #pragma HLS INLINE off
-    // 只处理有效行；无效行保持旧值，由 BConv Feed_X 显式注入 0，不整塔清零。
-    HKS_SCALE_LIMB: for (int q = 0; q < alpha; ++q) {
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=LIMB_Q avg=2
-        HKS_SCALE_ROW: for (int i = 0; i < SQRT; ++i) {
-            HKS_SCALE_COL: for (int j = 0; j < SQRT; ++j) {
-                #pragma HLS PIPELINE II=1
-                const int l = digit_start + q;
-                uint64_t scaled;
-                MultMod(work[q][i][j], inv[q], MODULUS[l], M[l], S[l], scaled);
-                work[q][i][j] = scaled;
-            }
-        }
-    }
-}
-
 static void Execute_Transform_Operation(
     const uint64_t* mem_in1, const uint64_t* mem_in2, uint64_t* mem_out,
     uint8_t opcode, int alpha, int digit_start
@@ -298,27 +278,31 @@ static void Execute_Transform_Operation(
         Load_HKS_Params(mem_in2, alpha, digit_start, weights, inv, out_mod, out_s, out_m);
     Load_Transform_Input(mem_in1, alpha, digit_start, fused);
 
-    // Fused schedule: alpha inverse transforms, BConv, (5-alpha) forward
-    // transforms. No overlap: every step reuses the SAME transform hardware.
-    const int steps = fused ? MAX_OUT_COLS : alpha;
+    // Fused schedule per input tower: INTT then in-place SCALE, followed by
+    // one BConv and all complement NTTs. SCALE and butterflies enter through
+    // the same Execute_Transform call site and share its four MultMod lanes.
+    const int steps = fused ? MAX_OUT_COLS + alpha : alpha;
     TRANSFORM_STEPS: for (int step = 0; step < steps; ++step) {
         #pragma HLS LOOP_TRIPCOUNT min=1 max=8 avg=5
         #pragma HLS LOOP_FLATTEN off
-        const bool complement = fused && step >= alpha;
+        const bool input_phase = fused && step < 2 * alpha;
+        const bool scale_only = input_phase && (step & 1);
+        const bool complement = fused && !input_phase;
         const bool is_ntt = fused ? complement : opcode == OP_NTT;
-        int limb = digit_start + step;
-        int source_limb = step;
+        const int q = input_phase ? (step >> 1) : step;
+        int limb = digit_start + q;
+        int source_limb = q;
+        uint64_t scale_factor = scale_only ? inv[q] : 0;
         if (complement) {
-            if (step == alpha) {
-                Prepare_HKS_BConv_Input(poly_buffer_1, inv, alpha, digit_start);
+            if (step == 2 * alpha) {
                 Compute_BConv_Systolic(poly_buffer_1, weights, out_mod, out_s, out_m,
                                       MAX_OUT_COLS - alpha, alpha);
             }
-            const int p = step - alpha;
+            const int p = step - 2 * alpha;
             limb = p < digit_start ? p : p + alpha;
             source_limb = LIMB_Q + p;
         }
-        Execute_Transform(limb, is_ntt, source_limb);
+        Execute_Transform(limb, is_ntt, source_limb, scale_only, scale_factor);
     }
     Store_Transform_Output(mem_out, fused, alpha, digit_start);
 }

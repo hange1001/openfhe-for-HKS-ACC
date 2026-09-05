@@ -267,3 +267,34 @@ warm two-digit latency improves to 139734 cycles. Neither is a board measurement
 
 Evidence and remaining limits:
 [OpenFHE integration report](../../docs/reports/hls/hks_digit_openfhe_20260904/README.md).
+
+## P4 prescale multiplier reuse (2026-09-05)
+
+The fused input schedule is now `INTT -> in-place SCALE` for every active Q
+tower, followed by BConv and complement NTTs. SCALE is a mutually exclusive
+mode of the single `CG_Transform_Work` parent and uses its existing four
+`MultMod` lanes; the separate `Prepare_HKS_BConv_Input` engine is retired.
+Generated-RTL auditing proves three four-lane clients backed by only one
+four-lane physical pool. Both butterfly loops and SCALE achieve II=1.
+
+For the matched OpenFHE fixture, warm two-digit RTL latency drops from 100422
+to 91242 cycles (1.1006x at the same clock). HLS resources change from
+424/1160/81549/180505/96 to 424/1102/80186/178865/96 for
+BRAM_18K/DSP/FF/LUT/URAM. The 58-DSP reduction is one removed Barrett
+multiplier. These are HLS/RTL measurements without PCIe or a board.
+
+Vitis cannot independently prove that the in-place flat SCALE loop has no
+cross-iteration RAW alias after the work array crosses the tower port. A narrow
+inter-iteration RAW directive is retained. The address checker proves unique
+full-tower coverage, and two complete RTL fixture runs each match all 40960
+residues. Removing the directive produces II=22; fixed-bank split loops still
+produce II=3, so neither failed experiment is used. Full evidence:
+[P4 report](../../docs/reports/hls/hks_mem_p4_20260905/README.md).
+
+Final OOC routing connects all 226368 routable nets with zero routing errors.
+The routed kernel meets the default 6ns target at +0.122ns WNS and the
+conservative 7ns period plus 0.75ns setup-uncertainty scenario at +0.372ns WNS.
+The 6ns plus 0.75ns scenario remains negative at -0.628ns. Post-route usage is
+106098 CLB LUTs, 61700 registers, 1102 DSPs, 272 BRAM tiles and 96 URAMs. This
+signs off internal OOC kernel paths only; board-level AXI I/O and platform-shell
+timing are not constrained or measured here.

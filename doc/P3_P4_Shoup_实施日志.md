@@ -8,7 +8,7 @@
 | 节点 | 目标 | 状态 | Git |
 |---|---|---|---|
 | P3 | 工作区直接作为变换 A bank；一条 scratch；预乘原位；消除变换装卸拷贝 | 完成 | `53cf757`（源码/功能/RTL），后续提交补物理证据 |
-| P4 | 预乘复用现有蝶形模乘 lane，顺序切换并排空流水线 | 实施中 | — |
+| P4 | 预乘复用现有蝶形模乘 lane，顺序切换并排空流水线 | 完成 | 本节点提交 |
 | Shoup | BConv 定常数模乘改为 Shoup，更新两个入口及 OpenFHE 元数据/验证 | 待开始 | — |
 
 证据分层：native/OpenFHE 精确数值 → HLS 端口/II/资源 → RTL 精确结果/周期 → OOC 布线。
@@ -92,3 +92,36 @@ Shoup 检查 x≥目标模数、边界/随机向量、元数据版本保护、�
   URAM 96。HLS LUT 180,505 不能与布线后 LUT 直接相减，两套口径分别报告。
 - 最差 setup 路径转到 BConv `Load_W`，5.951 ns 中 route 占 5.436 ns（91.346%）；
   P3 删除的旧整塔装卸路径没有重新出现。至此 P3 按保守 7 ns 情景完成验收，进入 P4。
+
+## 2026-09-05：P4 预乘复用变换模乘 lane
+
+- 删除独立 `Prepare_HKS_BConv_Input`。每个有效输入塔改为 `INTT → SCALE`，SCALE
+  作为 `CG_Transform_Work` 的互斥模式，和 NTT/INTT 共用同一父引擎及四路 `MultMod`。
+  BConv 和补集塔 NTT 的数学顺序不变；PE 仍为4，AXI仍为256bit。
+- r1 将 SCALE 与蝶形合并到同一循环后，RAM 端口调度退化到 II=2，拒绝。r2 将两种
+  内存日程拆成互斥子循环，SCALE/两路蝶形均 II=1；结构审计确认物理池只有4路。
+- r2 RTL 精确通过40960余数。r3 删除多余WAW提示，仅保留 SCALE 的窄
+  `inter RAW=false`，周期和资源不变，第二次 RTL 仍精确通过40960余数。
+- 为消除 xsim 依赖监视告警继续做两个拒绝实验：r4 不写提示时 Vitis 误判距离1相关，
+  SCALE II=22；r5 拆成低/高固定bank时仍误判距离8相关，II=3。最终保留r3。
+  独立检查器对4096个系数证明跨迭代地址不重复、活动bank每拍1R+1W；因此该提示有
+  数学证明和两轮RTL精确结果支撑，不是用 pragma 掩盖真实冲突。
+- OpenFHE Release、ASan、native Top18/18、HKS22、非法descriptor/canary、HLS C-sim
+  全部通过。生成RTL审计：BConv15路 + 共享变换4路 = Top19路；P3为20路。
+- HLS资源 P3→P4：BRAM_18K 424→424，DSP1160→1102，FF81549→80186，
+  LUT180505→178865，URAM96→96。DSP恰好减少一套58-DSP Barrett模乘。
+- 同一OpenFHE fixture的RTL周期：INIT保持295063；alpha2 52779→46671；
+  alpha1 47643→44571；暖态100422→91242，减少9180（9.141%），同频1.1006x。
+  预测减少9216，实测偏差36（0.39%）。6ns换算0.547452ms，7ns换算0.638694ms，
+  均为不含PCIe/驱动的RTL下界，不是板卡实测。
+- OOC物理实现完成：226368/226368 条可路由 net 全部布通，routing error 为 0。
+  默认 6ns 的 WNS/TNS 为 +0.122/0ns；6ns+0.75ns uncertainty 为
+  -0.628/-474.418ns，不通过；7ns+0.75ns 为 +0.372/0ns，通过。三种场景
+  hold 均为 WHS +0.019ns、THS 0。按计划采用保守 7ns 场景完成 P4 签核。
+- 布线后资源为 CLB LUT 106098、register 61700、BRAM tile 272、DSP 1102、
+  URAM 96；相对 P3 分别减少 2294 LUT、2358 register、58 DSP，BRAM/URAM
+  不变。最差 setup 路径从 `MultMod` 流水寄存器到 `poly_buffer_1` BRAM 写口，
+  data path 5.622ns，其中 route 3.973ns（70.667%）。
+- OOC 的 AXI 外部端口没有板级 input/output delay，内部无未约束 endpoint；因此这里只
+  签核 kernel 内部路径，不等价于平台 shell 链接或上板时序。P4 至此完成，下一节点为
+  BConv Shoup 整机接入。

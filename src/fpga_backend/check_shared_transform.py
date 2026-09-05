@@ -12,7 +12,7 @@ import re
 import xml.etree.ElementTree as ET
 
 
-def audit(solution, lanes, axi_width=None, no_auto=False):
+def audit(solution, lanes, axi_width=None, no_auto=False, require_shared_scale=False):
     rtl = solution / "syn" / "verilog"
     modules = {}
     for path in rtl.glob("*.v"):
@@ -73,6 +73,24 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
         multiplier_location = "Top: hoisted physical pool, external transform lane interfaces checked"
     if multipliers != lanes:
         raise ValueError(f"Expected {lanes} shared lane multipliers, found {multipliers}")
+    shared_clients = {}
+    if require_shared_scale:
+        client_pattern = re.compile(
+            r"Top_CG_Transform_Work_Pipeline_WORK_(?:BUTTERFLY|SCALE)_LOOP\d*")
+        clients = {name: n for name, n in core_counts.items() if client_pattern.fullmatch(name)}
+        if len(clients) != 3 or any(n != 1 for n in clients.values()):
+            raise ValueError("Expected two butterfly clients and one SCALE client: " + str(clients))
+        for name in clients:
+            client_ports = set(re.findall(
+                r"^output\s+\[63:0\]\s+(grp_MultMod(?:_\d+)?_fu_\d+)_p_din1;",
+                modules[name], re.M))
+            if len(client_ports) != lanes:
+                raise ValueError(f"{name} does not request all {lanes} shared multiplier lanes")
+            shared_clients[name] = len(client_ports)
+        retired_scale = {name: n for name, n in counts.items()
+                         if re.search(r"Prepare_HKS_BConv_Input|HKS_SCALE_(?:LIMB|ROW|COL)", name)}
+        if retired_scale:
+            raise ValueError("Separate prescale hardware remains reachable: " + str(retired_scale))
     transforms = {name: n for name, n in counts.items()
                   if re.fullmatch(r"Top_CG_Transform_(?:Work|Banks|Kernel)(?:_\d+)?", name)}
     if transforms != {chain[-1]: 1}:
@@ -106,6 +124,16 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
                 butterfly_ii[path.stem + ":" + loop.tag] = int(loop.findtext("PipelineII"))
     if len(butterfly_ii) != 2 or any(ii != 1 for ii in butterfly_ii.values()):
         raise ValueError("Expected both butterfly parity loops at II=1: " + str(butterfly_ii))
+    scale_ii = {}
+    if require_shared_scale:
+        for path in (solution / "syn" / "report").glob(
+                core + "_Pipeline_WORK_SCALE_LOOP*_csynth.xml"):
+            loops = ET.parse(path).getroot().find("PerformanceEstimates/SummaryOfLoopLatency")
+            if loops is not None:
+                for loop in loops:
+                    scale_ii[path.stem + ":" + loop.tag] = int(loop.findtext("PipelineII"))
+        if len(scale_ii) != 1 or any(ii != 1 for ii in scale_ii.values()):
+            raise ValueError("Expected one shared SCALE loop at II=1: " + str(scale_ii))
     work_memory = None
     if core == "CG_Transform_Work":
         copies = {name: n for name, n in counts.items()
@@ -141,9 +169,11 @@ def audit(solution, lanes, axi_width=None, no_auto=False):
         "direct_work_memory": work_memory,
         "core_shared_MultMod_instances": multipliers,
         "multiplier_location": multiplier_location,
+        "shared_multiplier_clients": shared_clients,
         "total_MultMod_instances": total_multipliers,
         "axi_data_width_bits": widths,
         "butterfly_loop_ii": butterfly_ii,
+        "scale_loop_ii": scale_ii,
         "top_resources": resources, "transform_including_adapters_resources": wrapper_resources,
         "core_resources": core_resources, "core_latency_cycles": core_latency,
         "transform_including_adapters_latency_cycles": wrapper_latency,
@@ -162,9 +192,12 @@ if __name__ == "__main__":
     parser.add_argument("--total-multipliers", type=int, help="Require unchanged/reduced whole-Top compute capacity")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--no-auto", action="store_true", help="Reject reachable retired automorphism hardware")
+    parser.add_argument("--require-shared-scale", action="store_true",
+                        help="Require one II=1 SCALE client sharing the transform four-lane pool")
     args = parser.parse_args()
     try:
-        result = audit(args.solution, args.lanes, args.axi_width, args.no_auto)
+        result = audit(args.solution, args.lanes, args.axi_width, args.no_auto,
+                       args.require_shared_scale)
         if args.total_multipliers is not None and result["total_MultMod_instances"] != args.total_multipliers:
             raise ValueError("Unexpected whole-Top multiplier count")
     except (ValueError, OSError, ET.ParseError) as exc:
