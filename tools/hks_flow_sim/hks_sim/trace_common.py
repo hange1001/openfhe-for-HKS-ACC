@@ -46,6 +46,9 @@ class TraceContext:
     res: ResourceSet
     boundary: str = BOUNDARY_MODUP
     invocation: str = INVOKE_PER_DIGIT
+    #: OC 的 output tile 宽度（一次处理多少个输出塔）。1 = 原始真 OC。
+    #: 这是**调度**参数不是硬件参数：同一套 3x5 阵列，只改调度粒度。
+    tile_width: int = 1
     tb: TraceBuilder = field(init=False)
     #: buffer id -> 最后写它的 op seq，用来串真实数据依赖
     producer: Dict[str, int] = field(default_factory=dict)
@@ -56,6 +59,11 @@ class TraceContext:
             raise ValueError(f"未知 boundary: {self.boundary}")
         if self.invocation not in INVOKE_GRANULARITIES:
             raise ValueError(f"未知 invocation granularity: {self.invocation}")
+        if not 1 <= self.tile_width <= self.res.bconv_cols:
+            raise ValueError(
+                f"oc_output_tile_width={self.tile_width} 超出 [1, bconv_cols="
+                f"{self.res.bconv_cols}]：一次调用最多利用 bconv_cols 个输出列"
+            )
         self.tb = TraceBuilder(self.strategy)
 
     # ---------- 基础工具 ----------

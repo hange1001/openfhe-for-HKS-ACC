@@ -16,7 +16,8 @@ from .resources import BCONV, TRANSFORM
 
 #: §9 要求的指标列，顺序固定，便于跨次运行 diff
 METRIC_COLUMNS = [
-    "strategy", "hardware_config_hash", "workload_config_hash", "workload",
+    "strategy", "hardware_config_hash", "workload_config_hash",
+    "strategy_config_hash", "oc_output_tile_width", "workload",
     "boundary", "invocation_granularity", "invocations", "evidence",
     "total_cycles", "latency_us",
     "compute_cycles", "memory_stall_cycles", "control_cycles",

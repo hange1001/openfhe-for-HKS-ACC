@@ -274,6 +274,18 @@ def workload_config_hash(wl: WorkloadConfig) -> str:
     return config_hash(wl, "wl")
 
 
+def strategy_config_hash(strategy: str, tile_width: int = 1) -> str:
+    """**调度**自由度的指纹，与硬件分开。
+
+    output tile width 改变的是 dataflow 的调度粒度，不是硬件——同一套 3x5 阵列、
+    同样的引擎和端口。因此它绝不能进 hardware_config_hash（那会让 OC-w1..w5
+    之间的对比显示成「配置不同」而失去可比性），但必须单独记录，否则报告里就分不清
+    某个数字是哪个 tile width 跑出来的。
+    """
+    return config_hash({"strategy": strategy, "oc_output_tile_width": tile_width},
+                       "strat")
+
+
 def _filter_known(cls, data: Dict[str, Any]) -> Dict[str, Any]:
     known = set(cls.__dataclass_fields__)
     unknown = set(data) - known

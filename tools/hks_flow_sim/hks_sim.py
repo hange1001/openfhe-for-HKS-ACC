@@ -25,7 +25,8 @@ from typing import Any, Dict, List, Sequence
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from hks_sim.config import ConfigError, SimConfig, sim_config_from_dict, with_overrides
-from hks_sim.engine import STRATEGIES, FairnessError, run_all
+from hks_sim.engine import (STRATEGIES, FairnessError, oc_tile_strategies,
+                            parse_strategy, run_all)
 from hks_sim.report import format_summary, write_results, write_summary
 
 
@@ -95,7 +96,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                     default=[],
                     help="YAML/JSON 配置，可重复，按顺序深合并（base + keymult 档位）")
     ap.add_argument("--strategies", default=",".join(STRATEGIES),
-                    help=f"逗号分隔，默认 {','.join(STRATEGIES)}")
+                    help=f"逗号分隔，默认 {','.join(STRATEGIES)}；"
+                         "OC 可写 oc-w1..oc-w<bconv_cols> 指定 output tile 宽度")
+    ap.add_argument("--oc-tile-sweep", action="store_true",
+                    help="把 oc-w1..oc-w<bconv_cols> 全部加入对比（M4 Pareto）")
     ap.add_argument("--output", help="输出目录；不给则只打印摘要")
     ap.add_argument("--sweep", action="append", default=[],
                     help="key=v1,v2,...；可重复，多个 --sweep 取笛卡尔积")
@@ -110,9 +114,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     strategies = [s.strip() for s in args.strategies.split(",") if s.strip()]
-    bad = set(strategies) - set(STRATEGIES)
-    if bad:
-        raise SystemExit(f"未知策略 {sorted(bad)}；可选 {STRATEGIES}")
+    for s in strategies:
+        try:
+            parse_strategy(s)
+        except KeyError as exc:
+            raise SystemExit(str(exc))
 
     try:
         base = _load_config(args.config)
@@ -136,7 +142,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         overrides.update(point)
         try:
             cfg = with_overrides(base, **overrides) if overrides else base
-            results = run_all(cfg, strategies)
+            names = list(strategies)
+            if args.oc_tile_sweep:
+                # oc-w1..oc-w<bconv_cols>；bconv_cols 可能被 --sweep 改过，
+                # 所以要在拿到本点的 cfg 之后再展开
+                names = [s for s in names if s != "oc"]
+                names += list(oc_tile_strategies(cfg.hardware.bconv_cols))
+            results = run_all(cfg, names)
         except (ConfigError, FairnessError) as exc:
             print(f"[point {i}] 失败：{exc}", file=sys.stderr)
             exit_code = 1

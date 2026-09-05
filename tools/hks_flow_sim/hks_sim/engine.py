@@ -10,7 +10,8 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence
 
 from . import trace_dc, trace_mp, trace_oc
-from .config import (SimConfig, hardware_config_hash, workload_config_hash)
+from .config import (SimConfig, hardware_config_hash, strategy_config_hash,
+                     workload_config_hash)
 from .cost_model import CostModel
 from .memory import CapacityError, MemoryStats, apply_capacity
 from .op import COMPUTE_KINDS, TRANSFER_KINDS, Op, OpKind
@@ -24,7 +25,31 @@ STRATEGY_BUILDERS: Dict[str, Callable[[TraceContext], List[Op]]] = {
     "mp": trace_mp.build,
     "oc": trace_oc.build,
 }
-STRATEGIES = tuple(STRATEGY_BUILDERS)
+#: 默认对比集。`oc` = `oc-w1` = 原始真 OC 基线。
+STRATEGIES = ("dc", "mp", "oc")
+
+_OC_PREFIX = "oc-w"
+
+
+def parse_strategy(name: str) -> tuple[str, int]:
+    """把 `oc-w3` 解析成 (builder_key, tile_width)。
+
+    `oc` 等价于 `oc-w1`。tile width 是**调度**参数，绝不进 hardware hash——
+    OC-w1..w5 必须能互相比较，所以它们的硬件配置必须判定为相同。
+    """
+    if name.startswith(_OC_PREFIX):
+        suffix = name[len(_OC_PREFIX):]
+        if not suffix.isdigit() or int(suffix) < 1:
+            raise KeyError(f"非法策略名 {name!r}；应形如 oc-w1 .. oc-w5")
+        return "oc", int(suffix)
+    if name not in STRATEGY_BUILDERS:
+        raise KeyError(f"未知策略 {name!r}；可选 {STRATEGIES} 或 oc-w1..oc-w<bconv_cols>")
+    return name, 1
+
+
+def oc_tile_strategies(bconv_cols: int) -> tuple[str, ...]:
+    """给定阵列列数，列出全部合法的 OC tile 宽度策略名。"""
+    return tuple(f"{_OC_PREFIX}{w}" for w in range(1, bconv_cols + 1))
 
 
 class FairnessError(RuntimeError):
@@ -43,6 +68,8 @@ class RunResult:
     hardware_hash: str
     workload_hash: str
     invocations: int
+    tile_width: int = 1
+    strategy_hash: str = ""
     infeasible_reason: str = ""
     metrics: Dict[str, object] = field(default_factory=dict)
 
@@ -52,22 +79,23 @@ class RunResult:
 
 
 def run_strategy(cfg: SimConfig, strategy: str) -> RunResult:
-    if strategy not in STRATEGY_BUILDERS:
-        raise KeyError(f"未知策略 {strategy}；可选 {STRATEGIES}")
+    builder_key, tile_width = parse_strategy(strategy)
     cfg.validate()
     wl = build_workload(cfg.workload)
     cm = CostModel(wl=cfg.workload, hw=cfg.hardware)
     res = build_resources(cfg.hardware)
 
     ctx = TraceContext(strategy=strategy, wl=wl, cm=cm, res=res,
-                       boundary=cfg.boundary, invocation=cfg.invocation)
-    ops = STRATEGY_BUILDERS[strategy](ctx)
+                       boundary=cfg.boundary, invocation=cfg.invocation,
+                       tile_width=tile_width)
+    ops = STRATEGY_BUILDERS[builder_key](ctx)
 
     if cfg.include_init:
         _prepend_init(ops, cm.init_cycles())
 
     hw_hash = hardware_config_hash(cfg)
     wl_hash = workload_config_hash(cfg.workload)
+    st_hash = strategy_config_hash(strategy, tile_width)
 
     try:
         ops, mem = apply_capacity(ops, cfg.hardware.sram_capacity_bytes,
@@ -77,7 +105,8 @@ def run_strategy(cfg: SimConfig, strategy: str) -> RunResult:
         return RunResult(strategy=strategy, cfg=cfg, wl=wl, res=res, ops=ops,
                          sched=None, mem=analyze_lifetimes(ops),
                          hardware_hash=hw_hash, workload_hash=wl_hash,
-                         invocations=ctx.invocations,
+                         invocations=ctx.invocations, tile_width=tile_width,
+                         strategy_hash=st_hash,
                          infeasible_reason=str(exc))
 
     sched = schedule(ops, res, tie_break=cfg.tie_break,
@@ -86,7 +115,8 @@ def run_strategy(cfg: SimConfig, strategy: str) -> RunResult:
 
     out = RunResult(strategy=strategy, cfg=cfg, wl=wl, res=res, ops=ops,
                     sched=sched, mem=mem, hardware_hash=hw_hash,
-                    workload_hash=wl_hash, invocations=ctx.invocations)
+                    workload_hash=wl_hash, invocations=ctx.invocations,
+                    tile_width=tile_width, strategy_hash=st_hash)
     out.metrics = _metrics(out)
     return out
 
@@ -117,6 +147,8 @@ def _metrics(r: RunResult) -> Dict[str, object]:
         "strategy": r.strategy,
         "hardware_config_hash": r.hardware_hash,
         "workload_config_hash": r.workload_hash,
+        "strategy_config_hash": r.strategy_hash,
+        "oc_output_tile_width": r.tile_width,
         "workload": r.wl.describe(),
         "boundary": r.cfg.boundary,
         "invocation_granularity": r.cfg.invocation,

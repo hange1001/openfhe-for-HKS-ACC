@@ -14,10 +14,23 @@ from .config import HardwareConfig
 TRANSFORM = "transform_engine"
 BCONV = "bconv_array"
 KEYMULT = "keymult_engine"
-DMA_H2D = "dma_h2d"
-DMA_D2H = "dma_d2h"
-DMA_SPILL = "dma_spill"
+#: **所有**搬运共用一个 AXI 池，容量 = axi_channels。
+#:
+#: 早先按用途拆成 dma_h2d / dma_d2h / dma_spill 三个各自容量 1 的池，等于白送
+#: 3 倍并发带宽，而且按「用途」划分通道本身就是臆造的——真实绑定是按 gmem 端口。
+#: 实测能证伪那个模型：P4 单 digit 事务 46671 只有在 alpha 个 load 塔加 L+K 个
+#: store 塔**全部串行**（7x1053）时才对得上；任意两笔重叠，实测值都会更小。
+#: 因此 digit 路径上的 AXI 是串行的，默认 axi_channels=1。
+#:
+#: （INIT 的两张 twiddle 表确实在 gmem0/gmem1 上重叠，但那是另一条代码路径，
+#: 且 295063 是直接实测的常数，整体计入，不由本池建模。）
+DMA = "dma_axi"
 CONTROL = "control"
+
+# 兼容旧名字：三者现在都指向同一个共享池
+DMA_H2D = DMA
+DMA_D2H = DMA
+DMA_SPILL = DMA
 
 
 @dataclass(frozen=True)
@@ -29,6 +42,9 @@ class ResourceSet:
     keymult_resource: str
     #: 变换 lane 数，供 cost_model 使用
     transform_lanes: int
+    #: BConv 阵列的输出列数。一次调用最多能同时产出这么多输出塔，
+    #: 因此它也是 OC output tile width 的物理上限。
+    bconv_cols: int = 5
 
     def cap(self, name: str) -> int:
         if name not in self.capacity:
@@ -47,9 +63,7 @@ def build_resources(hw: HardwareConfig) -> ResourceSet:
     capacity = {
         TRANSFORM: hw.transform_engines,
         BCONV: hw.bconv_arrays,
-        DMA_H2D: hw.axi_channels,
-        DMA_D2H: hw.axi_channels,
-        DMA_SPILL: hw.axi_channels,
+        DMA: hw.axi_channels,
         CONTROL: 1,
     }
     if keymult_resource == KEYMULT:
@@ -58,4 +72,5 @@ def build_resources(hw: HardwareConfig) -> ResourceSet:
         capacity=capacity,
         keymult_resource=keymult_resource,
         transform_lanes=hw.transform_lanes,
+        bconv_cols=hw.bconv_cols,
     )
