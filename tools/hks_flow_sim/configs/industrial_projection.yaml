@@ -1,0 +1,46 @@
+# Industrial projection（方案 §3 实验类别 2）
+#
+# 全部结果标记为 projected：参数形状是手写的，不代表通过了 CKKS 安全性或精度
+# 验证，也不是当前 bitstream 的实测。正式 industrial case 应改用 OpenFHE
+# CryptoContext 导出（workload.source: openfhe_context）。
+#
+# 这里刻意把边界推到 full_hks：KeyMult/Accumulate 硬件未实现，因此必须配合
+# keymult_{optimistic,nominal,pessimistic}.yaml 三档一起跑，不得只报单点。
+
+workload:
+  ring_dimension: 16384
+  q_towers: 12
+  p_towers: 4
+  num_part_q: 4                 # -> alpha=3, 四个 digit 均为 alpha_d=3, beta_d=13
+  limb_bits: 64
+  batch_count: 1
+  source: handwritten
+  label: industrial_projection
+
+hardware:
+  clock_period_ns: 7.0
+  transform_engines: 1
+  transform_lanes: 4
+  bconv_arrays: 1
+  bconv_rows: 3
+  bconv_cols: 5
+  keymult_binding: shared_transform_mul
+  axi_bits: 256
+  axi_channels: 1
+  # U55C 片上约 43 MiB 原始位容量，可用数据容量更低（见 HKS_大参数扩展 §3）。
+  # 这里先给 8 MiB 作为容量边界扫描的中心点，真正的结论应来自
+  # --sweep hardware.sram_capacity_bytes=... 的整条曲线。
+  sram_capacity_bytes: 8388608
+  ddr_bandwidth_GBps: 0.0       # 未标定：留 0 时 spill 退化为 AXI 口径
+  pcie_fixed_us: 0.0            # 无板卡：作为扫描维，不是标定量
+  pcie_bandwidth_GBps: 0.0
+  dma_compute_overlap: false
+  allow_engine_overlap: false
+  allow_tiling: true
+  strict_p4: false
+
+boundary: full_hks
+invocation: per_hks             # 融合成一次调用；per_output_tower 是 OC 的悲观口径
+tie_break: trace_order
+include_init: false
+note: "projected; requires keymult_*.yaml band sweep, never a single point"

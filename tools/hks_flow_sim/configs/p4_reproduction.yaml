@@ -1,0 +1,41 @@
+# P4 reproduction（方案 §3 实验类别 1）
+#
+# 严格使用当前 N=4096, L=3, K=2, PE=4 与现有 buffer/twiddle 限制，
+# 用来校准已实现算子。此配置下 DC 的总周期必须精确等于 RTL co-sim 实测：
+#   alpha=2 digit 46671 + alpha=1 digit 44571 = 91242 cycles = 638.694 us @7ns
+# 证据：docs/reports/hls/hks_mem_p4_20260905/perf-transactions.rpt
+#
+# 边界：只覆盖 OP_HKS_DIGIT 的 ModUp（P1-P3），不含 KeyMult/Accumulate——
+# 后者硬件未实现，放进来就无法与实测对账。
+
+workload:
+  ring_dimension: 4096
+  q_towers: 3
+  p_towers: 2
+  num_part_q: 2
+  limb_bits: 64
+  batch_count: 1
+  source: handwritten
+  label: p4_reproduction
+
+hardware:
+  clock_period_ns: 7.0          # 保守签核情景；6ns+0.75ns 裕量并未闭合
+  transform_engines: 1
+  transform_lanes: 4
+  bconv_arrays: 1
+  bconv_rows: 3
+  bconv_cols: 5
+  keymult_binding: shared_transform_mul
+  axi_bits: 256
+  axi_channels: 1
+  sram_capacity_bytes: 0        # 不限容量：先看 peak 需求，不引入 spill
+  dma_compute_overlap: false    # XRT 完全阻塞（task.yaml q8）
+  allow_engine_overlap: false   # opcode-RPC dispatcher，引擎顺序调用（ADR-008）
+  allow_tiling: false
+  strict_p4: true
+
+boundary: modup_only
+invocation: per_digit           # 1 digit = 1 次 kernel 调用，与标定口径一致
+tie_break: trace_order
+include_init: false             # OP_INIT 295063 是上下文级固定段，单列不混入
+note: "calibration point; DC must reproduce 91242 cycles exactly"

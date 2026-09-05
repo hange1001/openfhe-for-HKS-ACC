@@ -1,0 +1,21 @@
+# KeyMult/Accumulate 参数：optimistic（乐观） 档
+#
+# 硬件未实现，全部为 projected。方案 §5.2 要求 optimistic/nominal/pessimistic
+# 三组必须同时运行，不得对未实现模块给出伪精确单点结果。
+#
+# T_KM(d,t) = keymult_mul_passes * ceil(N/lanes) * modmul_ii + keymult_pipe + keymult_mem
+# T_ACC(t)  = ceil(N/lanes) + accumulate_overhead
+#
+# 要把这三档收敛成一个数，需要方案 §11 P2 列的实测：模乘 latency/II、
+# a/b 两路的顺序或并行关系、accumulate 能否与 write-back 融合、
+# evk 从片上/DDR/host 供数的访问成本。在拿到这些之前只能报区间。
+
+# 乐观：只付一次流水线填充，无端口争用，累加与写回融合
+hardware:
+  cost:
+    keymult_mul_passes: 2
+    modmul_ii: 1
+    keymult_pipe: 19            # = Barrett MultMod latency
+    keymult_mem: 0
+    accumulate_overhead: 0
+note: "projected/optimistic"
