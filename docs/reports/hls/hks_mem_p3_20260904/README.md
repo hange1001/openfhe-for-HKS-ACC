@@ -1,6 +1,7 @@
 # P3：共享工作区与原位预乘
 
-状态：C-model、综合结构、RTL smoke/perf 验证通过，物理验收进行中，尚未提交。
+状态：C-model、综合结构、RTL smoke/perf、随机 AXI stall 与 OOC 布线验收均通过。
+源码检查点为 `53cf757`；布线报告在检查点生成后补入本目录。
 
 ## 改动范围
 
@@ -62,7 +63,37 @@ LUT 增25,653（约16.57%）：不再用局部A bank隔离多塔工作区，增�
 - Top18/18、HKS22、独立BConv9/9通过（包含无效行毒化）。
 - OpenFHE Release / ASan各472项检查、1,523,712个余数精确一致；ASan检测泄漏开启。
 - 最终完整C-sim通过；RTL smoke 35次调用/4种digit通过，perf 40,960余数精确一致。
-  smoke与perf的生成Verilog目录逐文件一致。布线数据待本报告补齐。
+  smoke与perf的生成Verilog目录逐文件一致。
+- 使用 `config_cosim -random_stall` 重放 perf fixture 通过，覆盖 AXI 随机背压下的
+  数据完整性；它验证协议/流水线停顿，不改变无 stall 的周期基线。
 - 无板卡，任何周期×时钟换算仅是核内时间，不含PCIe/驱动/主机准备；INIT单列。
+
+## 布线后结果
+
+Vivado 2023.2，U55C `xcu55c-fsvh2892-2L-e`。全部 235,225 条可路由 net 均完成
+路由，routing error 为 0。
+
+| 时序情景 | WNS | TNS | setup 失败端点 | WHS | THS | hold 失败端点 | 判定 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| 默认 6 ns | +0.029 ns | 0 | 0 | +0.007 ns | 0 | 0 | 通过 |
+| 6 ns + 0.75 ns uncertainty | -0.721 ns | -595.871 ns | 3,140 | +0.007 ns | 0 | 0 | 不通过 |
+| 7 ns + 0.75 ns uncertainty | +0.279 ns | 0 | 0 | +0.007 ns | 0 | 0 | 通过 |
+
+因此 P3 可以按保守的 7 ns 工程情景签核，不能宣称带 0.75 ns 裕量的 6 ns 已通过。
+最差 setup 路径位于 BConv `Load_W` 内部：data path 5.951 ns，其中 routing
+5.436 ns（91.346%），logic 0.515 ns（4 levels）；旧的整塔工作区到局部 bank
+路径已消失。该结果说明当前临界项主要是布局/走线，而不是新增深逻辑链。
+
+| 布线后资源 | 用量 | 器件占比 |
+|---|---:|---:|
+| CLB LUT | 108,392 | 8.31% |
+| CLB Register | 64,058 | 2.46% |
+| Block RAM Tile | 272 | 13.49% |
+| DSP | 1,160 | 12.85% |
+| URAM | 96 | 10.00% |
+
+HLS 资源估计与 Vivado 布线后利用率属于不同阶段、不同统计口径，不能直接相减；
+两组数字均保留，前者用于版本间快速审计，后者用于器件容量判断。原始证据见
+`postroute_margin/`，PE 扫参与布线分析见 `doc/PE扫参与P3布线结果_2026-09-05.md`。
 
 完整试验过程见 `doc/P3_P4_Shoup_实施日志.md`。失败项目r1/r2保留在本地Solution下，不纳入通过证据。

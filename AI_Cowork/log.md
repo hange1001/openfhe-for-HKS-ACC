@@ -1029,3 +1029,16 @@ in_x[q][(t-q)>>6][(t-q)&63]，Collect 写 in_x[LIMB_Q+p][(t-3-p)>>6][(t-3-p)&63]
 - 推荐整核顺序 P3→P4→BConv Shoup；独立Shoup算术验证可先做。P3为P4提供原位存储契约，BConv Shoup与P4无硬性前置依赖。
 - 后续若拓展Shoup到NTT/预乘，再重新审视P4；本轮不作该扩展。验收需保持OpenFHE逐residue一致及RTL实例共享。
 - 具体文件、缓存键、协议风险与验收步骤写入 `doc/HKS_digit间并行与BConv资源拆解.md` 第7节。
+
+### [2026-09-05] P3 物理实现签核
+
+**Agent**: Codex。核对恢复完成的 OOC implementation，并将物理证据补入 P3 正式报告；
+未修改 PE_PARALLEL，也未干预用户的扫参任务。
+
+- 235225/235225 条可路由 net 全部布通，routing error=0。
+- 默认 6ns：WNS +0.029ns、TNS 0；6ns+0.75ns uncertainty：WNS -0.721ns、
+  TNS -595.871ns，不通过；7ns+0.75ns：WNS +0.279ns、TNS 0，通过。
+- 三种情景 hold 均为 WHS +0.007ns、THS 0、0 失败端点。
+- 布线后 CLB LUT 108392、register 64058、BRAM tile 272、DSP 1160、URAM 96。
+- 最差 setup 路径位于 BConv `Load_W`，data path 5.951ns，route 占 91.346%；
+  P3 已按保守 7ns 工程情景完成签核，下一节点为 P4 模乘 lane 复用。

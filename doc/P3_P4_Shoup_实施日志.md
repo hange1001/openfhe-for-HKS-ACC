@@ -7,8 +7,8 @@
 
 | 节点 | 目标 | 状态 | Git |
 |---|---|---|---|
-| P3 | 工作区直接作为变换 A bank；一条 scratch；预乘原位；消除变换装卸拷贝 | 实施中 | 待验证 |
-| P4 | 预乘复用现有蝶形模乘 lane，顺序切换并排空流水线 | 待开始 | — |
+| P3 | 工作区直接作为变换 A bank；一条 scratch；预乘原位；消除变换装卸拷贝 | 完成 | `53cf757`（源码/功能/RTL），后续提交补物理证据 |
+| P4 | 预乘复用现有蝶形模乘 lane，顺序切换并排空流水线 | 实施中 | — |
 | Shoup | BConv 定常数模乘改为 Shoup，更新两个入口及 OpenFHE 元数据/验证 | 待开始 | — |
 
 证据分层：native/OpenFHE 精确数值 → HLS 端口/II/资源 → RTL 精确结果/周期 → OOC 布线。
@@ -77,3 +77,18 @@ Shoup 检查 x≥目标模数、边界/随机向量、元数据版本保护、�
 - 随后确认暂停进程仍持有约4GB，系统交换区约7.3/8GB；为释放内存，已正常终止本轮PID376659。
   综合DCP和Vivado工程完整保留；新增 `hks_resume_impl.tcl` 仅从已完成synth_1继续impl_1，禁止自动reset/resynth。
   后续应通过该入口继续P3，不再向已结束的PID发CONT。用户PE16任务未被干预。
+
+## 2026-09-05：P3 最终签核
+
+- P3 源码、功能与 RTL 证据已保存在 `53cf757`。该提交同时包含尚未接入 Top 的 Shoup
+  原语 WIP；不改写已有历史，后续仍按 P4、Shoup 整机接入分别提交。
+- perf fixture 在 `config_cosim -random_stall` 下重放通过，说明三个 AXI master 出现随机
+  背压时仍能保持结果精确；周期比较继续采用无 stall fixture，避免把随机等待混入架构周期。
+- 恢复路径完成 OOC implementation：235,225/235,225 条可路由 net 全部布通，routing
+  error 为 0。默认 6 ns 的 WNS/TNS 为 +0.029/0 ns；6 ns +0.75 ns uncertainty
+  为 -0.721/-595.871 ns，不通过；7 ns +0.75 ns 为 +0.279/0 ns，通过。
+  三种情景 hold 均为 WHS +0.007 ns、THS 0、0 个失败端点。
+- 布线后资源：CLB LUT 108,392、register 64,058、BRAM tile 272、DSP 1,160、
+  URAM 96。HLS LUT 180,505 不能与布线后 LUT 直接相减，两套口径分别报告。
+- 最差 setup 路径转到 BConv `Load_W`，5.951 ns 中 route 占 5.436 ns（91.346%）；
+  P3 删除的旧整塔装卸路径没有重新出现。至此 P3 按保守 7 ns 情景完成验收，进入 P4。

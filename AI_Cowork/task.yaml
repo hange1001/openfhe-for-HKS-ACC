@@ -9,7 +9,7 @@
 
 memory_shoup_implementation:
   requested: 2026-09-04
-  status: p3_in_progress
+  status: p3_complete_p4_in_progress
   baseline: 32c04b5
   scope: "按 P3→P4→Shoup 实施，每节点验证并 Git 提交；不推送，不改变并行度扫参"
   log: doc/P3_P4_Shoup_实施日志.md
