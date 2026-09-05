@@ -68,6 +68,27 @@ if(BUILD_UNITTESTS)
     add_dependencies(allpke pke_tests)
     add_custom_command(OUTPUT runpketests WORKING_DIRECTORY ${CMAKE_BINARY_DIR} COMMAND ${CMAKE_BINARY_DIR}/unittest/pke_tests)
     add_custom_target(testpke DEPENDS pke_tests runpketests)
+
+    # ------------------------------------------------------------------------
+    # HKS 真 OC 功能验证：独立二进制
+    #
+    # 单列一个 target，是因为 pke_tests 目前在**静态初始化阶段**就会 abort：
+    # unittest/utckksrns/UnitTestInteractiveBootstrap.cpp 的
+    #     static ... testCasesUTCKKSRNS_INTERACTIVE_BOOT = getTestData(__FILE__);
+    # 在 main 之前读 CSV 并调用 std::stoul，抛出的 std::invalid_argument 逃逸出
+    # 静态初始化，连 `pke_tests --gtest_list_tests` 都跑不起来（既存问题，见
+    # AI_Cowork/MAP.md「旧全量 PKE 测试用例加载抛出 stoul 异常」）。
+    #
+    # 该问题与 HKS 无关，这里不去修它，只把 HKS 的功能验证隔离到能跑的地方。
+    # 等那个问题修好，本 target 即可删除——同一个 .cpp 已经在 pke_tests 里。
+    add_executable(hks_true_oc_tests unittest/UnitTestHKSTrueOC.cpp)
+    set_property(TARGET hks_true_oc_tests PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/unittest)
+    target_include_directories(hks_true_oc_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/unittest/utils")
+    target_link_libraries(hks_true_oc_tests PRIVATE gtest gtest_main)
+    target_link_libraries(hks_true_oc_tests ${PKELIBS} ${ADDITIONAL_LIBS})
+    if(NOT ${WITH_OPENMP} AND NOT EMSCRIPTEN)
+        target_link_libraries(hks_true_oc_tests PRIVATE Threads::Threads)
+    endif()
 endif()
 
 set(PKEAPPS "")

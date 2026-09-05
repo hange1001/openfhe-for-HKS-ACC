@@ -269,25 +269,50 @@ tools/hks_flow_sim/
 | M2 资源约束调度 | ✅ | ready queue / 引擎互斥 / DMA overlap / makespan 四分解 |
 | M3 P4 校准与 KeyMult 区间 | ✅ | P4 零残差、P3 hold-out 0.009%、三档区间 |
 | M4 Tiling 与 spill | ✅ | OC-w1..w5、容量边界曲线、Pareto、两档敏感性 |
-| M5 Functional reference | ⬜ | 真 OC，test-only C++ reference（下一步） |
+| M5 Functional reference | ✅ | 真 OC 的 test-only C++ reference，8 组形状 524288 residue 精确一致 |
 | M6 Industrial projection | ⬜ | 扫参框架就绪，尚未系统跑 |
 
 M4 尚未做的：BConv 的**行**方向分块（`ceil(alpha/rows)`，当前所有参数点都是 1），
 以及 `allow_tiling` 目前只做校验、未改变 BConv 成本模型。
 
-### M5 计划（已定路线）
+### M5 已完成：真 OC 的功能正确性
 
-真 OC，但用**只供测试使用**的独立 C++ reference，不碰 production dispatch：
+`src/pke/unittest/UnitTestHKSTrueOC.cpp`（**只供测试使用**，不参与 production dispatch）。
+它按真 OC 的顺序重算 `cTilda0/cTilda1`：
 
 ```
-for output tower:
-    for digit:
-        native tower  -> bypass
-        non-native    -> 调用已有 full BConv 后只取目标 tower
+for output tower t in [0, L+K):
+    for digit j:
+        native Q tower -> bypass（直接复用原 EVAL 系数）
+        non-native     -> 调用已有 full BConv 后只取目标塔 -> NTT
         立即 KeyMult
         立即 Accumulate
 ```
 
-调用 full BConv 只负责提供正确 residue，其 CPU 内存与运行时间**不进入性能模型**。
-另加一个小参数 scalar test 独立验证
-`full_BConv[d][target] == scalar_single_target_BConv(d, target)`。
+non-native 分支调用全宽 BConv **只为提供正确 residue**，其 CPU 内存与运行时间
+不进入任何性能模型——本文件验证的是真 OC 的功能正确性，不是它的效率。
+
+6 个测试全过：
+
+| 测试 | 覆盖 |
+|---|---|
+| `MatchesDCReference` | 与 OpenFHE 的 DC 路径逐 residue 一致（49152 个） |
+| `MatchesAcrossShapesAndLevels` | 8 组形状、L=4..7、alpha=1/2/3、D=2/3/4/6，共 **524288 个 residue**；含末位 digit 不完整与每 digit 单塔 |
+| `AllSchedulesAgree` | DC / MP / 伪OC / 真OC 四者结果全等 |
+| `OperatorCountsMatchSimulatorClosedForm` | bypass=L、逐目标塔 BConv=L(D−1)+KD、KeyMult=D(L+K)，在真实 OpenFHE 参数集上验证仿真器的闭式 |
+| `ScalarSingleTargetBConvMatchesFullBConv` | 按 BConv 定义逐系数重算单列（32768 个 residue），证明「只算一列」= 全宽结果的那一列 |
+| `EndToEndDecryptionIsCorrect` | 三种 production 策略的 EvalMult 解密结果正确 |
+
+**运行方式**（注意不是 `pke_tests`）：
+
+```bash
+cd build && make hks_true_oc_tests -j8 && ./unittest/hks_true_oc_tests
+```
+
+`pke_tests` 目前在**静态初始化阶段**就会 abort：
+`unittest/utckksrns/UnitTestInteractiveBootstrap.cpp` 的
+`static ... = getTestData(__FILE__);` 在 main 之前读 CSV 并 `std::stoul`，
+抛出的 `std::invalid_argument` 逃逸出静态初始化，连 `--gtest_list_tests` 都跑不起来
+（既存问题，见 MAP.md）。该问题与 HKS 无关，本轮没有去修它，只是把 HKS 的功能
+验证隔离到一个能跑的独立 target 里。等它修好，`hks_true_oc_tests` 这个 target
+即可删除——同一个 `.cpp` 已经在 `pke_tests` 的 glob 里。
