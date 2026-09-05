@@ -9,13 +9,14 @@
 
 memory_shoup_implementation:
   requested: 2026-09-04
-  status: p4_complete_shoup_pending
+  status: microarchitecture_complete_shoup_deferred
   baseline: 32c04b5
   scope: "按 P3→P4→Shoup 实施，每节点验证并 Git 提交；不推送，不改变并行度扫参"
   log: doc/P3_P4_Shoup_实施日志.md
   validation: "native / OpenFHE Release+ASan / HLS 资源与实例审计 / RTL smoke+perf / OOC 布线；无板卡"
   p4_results: "暖态两digit 91242cycles（同频较P3 1.1006x）；HLS 424 BRAM_18K/1102 DSP/80186 FF/178865 LUT/96 URAM；布线后106098 LUT/61700 Reg/1102 DSP/272 BRAM tile/96 URAM；226368 nets全布通；默认6ns WNS+0.122ns，6ns+0.75ns WNS-0.628ns，7ns+0.75ns WNS+0.372ns"
-  next: "BConv Shoup 整机接入：ABI v2、OpenFHE precon、两个入口、RTL实例审计与物理验收"
+  next: "先冻结工业参数与板级测量口径；Shoup、INIT有效模数装载和BConv包装器统一作为后续候选，不在当前微架构收尾节点实施"
+  closure_report: doc/HKS_微架构阶段收尾报告.md
 
 active_implementation:
   id: hks-remove-fpga-auto

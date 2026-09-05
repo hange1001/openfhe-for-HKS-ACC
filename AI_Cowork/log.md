@@ -1070,3 +1070,20 @@ in_x[q][(t-q)>>6][(t-q)&63]，Collect 写 in_x[LIMB_Q+p][(t-3-p)>>6][(t-3-p)&63]
 **边界**:
 - 无板卡；只签核OOC kernel内部路径，未约束平台AXI I/O，也没有PCIe或系统加速比。
 - BConv仍使用Barrett；下一独立节点为Shoup ABI/OpenFHE/两入口整机接入。
+
+### [2026-09-05] 微架构阶段收尾
+
+**Agent**: Codex。用户决定不在当前阶段接入 Shoup，将其作为未来方向；以 P4
+`e948a69` 作为固定 N4096/Q3/P2、PE4 微架构稳定节点。
+
+- P5剩余旁路审计结论为不实施：EVAL保存已融合进输入load、补基塔已直接drain；
+  通用ADD/SUB/MULT仍需要 `result_buffer`，仅绕开HKS访问不能回收RAM，反而引入DDR
+  重读或输出别名风险。P4已满足P5物理验收。
+- Amdahl复核：一次冷启动+两digit中INIT占76.38%，但同上下文重复10/100次时降为
+  24.44%/3.13%。INIT内部两张196608项twiddle表经独立AXI路径重叠，不是单一串行链；
+  8个槽仅5个有效导致37.5%浪费，列为未来冷启动/工业参数项。
+- 两个BConv可达包装器合计10780 LUT/7891 FF、DSP为0；二者共享15路Barrett池。
+  统一包装器最多约省一份5.3k LUT/3.9k FF，不是再省一套870 DSP。
+- Shoup独立原语36 DSP/latency12/II1，对比Barrett 58 DSP/latency19/II1；整核
+  DSP预测1102→772，但当前暖态周期仅预计减少十几拍，故延后。
+- 新增中文收尾报告和ADR-014；硬件源码、ABI与已验证P4报告均未修改。
