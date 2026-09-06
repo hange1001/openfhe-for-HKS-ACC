@@ -1,1 +1,0 @@
-FAIL: Retired automorphism hardware remains reachable: {'Top_Load_Auto_Meta': 1, 'Top_Compute_Auto': 1, 'Top_Compute_Auto_Pipeline_ROW_COL': 1}

@@ -106,8 +106,17 @@ src/fpga_backend/*.link_summary
 src/fpga_backend/*.compile_summary
 src/fpga_backend/emconfig.json
 vitis_hls.log
-# Hand-promoted reports in docs/reports/ are intentionally tracked
-!docs/reports/
+# Local research material and AI workspace (keep on this machine only)
+/AI_Cowork/
+/.claude/
+/.qoder/
+/doc/
+/docs/notes/
+/docs/papers/
+/docs/reports/
+/results/
+/openfhe-for-HKS-ACC学习笔记.md
+/问题回答.md
 
 # HDL netlists / IP cache outputs
 *_sim_netlist.v
